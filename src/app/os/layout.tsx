@@ -28,9 +28,13 @@ export default function OSLayout({ children }: { children: React.ReactNode }) {
           <div className="flex-1 items-start md:grid md:grid-cols-[220px_minmax(0,1fr)] lg:grid-cols-[240px_minmax(0,1fr)]">
             <aside className="fixed top-14 z-30 -ml-2 hidden h-[calc(100vh-3.5rem)] w-full shrink-0 md:sticky md:block border-r bg-background/40 backdrop-blur-md">
               <div className="py-6 px-4">
-                <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
-                  FZ OS
-                </h2>
+                <div className="mb-4 px-4">
+                  <img
+                    src="/fzbuildsemfundo.png"
+                    alt="FZ OS"
+                    className="h-8 w-auto"
+                  />
+                </div>
                 <div className="space-y-1">
                   <nav className="flex flex-col gap-1 px-2">
                     <Link

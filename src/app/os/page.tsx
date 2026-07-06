@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Bell,
   Settings,
@@ -21,6 +22,14 @@ import {
 export default function DashboardPage() {
   const router = useRouter();
   const [prompt, setPrompt] = useState("");
+  const [selectedCard, setSelectedCard] = useState<string | null>(null);
+
+  const handleCardClick = (path: string) => {
+    setSelectedCard(path);
+    setTimeout(() => {
+      router.push(path);
+    }, 500); // Wait for animation to finish
+  };
 
   // Parallax / Hover tilt effect for all cards
   useEffect(() => {
@@ -79,13 +88,15 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="relative min-h-screen font-sans bg-[#f8f9fb] text-[#191c1e] select-none overflow-x-hidden">
+    <div className="relative min-h-screen font-sans bg-transparent text-[#191c1e] select-none overflow-x-hidden">
       {/* Top Navigation Anchor */}
       <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-center px-8 md:px-[80px] h-20">
         <div className="bg-[#f8f9fb]/80 backdrop-blur-xl border border-slate-200/50 rounded-full px-8 py-2.5 flex items-center shadow-sm gap-2">
-          <span className="font-heading text-xl font-extrabold tracking-tighter text-[#191c1e] mr-6">
-            FZ CONSOLE
-          </span>
+          <img
+            src="/fzbuildsemfundo.png"
+            alt="FZ Console"
+            className="h-8 w-auto mr-6"
+          />
           <nav className="hidden md:flex gap-6 items-center">
             <Link
               className="font-mono text-xs font-semibold uppercase tracking-wider text-[#003d9b] border-b-2 border-[#003d9b] py-1 transition-colors"
@@ -148,7 +159,7 @@ export default function DashboardPage() {
           <div className="h-px w-8 bg-slate-300/40 my-2" />
 
           <Link
-            href="#"
+            href="/os/admin"
             className="w-12 h-12 flex items-center justify-center text-slate-400 transition-all duration-300 hover:scale-110 hover:text-[#003d9b]"
           >
             <HelpCircle className="h-5 w-5" />
@@ -175,8 +186,10 @@ export default function DashboardPage() {
           {/* LEFT COLUMN */}
           <div className="col-span-12 lg:col-span-3 space-y-8 flex flex-col justify-center">
             {/* Projects Panel */}
-            <div
-              className="glass-card bg-white/80 backdrop-blur-xl border border-white/40 p-6 rounded-2xl shadow-xl shadow-blue-900/5 transition-transform duration-500 transform -rotate-1 hover:rotate-0"
+            <motion.div
+              layoutId="/os/projects"
+              onClick={() => handleCardClick("/os/projects")}
+              className="glass-card bg-white/80 backdrop-blur-xl border border-white/40 p-6 rounded-2xl shadow-xl shadow-blue-900/5 transition-transform duration-500 transform -rotate-1 hover:rotate-0 cursor-pointer hover:shadow-2xl hover:scale-[1.02]"
               style={{
                 transform: "perspective(1000px) rotateX(0deg) rotateY(0deg)",
               }}
@@ -218,11 +231,13 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* Team Activity */}
-            <div
-              className="glass-card bg-white/80 backdrop-blur-xl border border-white/40 p-6 rounded-2xl shadow-xl shadow-blue-900/5 transition-transform duration-500 transform rotate-1 hover:rotate-0"
+            <motion.div
+              layoutId="/os/team"
+              onClick={() => handleCardClick("/os/team")}
+              className="glass-card bg-white/80 backdrop-blur-xl border border-white/40 p-6 rounded-2xl shadow-xl shadow-blue-900/5 transition-transform duration-500 transform rotate-1 hover:rotate-0 cursor-pointer hover:shadow-2xl hover:scale-[1.02]"
               style={{
                 transform: "perspective(1000px) rotateX(0deg) rotateY(0deg)",
               }}
@@ -287,11 +302,13 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* Workflow Visualization Bottom */}
-            <div
-              className="glass-card bg-white/80 backdrop-blur-xl border border-white/40 p-6 rounded-2xl h-48 flex flex-col shadow-xl shadow-blue-900/5"
+            <motion.div
+              layoutId="/os/workflow-viz"
+              onClick={() => handleCardClick("/os/workflow")}
+              className="glass-card bg-white/80 backdrop-blur-xl border border-white/40 p-6 rounded-2xl h-48 flex flex-col shadow-xl shadow-blue-900/5 cursor-pointer hover:shadow-2xl hover:scale-[1.02]"
               style={{
                 transform: "perspective(1000px) rotateX(0deg) rotateY(0deg)",
               }}
@@ -302,7 +319,7 @@ export default function DashboardPage() {
               <div className="flex-grow flex items-end">
                 <div className="w-full h-full relative overflow-hidden" />
               </div>
-            </div>
+            </motion.div>
           </div>
 
           {/* CENTRAL HUB */}
@@ -316,7 +333,7 @@ export default function DashboardPage() {
 
             {/* Main AI Command Circle */}
             <div
-              className="w-[520px] h-[520px] rounded-full bg-white/95 glass-card border border-white/45 flex flex-col items-center justify-center p-12 text-center relative z-20 shadow-2xl shadow-blue-900/15"
+              className="w-[520px] h-[520px] rounded-full bg-white/70 backdrop-blur-lg glass-card border border-white/45 flex flex-col items-center justify-center p-12 text-center relative z-20 shadow-2xl shadow-blue-900/15"
               style={{
                 transform: "perspective(1000px) rotateX(0deg) rotateY(0deg)",
               }}
@@ -374,8 +391,10 @@ export default function DashboardPage() {
           {/* RIGHT COLUMN */}
           <div className="col-span-12 lg:col-span-3 space-y-8 flex flex-col justify-center">
             {/* Workflow Nodes */}
-            <div
-              className="glass-card bg-white/80 backdrop-blur-xl border border-white/40 p-6 rounded-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500 h-64 overflow-hidden relative shadow-xl shadow-blue-900/5"
+            <motion.div
+              layoutId="/os/workflow"
+              onClick={() => handleCardClick("/os/workflow")}
+              className="glass-card bg-white/80 backdrop-blur-xl border border-white/40 p-6 rounded-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500 h-64 overflow-hidden relative shadow-xl shadow-blue-900/5 cursor-pointer hover:shadow-2xl hover:scale-[1.02]"
               style={{
                 transform: "perspective(1000px) rotateX(0deg) rotateY(0deg)",
               }}
@@ -392,11 +411,13 @@ export default function DashboardPage() {
                   }}
                 />
               </div>
-            </div>
+            </motion.div>
 
             {/* Infrastructure Map */}
-            <div
-              className="glass-card bg-white/80 backdrop-blur-xl border border-white/40 p-6 rounded-2xl transform -rotate-2 hover:rotate-0 transition-transform duration-500 h-72 shadow-xl shadow-blue-900/5"
+            <motion.div
+              layoutId="/os/infrastructure"
+              onClick={() => handleCardClick("/os/infrastructure")}
+              className="glass-card bg-white/80 backdrop-blur-xl border border-white/40 p-6 rounded-2xl transform -rotate-2 hover:rotate-0 transition-transform duration-500 h-72 shadow-xl shadow-blue-900/5 cursor-pointer hover:shadow-2xl hover:scale-[1.02]"
               style={{
                 transform: "perspective(1000px) rotateX(0deg) rotateY(0deg)",
               }}
@@ -414,7 +435,7 @@ export default function DashboardPage() {
                   }}
                 />
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </main>
@@ -429,6 +450,23 @@ export default function DashboardPage() {
           <span>New Spatial Workflow</span>
         </button>
       </div>
+
+      <AnimatePresence>
+        {selectedCard && (
+          <motion.div
+            layoutId={
+              selectedCard === "/os/workflow" && selectedCard
+                ? "/os/workflow"
+                : selectedCard
+            }
+            className="fixed inset-0 z-[100] bg-white"
+            initial={{ borderRadius: 24, opacity: 0.8 }}
+            animate={{ borderRadius: 0, opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ type: "spring", bounce: 0, duration: 0.5 }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

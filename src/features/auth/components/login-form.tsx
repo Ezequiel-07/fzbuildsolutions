@@ -8,14 +8,7 @@ import { auth } from "@/lib/firebase";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import {
-  Building2,
-  Sparkles,
-  Mail,
-  Lock,
-  ArrowRight,
-  Loader2,
-} from "lucide-react";
+import { Sparkles, Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email("Endereço de e-mail inválido"),
@@ -104,11 +97,11 @@ export function LoginForm() {
               }}
             >
               <h2 className="font-heading text-[44px] font-extrabold tracking-tight leading-[1.1] mb-6">
-                Building Future Ecosystems
+                Construindo Ecossistemas do Futuro
               </h2>
               <p className="text-lg text-white/80 font-normal leading-relaxed mb-8 font-sans">
-                Access the world&apos;s most advanced spatial management
-                platform for enterprise innovators.
+                Acesse a plataforma de gestão mais avançada do mundo para
+                empresas inovadoras.
               </p>
 
               <div className="flex items-center gap-4 bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/20">
@@ -117,10 +110,10 @@ export function LoginForm() {
                 </div>
                 <div>
                   <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-white/70">
-                    Live Ecosystem Data
+                    Dados do Ecossistema ao Vivo
                   </p>
                   <p className="text-base font-bold font-sans">
-                    2.4k Active Node Connections
+                    2.4k Conexões Ativas
                   </p>
                 </div>
               </div>
@@ -135,24 +128,20 @@ export function LoginForm() {
         <div className="col-span-1 md:col-span-6 flex flex-col p-8 md:p-12 lg:p-16 bg-[#ffffff]/60 justify-between">
           {/* Brand Header */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#003d9b] rounded-xl flex items-center justify-center shadow-lg shadow-blue-900/10 text-white">
-              <Building2 className="h-5 w-5" />
-            </div>
-            <h1 className="font-heading text-2xl font-black tracking-tight text-[#003d9b] uppercase leading-none">
-              FZ Build{" "}
-              <span className="text-slate-500 font-bold block text-[10px] tracking-widest mt-0.5">
-                Solutions
-              </span>
-            </h1>
+            <img
+              src="/fzbuildsemfundo.png"
+              alt="FZ Build Solutions"
+              className="h-12 w-auto"
+            />
           </div>
 
           <div className="flex-grow flex flex-col justify-center my-8 md:my-0">
             <div className="mb-8">
               <h3 className="font-heading text-[28px] font-bold text-slate-900 mb-2 leading-tight">
-                Welcome Back
+                Bem-vindo(a) de volta
               </h3>
               <p className="text-slate-500 text-sm font-sans">
-                Enter your credentials to manage your ecosystem.
+                Insira suas credenciais para gerenciar seu ecossistema.
               </p>
             </div>
 
@@ -169,7 +158,7 @@ export function LoginForm() {
                   className="font-mono text-[10px] font-bold text-slate-500 uppercase tracking-wider"
                   htmlFor="email"
                 >
-                  Email Address
+                  Endereço de E-mail
                 </label>
                 <div className="relative group">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#003d9b] transition-colors">
@@ -197,13 +186,13 @@ export function LoginForm() {
                     className="font-mono text-[10px] font-bold text-slate-500 uppercase tracking-wider"
                     htmlFor="password"
                   >
-                    Password
+                    Senha
                   </label>
                   <Link
                     href="#"
                     className="text-xs font-bold text-[#003d9b] hover:underline underline-offset-4 decoration-2"
                   >
-                    Forgot Password?
+                    Esqueceu a Senha?
                   </Link>
                 </div>
                 <div className="relative group">
@@ -235,7 +224,7 @@ export function LoginForm() {
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <>
-                    Sign In
+                    Entrar
                     <ArrowRight className="h-4 w-4" />
                   </>
                 )}
@@ -249,7 +238,7 @@ export function LoginForm() {
               </div>
               <div className="relative flex justify-center">
                 <span className="bg-white/80 px-4 font-mono text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                  OR CONTINUE WITH
+                  OU CONTINUAR COM
                 </span>
               </div>
             </div>
@@ -299,12 +288,12 @@ export function LoginForm() {
           {/* Footer Text */}
           <div className="text-center mt-6">
             <p className="text-slate-400 text-xs font-sans">
-              Don&apos;t have an account?{" "}
+              Não tem uma conta?{" "}
               <Link
                 href="#"
                 className="text-[#003d9b] font-bold hover:underline underline-offset-4 decoration-2"
               >
-                Sign up for free
+                Cadastre-se grátis
               </Link>
             </p>
           </div>
@@ -316,19 +305,19 @@ export function LoginForm() {
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-[#006875] animate-pulse" />
           <span className="font-mono text-[9px] font-bold text-slate-500 uppercase tracking-wider">
-            Core Systems Active
+            Sistemas Principais Ativos
           </span>
         </div>
         <div className="w-px h-4 bg-slate-200" />
         <div className="flex items-center gap-2">
           <span className="font-mono text-[9px] font-bold text-slate-500 uppercase tracking-wider">
-            Latency: 12ms
+            Latência: 12ms
           </span>
         </div>
         <div className="w-px h-4 bg-slate-200" />
         <div className="flex items-center gap-2">
           <span className="font-mono text-[9px] font-bold text-slate-500 uppercase tracking-wider">
-            Ecosystem v4.2.0
+            Ecossistema v4.2.0
           </span>
         </div>
       </div>

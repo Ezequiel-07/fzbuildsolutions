@@ -6,12 +6,11 @@ export default function Home() {
       {/* TopNavBar */}
       <nav className="bg-[#f8f9fb]/80 backdrop-blur-xl docked full-width top-0 z-50 sticky border-b border-[#737685]/10 shadow-sm flex justify-between items-center px-5 md:px-20 py-4 w-full max-w-full">
         <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-[#003d9b] text-3xl">
-            token
-          </span>
-          <span className="font-heading text-xl md:text-2xl font-bold tracking-tighter text-[#003d9b]">
-            FZ Build Solutions
-          </span>
+          <img
+            src="/fzbuildsemfundo.png"
+            alt="FZ Build Solutions"
+            className="h-10 w-auto"
+          />
         </div>
 
         <div className="hidden md:flex items-center gap-8 font-semibold">
@@ -43,10 +42,10 @@ export default function Home() {
 
         <div className="flex items-center gap-4">
           <Link
-            href="mailto:contato@fzbuild.solutions"
+            href="/login"
             className="bg-[#003d9b] text-white font-mono text-xs font-semibold tracking-wider uppercase px-6 py-3 rounded-full hover:bg-[#0052cc] transition-all shadow-md active:scale-95 text-center"
           >
-            Solicitar Diagnóstico
+            Acessar Plataforma
           </Link>
         </div>
       </nav>
@@ -789,12 +788,11 @@ export default function Home() {
         <div className="flex flex-col md:flex-row justify-between items-start gap-12">
           <div className="flex flex-col gap-4 text-left">
             <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[#003d9b] text-3xl">
-                token
-              </span>
-              <span className="font-heading text-2xl font-black text-[#191c1e]">
-                FZ Build Solutions
-              </span>
+              <img
+                src="/fzbuildsemfundo.png"
+                alt="FZ Build Solutions"
+                className="h-10 w-auto"
+              />
             </div>
             <p className="text-sm max-w-xs font-sans">
               Building Future Ecosystems through Intelligent Software.
