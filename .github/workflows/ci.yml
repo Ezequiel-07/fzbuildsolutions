@@ -1,0 +1,40 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [22.x]
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 9
+        
+    - name: Install dependencies
+      run: pnpm install --legacy-peer-deps
+      
+    - name: Lint
+      run: pnpm lint
+      
+    - name: Type Check
+      run: pnpm tsc --noEmit
+      
+    - name: Build
+      run: pnpm build
