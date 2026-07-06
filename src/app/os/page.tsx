@@ -3,26 +3,17 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { signOut } from "firebase/auth";
-import { auth } from "@/lib/firebase";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Bell,
-  Settings,
-  LayoutGrid,
-  Users,
-  Brain,
-  Building2,
-  HelpCircle,
-  LogOut,
-  Send,
-  Plus,
-} from "lucide-react";
+import { Bell, Settings, Send, Plus } from "lucide-react";
+import { NewProjectModal } from "@/features/projects/components/new-project-modal";
+import { useProjects } from "@/features/projects/api/use-projects";
 
 export default function DashboardPage() {
   const router = useRouter();
   const [prompt, setPrompt] = useState("");
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
+  const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
+  const { data: projects = [], isLoading: isLoadingProjects } = useProjects();
 
   const handleCardClick = (path: string) => {
     setSelectedCard(path);
@@ -31,54 +22,51 @@ export default function DashboardPage() {
     }, 500); // Wait for animation to finish
   };
 
-  // Parallax / Hover tilt effect for all cards
+  // Parallax / Hover tilt effect for individual cards
   useEffect(() => {
+    const cards = document.querySelectorAll(".glass-card");
+
     const handleMouseMove = (e: MouseEvent) => {
-      const cards = document.querySelectorAll(".glass-card");
-      const mouseX = e.clientX / window.innerWidth - 0.5;
-      const mouseY = e.clientY / window.innerHeight - 0.5;
+      const card = e.currentTarget as HTMLElement;
+      const rect = card.getBoundingClientRect();
 
-      cards.forEach((card) => {
-        const htmlCard = card as HTMLElement;
-        const rect = htmlCard.getBoundingClientRect();
-        const cardX = (rect.left + rect.width / 2) / window.innerWidth - 0.5;
-        const cardY = (rect.top + rect.height / 2) / window.innerHeight - 0.5;
+      // Calculate mouse position relative to card center
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
 
-        const factor = 15;
-        const rotateX = (mouseY - cardY) * factor;
-        const rotateY = (mouseX - cardX) * -factor;
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
 
-        htmlCard.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-      });
+      // Max 10 degrees of rotation
+      const rotateX = ((y - centerY) / centerY) * -10;
+      const rotateY = ((x - centerX) / centerX) * 10;
+
+      card.style.transition = "transform 0.1s ease-out";
+      card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
     };
 
-    const handleMouseLeave = () => {
-      const cards = document.querySelectorAll(".glass-card");
-      cards.forEach((card) => {
-        const htmlCard = card as HTMLElement;
-        htmlCard.style.transform =
-          "perspective(1000px) rotateX(0deg) rotateY(0deg)";
-      });
+    const handleMouseLeave = (e: MouseEvent) => {
+      const card = e.currentTarget as HTMLElement;
+      card.style.transition = "transform 0.5s ease-out";
+      card.style.transform =
+        "perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)";
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseleave", handleMouseLeave);
+    cards.forEach((card) => {
+      card.addEventListener("mousemove", handleMouseMove as EventListener);
+      card.addEventListener("mouseleave", handleMouseLeave as EventListener);
+    });
 
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseleave", handleMouseLeave);
+      cards.forEach((card) => {
+        card.removeEventListener("mousemove", handleMouseMove as EventListener);
+        card.removeEventListener(
+          "mouseleave",
+          handleMouseLeave as EventListener,
+        );
+      });
     };
   }, []);
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      router.push("/login");
-      router.refresh();
-    } catch (err) {
-      console.error("Logout Error:", err);
-    }
-  };
 
   const handleSendPrompt = (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,19 +90,19 @@ export default function DashboardPage() {
               className="font-mono text-xs font-semibold uppercase tracking-wider text-[#003d9b] border-b-2 border-[#003d9b] py-1 transition-colors"
               href="#"
             >
-              Ecosystem
+              Ecossistema
             </Link>
             <Link
               className="font-mono text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-[#003d9b] py-1 transition-colors"
               href="#"
             >
-              Predictions
+              Previsões
             </Link>
             <Link
               className="font-mono text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-[#003d9b] py-1 transition-colors"
               href="#"
             >
-              Fleet
+              Frota
             </Link>
           </nav>
           <div className="ml-8 flex items-center gap-4 text-[#003d9b]">
@@ -123,56 +111,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </header>
-
-      {/* Side Navigation Bar (Anchored Right) */}
-      <aside className="fixed right-0 top-1/2 -translate-y-1/2 flex flex-col items-center py-8 gap-8 z-40 bg-[#f3f4f6]/80 backdrop-blur-2xl w-20 rounded-2xl shadow-2xl border border-white/20 perspective-1000 translate-x-[80%] opacity-20 hover:translate-x-0 hover:opacity-100 transition-all duration-500 justify-center">
-        <div className="flex flex-col items-center gap-6 w-full px-2 justify-center">
-          {/* Active: Dashboard */}
-          <Link
-            href="/os"
-            className="w-12 h-12 flex items-center justify-center bg-[#00e3fd]/20 text-[#00616d] rounded-xl scale-110 transition-all duration-300 hover:scale-110 shadow-sm border border-[#00e3fd]/40"
-          >
-            <LayoutGrid className="h-5 w-5" />
-          </Link>
-
-          <Link
-            href="/os/projects"
-            className="w-12 h-12 flex items-center justify-center text-slate-400 transition-all duration-300 hover:scale-110 hover:text-[#003d9b]"
-          >
-            <Users className="h-5 w-5" />
-          </Link>
-
-          <Link
-            href="/os/crm"
-            className="w-12 h-12 flex items-center justify-center text-slate-400 transition-all duration-300 hover:scale-110 hover:text-[#003d9b]"
-          >
-            <Brain className="h-5 w-5" />
-          </Link>
-
-          <Link
-            href="/os/finance"
-            className="w-12 h-12 flex items-center justify-center text-slate-400 transition-all duration-300 hover:scale-110 hover:text-[#003d9b]"
-          >
-            <Building2 className="h-5 w-5" />
-          </Link>
-
-          <div className="h-px w-8 bg-slate-300/40 my-2" />
-
-          <Link
-            href="/os/admin"
-            className="w-12 h-12 flex items-center justify-center text-slate-400 transition-all duration-300 hover:scale-110 hover:text-[#003d9b]"
-          >
-            <HelpCircle className="h-5 w-5" />
-          </Link>
-
-          <button
-            onClick={handleLogout}
-            className="w-12 h-12 flex items-center justify-center text-slate-400 transition-all duration-300 hover:scale-110 hover:text-red-600"
-          >
-            <LogOut className="h-5 w-5" />
-          </button>
-        </div>
-      </aside>
 
       {/* Main Spatial Canvas */}
       <main className="relative min-h-screen pt-32 pb-28 px-8 flex items-center justify-center overflow-hidden">
@@ -196,40 +134,41 @@ export default function DashboardPage() {
             >
               <div className="flex justify-between items-center mb-6">
                 <h3 className="font-mono text-xs font-bold tracking-widest text-[#003d9b]">
-                  PROJECTS
+                  PROJETOS
                 </h3>
                 <div className="w-2 h-2 rounded-full bg-[#006875] animate-pulse" />
               </div>
               <div className="space-y-4">
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs font-bold mb-1 text-slate-700">
-                    <span>Core Engine</span>
-                    <span className="text-slate-400">42 - 312</span>
+                {isLoadingProjects ? (
+                  <div className="text-xs text-slate-400">
+                    Carregando projetos...
                   </div>
-                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-[#003d9b] w-[75%] rounded-full" />
+                ) : projects.length === 0 ? (
+                  <div className="text-xs text-slate-400">
+                    Nenhum projeto encontrado.
                   </div>
-                </div>
-
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs font-bold mb-1 text-slate-700">
-                    <span>Spatial UI</span>
-                    <span className="text-slate-400">68 - 42</span>
-                  </div>
-                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-[#00e3fd] w-[45%] rounded-full" />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs font-bold mb-1 text-slate-700">
-                    <span>AI Dataset</span>
-                    <span className="text-slate-400">15 - 13</span>
-                  </div>
-                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-[#003d9b] w-[90%] rounded-full" />
-                  </div>
-                </div>
+                ) : (
+                  projects.slice(0, 3).map((project) => (
+                    <div key={project.id} className="space-y-1">
+                      <div className="flex justify-between text-xs font-bold mb-1 text-slate-700">
+                        <span>{project.name}</span>
+                        <span className="text-slate-400">
+                          Status: {project.status}
+                        </span>
+                      </div>
+                      <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${
+                            project.status === "completed"
+                              ? "bg-green-500"
+                              : "bg-[#003d9b]"
+                          }`}
+                          style={{ width: `${project.progress || 0}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </motion.div>
 
@@ -243,7 +182,7 @@ export default function DashboardPage() {
               }}
             >
               <h3 className="font-mono text-xs font-bold tracking-widest text-[#003d9b] mb-6">
-                TEAM ACTIVITY
+                ATIVIDADE DA EQUIPE
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-3">
@@ -254,7 +193,7 @@ export default function DashboardPage() {
                   />
                   <div className="flex flex-col">
                     <span className="text-xs font-bold text-slate-800">
-                      Active
+                      Ativo
                     </span>
                     <span className="text-[10px] text-slate-400">Status</span>
                   </div>
@@ -268,7 +207,7 @@ export default function DashboardPage() {
                   />
                   <div className="flex flex-col">
                     <span className="text-xs font-bold text-slate-800">
-                      Idle
+                      Ausente
                     </span>
                     <span className="text-[10px] text-slate-400">Status</span>
                   </div>
@@ -282,7 +221,7 @@ export default function DashboardPage() {
                   />
                   <div className="flex flex-col">
                     <span className="text-xs font-bold text-slate-800">
-                      Busy
+                      Ocupado
                     </span>
                     <span className="text-[10px] text-slate-400">Status</span>
                   </div>
@@ -314,7 +253,7 @@ export default function DashboardPage() {
               }}
             >
               <h3 className="font-mono text-xs font-bold tracking-widest text-[#003d9b] mb-2">
-                WORKFLOW VISUALIZATION
+                VISUALIZAÇÃO DE FLUXOS
               </h3>
               <div className="flex-grow flex items-end">
                 <div className="w-full h-full relative overflow-hidden" />
@@ -339,11 +278,15 @@ export default function DashboardPage() {
               }}
             >
               <div className="mb-6 flex flex-col items-center select-none">
-                <div className="w-16 h-16 bg-[#003d9b] rounded-2xl flex items-center justify-center text-white font-extrabold text-3xl mb-4 shadow-lg shadow-blue-900/25">
-                  FZ
+                <div className="mb-4">
+                  <img
+                    src="/fzbuildsemfundo.png"
+                    alt="FZ Logo"
+                    className="h-16 w-auto drop-shadow-md"
+                  />
                 </div>
                 <h2 className="font-heading text-[28px] font-extrabold tracking-tight leading-tight text-slate-800 uppercase">
-                  AI COMMAND CENTER
+                  CENTRAL DE COMANDO IA
                 </h2>
               </div>
 
@@ -354,7 +297,7 @@ export default function DashboardPage() {
                     type="text"
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
-                    placeholder="Describe project workflow for deployment..."
+                    placeholder="Descreva o fluxo do projeto para implantação..."
                     className="w-full bg-[#f3f4f6]/80 border border-slate-200 px-6 py-4 rounded-full text-sm font-sans focus:ring-2 focus:ring-[#00e3fd]/50 focus:border-[#00e3fd] outline-none transition-all pr-12 shadow-inner text-slate-800 placeholder-slate-400"
                   />
                   <button
@@ -370,18 +313,18 @@ export default function DashboardPage() {
               <div className="grid grid-cols-2 gap-8 w-full select-none">
                 <div className="flex flex-col items-center">
                   <div className="w-full h-24 mb-2 bg-[#f8f9fb] rounded-xl border border-slate-100 flex items-center justify-center text-slate-300 font-mono text-xs">
-                    Insights Graph
+                    Gráfico de Insights
                   </div>
                   <span className="font-mono text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    AI INSIGHTS
+                    INSIGHTS DE IA
                   </span>
                 </div>
                 <div className="flex flex-col items-center">
                   <div className="w-full h-24 mb-2 bg-[#f8f9fb] rounded-xl border border-slate-100 flex items-center justify-center text-slate-300 font-mono text-xs">
-                    Predict Map
+                    Mapa de Previsão
                   </div>
                   <span className="font-mono text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    PREDICTIONS
+                    PREVISÕES
                   </span>
                 </div>
               </div>
@@ -400,7 +343,7 @@ export default function DashboardPage() {
               }}
             >
               <h3 className="font-mono text-xs font-bold tracking-widest text-[#003d9b] mb-4">
-                WORKFLOW VISUALIZATION
+                VISUALIZAÇÃO DE FLUXOS
               </h3>
               <div className="w-full h-full flex items-center justify-center select-none">
                 <div
@@ -423,7 +366,7 @@ export default function DashboardPage() {
               }}
             >
               <h3 className="font-mono text-xs font-bold tracking-widest text-[#003d9b] mb-4">
-                INFRASTRUCTURE MAP
+                MAPA DE INFRAESTRUTURA
               </h3>
               <div className="w-full h-full relative select-none">
                 {/* Wireframe Mesh Background */}
@@ -443,11 +386,11 @@ export default function DashboardPage() {
       {/* Bottom Action Anchor (FAB) */}
       <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex gap-4">
         <button
-          onClick={() => alert("Abrindo modal de novo workflow espacial...")}
+          onClick={() => setIsNewProjectModalOpen(true)}
           className="bg-[#003d9b] hover:bg-[#003280] text-white px-8 py-4 rounded-full font-bold shadow-xl shadow-blue-900/25 flex items-center gap-2 hover:scale-105 active:scale-95 transition-all text-sm font-sans"
         >
           <Plus className="h-5 w-5" />
-          <span>New Spatial Workflow</span>
+          <span>Novo Projeto</span>
         </button>
       </div>
 
@@ -467,6 +410,10 @@ export default function DashboardPage() {
           />
         )}
       </AnimatePresence>
+      <NewProjectModal
+        isOpen={isNewProjectModalOpen}
+        onClose={() => setIsNewProjectModalOpen(false)}
+      />
     </div>
   );
 }

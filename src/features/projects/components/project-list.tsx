@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import {
   useProjects,
   useDeleteProject,
 } from "@/features/projects/api/use-projects";
+import { NewProjectModal } from "./new-project-modal";
 import {
   Table,
   TableBody,
@@ -20,6 +22,7 @@ import { format } from "date-fns";
 export function ProjectList() {
   const { data: projects, isLoading, error } = useProjects();
   const deleteProject = useDeleteProject();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -37,7 +40,7 @@ export function ProjectList() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold tracking-tight">Projetos</h2>
-        <Button>
+        <Button onClick={() => setIsModalOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Novo Projeto
         </Button>
@@ -48,17 +51,16 @@ export function ProjectList() {
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
-              <TableHead>Cliente</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Budget</TableHead>
-              <TableHead>Data de Início</TableHead>
+              <TableHead>Progresso</TableHead>
+              <TableHead>Data de Criação</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {projects?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center">
+                <TableCell colSpan={5} className="text-center">
                   Nenhum projeto encontrado.
                 </TableCell>
               </TableRow>
@@ -66,25 +68,26 @@ export function ProjectList() {
               projects?.map((project) => (
                 <TableRow key={project.id}>
                   <TableCell className="font-medium">{project.name}</TableCell>
-                  <TableCell>{project.client?.name || "-"}</TableCell>
                   <TableCell>
                     <Badge
                       variant={
-                        project.status === "COMPLETED" ? "default" : "secondary"
+                        project.status === "completed" ? "default" : "secondary"
                       }
                     >
-                      {project.status}
+                      {project.status === "completed"
+                        ? "Concluído"
+                        : project.status === "idle"
+                          ? "Ausente"
+                          : "Ativo"}
                     </Badge>
                   </TableCell>
+                  <TableCell>{project.progress || 0}%</TableCell>
                   <TableCell>
-                    {new Intl.NumberFormat("en-US", {
-                      style: "currency",
-                      currency: "USD",
-                    }).format(project.budget)}
-                  </TableCell>
-                  <TableCell>
-                    {project.startDate
-                      ? format(new Date(project.startDate), "MMM d, yyyy")
+                    {project.createdAt?.seconds
+                      ? format(
+                          new Date(project.createdAt.seconds * 1000),
+                          "MMM d, yyyy",
+                        )
                       : "-"}
                   </TableCell>
                   <TableCell className="text-right space-x-2">
@@ -107,6 +110,10 @@ export function ProjectList() {
           </TableBody>
         </Table>
       </div>
+      <NewProjectModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   );
 }

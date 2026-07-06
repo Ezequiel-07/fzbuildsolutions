@@ -225,7 +225,7 @@ export default function Home() {
 
             <div className="relative h-[500px] flex items-center justify-center">
               {/* Abstract Cutoff Form style */}
-              <div className="absolute right-0 w-full md:w-[120%] h-[400px] bg-[#003d9b] rounded-l-3xl shadow-2xl p-12 overflow-hidden flex flex-col justify-center">
+              <div className="absolute right-[-2rem] md:-right-20 w-[110%] md:w-[120%] h-[400px] bg-[#003d9b] rounded-l-3xl shadow-2xl p-12 pr-16 overflow-hidden flex flex-col justify-center">
                 <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-br from-white/10 to-transparent"></div>
                 <h4 className="text-white font-heading text-2xl font-bold mb-6 relative z-10">
                   Nosso Processo

@@ -1,12 +1,33 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Header } from "@/features/layout/components/header";
 import Link from "next/link";
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import {
+  LayoutGrid,
+  Users,
+  Brain,
+  Building2,
+  HelpCircle,
+  LogOut,
+} from "lucide-react";
 
 export default function OSLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const isMainDashboard = pathname === "/os";
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.push("/login");
+      router.refresh();
+    } catch (err) {
+      console.error("Logout Error:", err);
+    }
+  };
 
   return (
     <div className="relative flex min-h-screen flex-col">
@@ -20,57 +41,81 @@ export default function OSLayout({ children }: { children: React.ReactNode }) {
         <source src="/videodashboardfundo.mp4" type="video/mp4" />
       </video>
 
+      {/* Floating Right Sidebar for all internal pages */}
+      <aside className="fixed right-0 top-1/2 -translate-y-1/2 flex flex-col items-center py-8 gap-8 z-40 bg-[#f3f4f6]/80 backdrop-blur-2xl w-20 rounded-2xl shadow-2xl border border-white/20 perspective-1000 translate-x-[80%] opacity-20 hover:translate-x-0 hover:opacity-100 transition-all duration-500 justify-center">
+        <div className="flex flex-col items-center gap-6 w-full px-2 justify-center">
+          <Link
+            href="/os"
+            className={`w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-sm border ${
+              pathname === "/os"
+                ? "bg-[#00e3fd]/20 text-[#00616d] border-[#00e3fd]/40 scale-110"
+                : "text-slate-400 hover:scale-110 hover:text-[#003d9b] border-transparent"
+            }`}
+          >
+            <LayoutGrid className="h-5 w-5" />
+          </Link>
+
+          <Link
+            href="/os/projects"
+            className={`w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-sm border ${
+              pathname.includes("/os/projects")
+                ? "bg-[#00e3fd]/20 text-[#00616d] border-[#00e3fd]/40 scale-110"
+                : "text-slate-400 hover:scale-110 hover:text-[#003d9b] border-transparent"
+            }`}
+          >
+            <Users className="h-5 w-5" />
+          </Link>
+
+          <Link
+            href="/os/crm"
+            className={`w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-sm border ${
+              pathname.includes("/os/crm")
+                ? "bg-[#00e3fd]/20 text-[#00616d] border-[#00e3fd]/40 scale-110"
+                : "text-slate-400 hover:scale-110 hover:text-[#003d9b] border-transparent"
+            }`}
+          >
+            <Brain className="h-5 w-5" />
+          </Link>
+
+          <Link
+            href="/os/finance"
+            className={`w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-sm border ${
+              pathname.includes("/os/finance")
+                ? "bg-[#00e3fd]/20 text-[#00616d] border-[#00e3fd]/40 scale-110"
+                : "text-slate-400 hover:scale-110 hover:text-[#003d9b] border-transparent"
+            }`}
+          >
+            <Building2 className="h-5 w-5" />
+          </Link>
+
+          <div className="h-px w-8 bg-slate-300/40 my-2" />
+
+          <Link
+            href="/os/admin"
+            className={`w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-sm border ${
+              pathname.includes("/os/admin")
+                ? "bg-[#00e3fd]/20 text-[#00616d] border-[#00e3fd]/40 scale-110"
+                : "text-slate-400 hover:scale-110 hover:text-[#003d9b] border-transparent"
+            }`}
+          >
+            <HelpCircle className="h-5 w-5" />
+          </Link>
+
+          <button
+            onClick={handleLogout}
+            className="w-12 h-12 flex items-center justify-center text-slate-400 transition-all duration-300 hover:scale-110 hover:text-red-600 rounded-xl border border-transparent"
+          >
+            <LogOut className="h-5 w-5" />
+          </button>
+        </div>
+      </aside>
+
       {isMainDashboard ? (
         <div className="flex-1">{children}</div>
       ) : (
         <>
           <Header />
-          <div className="flex-1 items-start md:grid md:grid-cols-[220px_minmax(0,1fr)] lg:grid-cols-[240px_minmax(0,1fr)]">
-            <aside className="fixed top-14 z-30 -ml-2 hidden h-[calc(100vh-3.5rem)] w-full shrink-0 md:sticky md:block border-r bg-background/40 backdrop-blur-md">
-              <div className="py-6 px-4">
-                <div className="mb-4 px-4">
-                  <img
-                    src="/fzbuildsemfundo.png"
-                    alt="FZ OS"
-                    className="h-8 w-auto"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <nav className="flex flex-col gap-1 px-2">
-                    <Link
-                      className="group flex w-full items-center rounded-md border border-transparent px-2 py-1 text-muted-foreground hover:bg-muted/80 hover:text-foreground"
-                      href="/os"
-                    >
-                      Dashboard
-                    </Link>
-                    <Link
-                      className="group flex w-full items-center rounded-md border border-transparent px-2 py-1 text-muted-foreground hover:bg-muted/80 hover:text-foreground"
-                      href="/os/projects"
-                    >
-                      Projetos
-                    </Link>
-                    <Link
-                      className="group flex w-full items-center rounded-md border border-transparent px-2 py-1 text-muted-foreground hover:bg-muted/80 hover:text-foreground"
-                      href="/os/crm"
-                    >
-                      CRM
-                    </Link>
-                    <Link
-                      className="group flex w-full items-center rounded-md border border-transparent px-2 py-1 text-muted-foreground hover:bg-muted/80 hover:text-foreground"
-                      href="/os/finance"
-                    >
-                      Financeiro
-                    </Link>
-                    <Link
-                      className="group flex w-full items-center rounded-md border border-transparent px-2 py-1 text-muted-foreground hover:bg-muted/80 hover:text-foreground"
-                      href="/os/admin"
-                    >
-                      Configurações
-                    </Link>
-                  </nav>
-                </div>
-              </div>
-            </aside>
+          <div className="flex-1 items-start flex">
             <main className="flex w-full flex-col overflow-hidden p-4 md:p-8">
               {children}
             </main>
