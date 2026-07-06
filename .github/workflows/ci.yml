@@ -28,7 +28,7 @@ jobs:
         version: 9
         
     - name: Install dependencies
-      run: pnpm install --legacy-peer-deps
+      run: pnpm install --no-strict-peer-dependencies
       
     - name: Lint
       run: pnpm lint
