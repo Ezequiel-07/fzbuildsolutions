@@ -65,7 +65,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${hankenGrotesk.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${hankenGrotesk.variable} antialiased overflow-x-hidden`}
       >
         <AppProviders>
           {children}

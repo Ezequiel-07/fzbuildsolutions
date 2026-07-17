@@ -79,9 +79,9 @@ function NavBar() {
           <Image
             src="/fzbuildsemfundo.png"
             alt="FZ Build Solutions"
-            width={56}
-            height={56}
-            className="h-10 md:h-14 w-auto fz-logo-img transition-opacity group-hover:opacity-70"
+            width={96}
+            height={96}
+            className="h-14 md:h-20 w-auto fz-logo-img transition-opacity group-hover:opacity-70"
           />
         </Link>
 
@@ -227,12 +227,12 @@ function HeroSection() {
       <div className="absolute inset-0 fz-bg-pattern opacity-40 pointer-events-none" />
 
       {/* Background large watermark logo in the center */}
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[65%] max-w-[800px] opacity-10 pointer-events-none z-0 flex items-center justify-center select-none">
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[45%] max-w-[600px] opacity-10 pointer-events-none z-0 flex items-center justify-center select-none">
         <Image
           src="/fzbuildsemfundo.png"
           alt=""
-          width={800}
-          height={800}
+          width={600}
+          height={600}
           className={`w-full h-auto object-contain ${isDark ? "brightness-0 invert" : ""}`}
         />
       </div>
@@ -261,7 +261,7 @@ function HeroSection() {
                 duration: 0.7,
                 ease: [0.22, 1, 0.36, 1],
               }}
-              className="font-heading font-extrabold text-5xl md:text-7xl leading-[1.05] tracking-tight fz-hero-h1"
+              className="font-heading font-extrabold text-[40px] sm:text-5xl md:text-7xl leading-[1.05] tracking-tight fz-hero-h1 break-words"
             >
               Transformamos
               <br />
@@ -545,7 +545,7 @@ const TEAM = [
   },
   {
     name: "Felipe Honorato",
-    role: "Marketing • Comercial • Branding",
+    role: "CEO • Marketing • Comercial • Branding",
     initials: "FH",
     gradient: "from-[#8b5cf6] to-[#ec4899]",
     responsibilities: ["Marketing", "Vendas", "Posicionamento", "Marca"],

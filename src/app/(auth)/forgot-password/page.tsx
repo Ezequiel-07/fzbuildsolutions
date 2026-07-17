@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { auth } from "@/lib/firebase";
+import { GalaxyParticles } from "@/components/ui/galaxy-particles";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -32,11 +33,15 @@ export default function ForgotPasswordPage() {
         "E-mail de redefinição de senha enviado! Verifique sua caixa de entrada.",
       );
       router.push("/login");
-    } catch (error: any) {
-      // eslint-disable-line @typescript-eslint/no-explicit-any
+    } catch (error: unknown) {
       console.error("Password Reset Error:", error);
       let errorMessage = "Ocorreu um erro ao enviar o e-mail de redefinição.";
-      if (error.code === "auth/user-not-found") {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        (error as { code: string }).code === "auth/user-not-found"
+      ) {
         errorMessage = "Nenhum usuário encontrado com este e-mail.";
       }
       toast.error(errorMessage);
@@ -46,11 +51,12 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <main className="min-h-screen w-full flex items-center justify-center relative p-4 md:p-8 font-sans bg-[#f8f9fb] overflow-hidden select-none">
+    <main className="min-h-screen w-full flex items-center justify-center relative p-4 md:p-8 font-sans bg-[#0B1021] overflow-hidden select-none">
       {/* Abstract Background Elements */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[10%] -left-[5%] w-[40%] h-[60%] rounded-full bg-cyan-200/20 blur-[120px]" />
-        <div className="absolute top-[40%] -right-[10%] w-[50%] h-[70%] rounded-full bg-blue-200/30 blur-[140px]" />
+        <GalaxyParticles />
+        <div className="absolute -top-[10%] -left-[5%] w-[40%] h-[60%] rounded-full bg-cyan-600/20 blur-[120px]" />
+        <div className="absolute top-[40%] -right-[10%] w-[50%] h-[70%] rounded-full bg-blue-700/20 blur-[140px]" />
       </div>
 
       {/* Forgot Password Card */}

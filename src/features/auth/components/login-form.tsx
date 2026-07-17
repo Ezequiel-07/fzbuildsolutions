@@ -10,6 +10,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
+import { GalaxyParticles } from "@/components/ui/galaxy-particles";
 
 const loginSchema = z.object({
   email: z.string().email("Endereço de e-mail inválido"),
@@ -56,11 +57,12 @@ export function LoginForm() {
   };
 
   return (
-    <main className="min-h-screen w-full flex items-center justify-center relative p-4 md:p-8 font-sans bg-[#f8f9fb] overflow-hidden select-none">
+    <main className="min-h-screen w-full flex items-center justify-center relative p-4 md:p-8 font-sans bg-[#0B1021] overflow-hidden select-none">
       {/* Abstract Background Elements */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[10%] -left-[5%] w-[40%] h-[60%] rounded-full bg-cyan-200/20 blur-[120px]" />
-        <div className="absolute top-[40%] -right-[10%] w-[50%] h-[70%] rounded-full bg-blue-200/30 blur-[140px]" />
+        <GalaxyParticles />
+        <div className="absolute -top-[10%] -left-[5%] w-[40%] h-[60%] rounded-full bg-cyan-600/20 blur-[120px]" />
+        <div className="absolute top-[40%] -right-[10%] w-[50%] h-[70%] rounded-full bg-blue-700/20 blur-[140px]" />
         <div
           className="absolute inset-0 opacity-[0.03] mix-blend-overlay bg-repeat bg-center bg-cover pointer-events-none"
           style={{
@@ -99,19 +101,19 @@ export function LoginForm() {
 
         {/* Login Form Panel */}
         <div className="col-span-1 md:col-span-6 flex flex-col p-8 md:p-12 lg:p-16 bg-[#ffffff]/60 justify-between">
-          {/* Brand Header */}
-          <div className="flex items-center gap-3">
-            <Image
-              src="/fzbuildsemfundo.png"
-              alt="FZ Build Solutions"
-              width={48}
-              height={48}
-              className="h-12 w-auto"
-            />
-          </div>
-
           <div className="flex-grow flex flex-col justify-center my-8 md:my-0">
-            <div className="mb-8">
+            {/* Brand Header */}
+            <div className="flex justify-center md:justify-start items-center mb-6">
+              <Image
+                src="/fzbuildsemfundo.png"
+                alt="FZ Build Solutions"
+                width={80}
+                height={80}
+                className="h-20 w-auto"
+              />
+            </div>
+
+            <div className="mb-8 text-center md:text-left">
               <h3 className="font-heading text-[28px] font-bold text-slate-900 mb-2 leading-tight">
                 Bem-vindo(a) de volta
               </h3>
