@@ -1,0 +1,27 @@
+{
+  "name": "FZ Build Solutions",
+  "short_name": "FZ Build",
+  "description": "Plataforma inteligente de gestão físico-financeira para construtoras e incorporadoras",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8f9fb",
+  "theme_color": "#003d9b",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/fzbuild.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/fzbuildvertical.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "lang": "pt-BR",
+  "dir": "ltr"
+}
