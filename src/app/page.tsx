@@ -763,7 +763,7 @@ function SolutionsSection() {
 const PRODUCTS = [
   {
     name: "DP Core",
-    badge: "Em Produção",
+    badge: "Em Desenvolvimento",
     icon: "science",
     desc: "Gestão de laboratórios clínicos com IA para apoio operacional e auditoria de processos.",
     features: [
@@ -817,12 +817,12 @@ const PRODUCTS = [
     name: "CIA",
     badge: "Central de IA",
     icon: "support_agent",
-    desc: "Central Inteligente de Atendimento automática integrada com agentes autônomos de voz e chat.",
+    desc: "Estrutura avançada baseada em RAG e MCP para criação e orquestração de agentes autônomos e funcionários digitais.",
     features: [
-      "Ura inteligente",
-      "Atendimento via WhatsApp",
-      "IA Generativa",
-      "RAG integrado",
+      "Funcionários digitais",
+      "Integração MCP",
+      "Agentes autônomos",
+      "RAG avançado",
     ],
     featured: false,
   },
