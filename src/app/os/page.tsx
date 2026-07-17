@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -156,9 +157,11 @@ export default function DashboardPage() {
       {/* Top Navigation Anchor */}
       <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-center px-4 md:px-[80px] h-20">
         <div className="bg-[#f8f9fb]/80 backdrop-blur-xl border border-slate-200/50 rounded-full px-6 md:px-8 py-2.5 flex items-center shadow-sm gap-2 max-w-full overflow-x-auto">
-          <img
+          <Image
             src="/fzbuildsemfundo.png"
             alt="FZ Console"
+            width={32}
+            height={32}
             className="h-8 w-auto mr-2 md:mr-6 shrink-0"
           />
           <nav className="hidden md:flex gap-6 items-center">
@@ -287,9 +290,11 @@ export default function DashboardPage() {
                 ) : (
                   teamMembers.slice(0, 4).map((member) => (
                     <div key={member.id} className="flex items-center gap-3">
-                      <img
+                      <Image
                         src={member.avatarUrl}
                         alt={member.name}
+                        width={40}
+                        height={40}
                         className="w-10 h-10 rounded-full border-2 border-white shadow-sm"
                       />
                       <div className="flex flex-col">
@@ -329,9 +334,11 @@ export default function DashboardPage() {
             >
               <div className="mb-4 sm:mb-6 flex flex-col items-center select-none">
                 <div className="mb-2 sm:mb-4">
-                  <img
+                  <Image
                     src="/fzbuildsemfundo.png"
                     alt="FZ Logo"
+                    width={112}
+                    height={112}
                     className="h-16 sm:h-28 w-auto drop-shadow-md"
                   />
                 </div>

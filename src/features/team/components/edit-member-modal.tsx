@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Loader2, Trash2, Calendar, Upload } from "lucide-react";
@@ -145,9 +146,11 @@ export function EditMemberModal({
             <div className="flex justify-between items-start mb-6">
               <div className="flex items-center gap-4">
                 <div className="relative group">
-                  <img
+                  <Image
                     src={avatarUrl || member.avatarUrl}
-                    alt={name}
+                    alt={name || "Avatar do membro"}
+                    width={64}
+                    height={64}
                     className="w-16 h-16 rounded-full border border-slate-200 object-cover"
                   />
                   <label className="absolute inset-0 bg-black/50 text-white rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">

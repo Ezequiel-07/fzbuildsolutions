@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -148,9 +149,11 @@ export function LoginForm() {
         <div className="col-span-1 md:col-span-6 flex flex-col p-8 md:p-12 lg:p-16 bg-[#ffffff]/60 justify-between">
           {/* Brand Header */}
           <div className="flex items-center gap-3">
-            <img
+            <Image
               src="/fzbuildsemfundo.png"
               alt="FZ Build Solutions"
+              width={48}
+              height={48}
               className="h-12 w-auto"
             />
           </div>

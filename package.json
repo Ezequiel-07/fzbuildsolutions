@@ -4,10 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "node -e \"const fs=require('fs'); fs.rmSync('.next', { recursive: true, force: true });\" && next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "node -e \"const fs=require('fs'); fs.rmSync('.next', { recursive: true, force: true });\" && tsc --noEmit",
     "seed": "prisma db seed",
     "prepare": "husky"
   },

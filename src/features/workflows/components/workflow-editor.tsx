@@ -230,9 +230,8 @@ function Editor() {
       if (newNode) {
         setNodes((nds) => nds.concat(newNode!));
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
-    [onNodeDataChange],
+    [onNodeDataChange, setNodes],
   );
 
   const onDrop = useCallback(

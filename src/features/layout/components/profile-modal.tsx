@@ -1,11 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Loader2, User, Image, Mail } from "lucide-react";
+import { X, Loader2, User, Image as ImageIcon, Mail } from "lucide-react";
 import { auth } from "@/lib/firebase";
 import { updateProfile } from "firebase/auth";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -95,12 +95,22 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
             {/* Avatar Preview */}
             <div className="flex flex-col items-center mb-6">
-              <Avatar className="h-20 w-20 border-2 border-[#003d9b]/10 shadow-md mb-2">
-                <AvatarImage src={photoURL} alt={displayName} />
-                <AvatarFallback className="text-xl font-bold bg-[#003d9b]/10 text-[#003d9b]">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative h-20 w-20 border-2 border-[#003d9b]/10 shadow-md mb-2 overflow-hidden rounded-full bg-[#003d9b]/10">
+                {photoURL ? (
+                  <Image
+                    src={photoURL}
+                    alt={displayName || "Avatar do usuário"}
+                    width={80}
+                    height={80}
+                    unoptimized
+                    className="size-full object-cover"
+                  />
+                ) : (
+                  <div className="flex size-full items-center justify-center text-xl font-bold text-[#003d9b]">
+                    {initials}
+                  </div>
+                )}
+              </div>
               <span className="text-[10px] font-mono text-slate-400 font-bold uppercase tracking-wider">
                 Pré-visualização do Avatar
               </span>
@@ -158,7 +168,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                 </label>
                 <div className="relative">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
-                    <Image className="h-4 w-4" />
+                    <ImageIcon className="h-4 w-4" />
                   </span>
                   <input
                     type="url"

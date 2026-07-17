@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Plus, Star, Calendar, Search } from "lucide-react";
@@ -85,9 +86,11 @@ export default function TeamPage() {
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex items-center gap-4">
                         <div className="relative">
-                          <img
+                          <Image
                             src={member.avatarUrl}
                             alt={member.name}
+                            width={48}
+                            height={48}
                             className="w-12 h-12 rounded-full border-2 border-white shadow-sm"
                           />
                           <div

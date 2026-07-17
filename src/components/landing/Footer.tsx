@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 
 const NAV_LINKS = [
@@ -35,9 +36,11 @@ export function Footer() {
         <div className="flex flex-col md:flex-row justify-between gap-12 mb-12">
           {/* Brand */}
           <div className="flex flex-col gap-4 max-w-xs">
-            <img
+            <Image
               src="/fzbuildsemfundo.png"
               alt="FZ Build Solutions"
+              width={36}
+              height={36}
               className="h-9 w-auto brightness-0 invert opacity-80"
             />
             <p className="text-white/35 text-sm leading-relaxed">

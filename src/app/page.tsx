@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -61,11 +62,12 @@ function NavBar() {
           }}
           className="flex items-center gap-2 group z-50"
         >
-          <img
+          <Image
             src="/fzbuildsemfundo.png"
             alt="FZ Build Solutions"
+            width={56}
+            height={56}
             className="h-10 md:h-14 w-auto fz-logo-img transition-opacity group-hover:opacity-70"
-            style={{ height: "40px" }}
           />
         </Link>
 
@@ -212,9 +214,11 @@ function HeroSection() {
 
       {/* Background large watermark logo in the center */}
       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[65%] max-w-[800px] opacity-10 pointer-events-none z-0 flex items-center justify-center select-none">
-        <img
+        <Image
           src="/fzbuildsemfundo.png"
           alt=""
+          width={800}
+          height={800}
           className={`w-full h-auto object-contain ${isDark ? "brightness-0 invert" : ""}`}
         />
       </div>
@@ -1249,11 +1253,12 @@ function CTASection() {
           className="w-full flex flex-col sm:flex-row justify-between items-center border-t border-white/5 pt-4 mt-2 fz-body text-[10px] opacity-40 gap-2"
         >
           <span className="flex items-center gap-2">
-            <img
+            <Image
               src="/fzbuildsemfundo.png"
               alt=""
+              width={20}
+              height={20}
               className="h-5 w-auto fz-logo-img"
-              style={{ height: "20px" }}
             />
             <span>
               © 2026 FZ Build Solutions LTDA. Todos os direitos reservados.
