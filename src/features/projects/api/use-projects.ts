@@ -15,7 +15,7 @@ import {
   orderBy,
 } from "firebase/firestore";
 
-interface Project {
+export interface Project {
   id: string;
   name: string;
   description?: string;

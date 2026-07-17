@@ -41,8 +41,8 @@ export default function OSLayout({ children }: { children: React.ReactNode }) {
         <source src="/videodashboardfundo.mp4" type="video/mp4" />
       </video>
 
-      {/* Floating Right Sidebar for all internal pages */}
-      <aside className="fixed right-0 top-1/2 -translate-y-1/2 flex flex-col items-center py-8 gap-8 z-40 bg-[#f3f4f6]/80 backdrop-blur-2xl w-20 rounded-2xl shadow-2xl border border-white/20 perspective-1000 translate-x-[80%] opacity-20 hover:translate-x-0 hover:opacity-100 transition-all duration-500 justify-center">
+      {/* Floating Left Sidebar for all internal pages */}
+      <aside className="fixed left-0 top-1/2 -translate-y-1/2 flex flex-col items-center py-8 gap-8 z-40 bg-[#f3f4f6]/80 backdrop-blur-2xl w-20 rounded-r-2xl shadow-2xl border border-white/20 perspective-1000 -translate-x-[80%] opacity-20 hover:translate-x-0 hover:opacity-100 transition-all duration-500 justify-center">
         <div className="flex flex-col items-center gap-6 w-full px-2 justify-center">
           <Link
             href="/os"

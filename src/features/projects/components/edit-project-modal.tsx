@@ -1,40 +1,55 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Loader2 } from "lucide-react";
-import { useCreateProject } from "../api/use-projects";
+import { useUpdateProject, Project } from "../api/use-projects";
 
-interface NewProjectModalProps {
+interface EditProjectModalProps {
   isOpen: boolean;
   onClose: () => void;
+  project: Project | null;
 }
 
-export function NewProjectModal({ isOpen, onClose }: NewProjectModalProps) {
+export function EditProjectModal({
+  isOpen,
+  onClose,
+  project,
+}: EditProjectModalProps) {
   const [name, setName] = useState("");
   const [status, setStatus] = useState("active");
-  const createProject = useCreateProject();
+  const [progress, setProgress] = useState(0);
+  const updateProject = useUpdateProject();
+
+  useEffect(() => {
+    if (project) {
+      setName(project.name);
+      setStatus(project.status || "active");
+      setProgress(project.progress || 0);
+    }
+  }, [project]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || !project) return;
 
     try {
-      await createProject.mutateAsync({
-        name,
-        status,
-        progress: 0,
+      await updateProject.mutateAsync({
+        id: project.id,
+        data: {
+          name,
+          status,
+          progress,
+        },
       });
-      setName("");
-      setStatus("active");
       onClose();
     } catch (error) {
-      console.error("Erro ao criar projeto:", error);
-      alert("Erro ao criar projeto. Tente novamente.");
+      console.error("Erro ao atualizar projeto:", error);
+      alert("Erro ao atualizar projeto. Tente novamente.");
     }
   };
 
   return (
     <AnimatePresence>
-      {isOpen && (
+      {isOpen && project && (
         <>
           <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 pointer-events-auto">
             <motion.div
@@ -52,7 +67,7 @@ export function NewProjectModal({ isOpen, onClose }: NewProjectModalProps) {
             >
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-heading font-bold text-slate-800">
-                  Novo Projeto
+                  Editar Projeto
                 </h2>
                 <button
                   onClick={onClose}
@@ -71,7 +86,6 @@ export function NewProjectModal({ isOpen, onClose }: NewProjectModalProps) {
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Ex: Sistema de IA Interno"
                     className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#003d9b]/20 focus:border-[#003d9b] outline-none transition-all text-sm font-sans"
                     autoFocus
                   />
@@ -79,7 +93,7 @@ export function NewProjectModal({ isOpen, onClose }: NewProjectModalProps) {
 
                 <div>
                   <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
-                    Status Inicial
+                    Status
                   </label>
                   <select
                     value={status}
@@ -90,7 +104,24 @@ export function NewProjectModal({ isOpen, onClose }: NewProjectModalProps) {
                     <option value="Doing">Doing</option>
                     <option value="In Review">In Review</option>
                     <option value="Done">Done</option>
+                    <option value="active">Active</option>
+                    <option value="Fechado">Fechado</option>
                   </select>
+                </div>
+
+                <div>
+                  <label className="flex justify-between text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                    <span>Progresso</span>
+                    <span className="text-[#003d9b]">{progress}%</span>
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={progress}
+                    onChange={(e) => setProgress(parseInt(e.target.value))}
+                    className="w-full accent-[#003d9b]"
+                  />
                 </div>
 
                 <div className="pt-4 flex justify-end gap-3">
@@ -103,13 +134,13 @@ export function NewProjectModal({ isOpen, onClose }: NewProjectModalProps) {
                   </button>
                   <button
                     type="submit"
-                    disabled={createProject.isPending || !name.trim()}
+                    disabled={updateProject.isPending || !name.trim()}
                     className="px-6 py-3 rounded-xl font-semibold bg-[#003d9b] text-white hover:bg-[#002d73] transition-colors shadow-lg shadow-blue-900/20 text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {createProject.isPending && (
+                    {updateProject.isPending && (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     )}
-                    Criar Projeto
+                    Salvar
                   </button>
                 </div>
               </form>

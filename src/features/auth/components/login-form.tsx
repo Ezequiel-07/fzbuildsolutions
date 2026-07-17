@@ -43,6 +43,26 @@ export function LoginForm() {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
+  // Auto-seed a developer account in Firebase Auth
+  useEffect(() => {
+    const seedDevAccount = async () => {
+      try {
+        const { createUserWithEmailAndPassword } =
+          await import("firebase/auth");
+        await createUserWithEmailAndPassword(
+          auth,
+          "admin@fzbuild.solutions",
+          "admin123",
+        );
+        console.log("Registered test account successfully");
+      } catch (err) {
+        // Ignored if already registered
+        console.log("Test account setup:", err);
+      }
+    };
+    seedDevAccount();
+  }, []);
+
   const onSubmit = async (data: LoginFormData) => {
     setError(null);
     try {
@@ -287,6 +307,16 @@ export function LoginForm() {
 
           {/* Footer Text */}
           <div className="text-center mt-6">
+            <p className="text-slate-400 text-xs font-sans mb-3">
+              Modo de teste:{" "}
+              <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-700 select-all font-semibold">
+                admin@fzbuild.solutions
+              </span>{" "}
+              / senha:{" "}
+              <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-700 select-all font-semibold">
+                admin123
+              </span>
+            </p>
             <p className="text-slate-400 text-xs font-sans">
               Não tem uma conta?{" "}
               <Link

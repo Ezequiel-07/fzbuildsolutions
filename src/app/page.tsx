@@ -1,882 +1,1315 @@
-import Link from "next/link";
+"use client";
 
-export default function Home() {
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
+import { FullPageScroll } from "@/components/landing/FullPageScroll";
+import { ParticleCanvas } from "@/components/landing/ParticleCanvas";
+import { BuildTerminal } from "@/components/landing/BuildTerminal";
+import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
+import { Menu, X } from "lucide-react";
+
+/* ──────────────────────────────────────────────
+   THEME TOGGLE BUTTON
+────────────────────────────────────────────── */
+function ThemeToggle() {
+  const { isDark, toggle } = useTheme();
   return (
-    <div className="bg-[#f8f9fb] text-[#191c1e] font-sans overflow-x-hidden">
-      {/* TopNavBar */}
-      <nav className="bg-[#f8f9fb]/80 backdrop-blur-xl docked full-width top-0 z-50 sticky border-b border-[#737685]/10 shadow-sm flex justify-between items-center px-5 md:px-20 py-4 w-full max-w-full">
-        <div className="flex items-center gap-2">
+    <button
+      onClick={toggle}
+      aria-label="Alternar tema"
+      className="relative w-12 h-6 rounded-full border transition-all duration-500 fz-toggle-track flex items-center px-0.5"
+    >
+      <motion.span
+        layout
+        transition={{ type: "spring", stiffness: 500, damping: 35 }}
+        className="w-5 h-5 rounded-full fz-toggle-thumb"
+        style={{ marginLeft: isDark ? 0 : "calc(100% - 20px)" }}
+      />
+    </button>
+  );
+}
+
+/* ──────────────────────────────────────────────
+   NAV BAR
+────────────────────────────────────────────── */
+function NavBar() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const closeMenu = () => setMobileMenuOpen(false);
+
+  const handleNavClick = (idx: number) => {
+    const event = new CustomEvent("fz-scroll-to", { detail: { index: idx } });
+    window.dispatchEvent(event);
+    closeMenu();
+  };
+
+  return (
+    <motion.header
+      initial={{ y: -80, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+      className="fixed top-0 left-0 right-0 z-50 fz-nav"
+    >
+      <div className="max-w-[1400px] mx-auto flex items-center justify-between px-6 md:px-16 py-3 md:py-4">
+        {/* Logo */}
+        <Link
+          href="/"
+          onClick={(e) => {
+            e.preventDefault();
+            handleNavClick(0);
+          }}
+          className="flex items-center gap-2 group z-50"
+        >
           <img
             src="/fzbuildsemfundo.png"
             alt="FZ Build Solutions"
-            className="h-10 w-auto"
+            className="h-10 md:h-14 w-auto fz-logo-img transition-opacity group-hover:opacity-70"
+            style={{ height: "40px" }}
           />
-        </div>
+        </Link>
 
-        <div className="hidden md:flex items-center gap-8 font-semibold">
-          <Link
-            href="#quem-somos"
-            className="text-[#191c1e] hover:text-[#003d9b] transition-colors"
-          >
-            Sobre
-          </Link>
-          <Link
-            href="#solucoes"
-            className="text-[#191c1e] hover:text-[#003d9b] transition-colors"
-          >
-            Soluções
-          </Link>
-          <Link
-            href="#produtos"
-            className="text-[#191c1e] hover:text-[#003d9b] transition-colors"
-          >
-            Produtos
-          </Link>
-          <Link
-            href="#metodologia"
-            className="text-[#191c1e] hover:text-[#003d9b] transition-colors"
-          >
-            Metodologia
-          </Link>
-        </div>
+        {/* Desktop Nav links */}
+        <nav className="hidden md:flex items-center gap-8">
+          {["Sobre", "Equipe", "Soluções", "Produtos", "Metodologia"].map(
+            (label, idx) => (
+              <span
+                key={label}
+                onClick={() => handleNavClick(idx + 1)}
+                className="text-sm font-medium fz-nav-link relative group cursor-pointer"
+              >
+                {label}
+                <span className="absolute -bottom-0.5 left-0 w-0 h-px fz-nav-underline group-hover:w-full transition-all duration-300" />
+              </span>
+            ),
+          )}
+        </nav>
 
-        <div className="flex items-center gap-4">
+        {/* Desktop Right actions */}
+        <div className="hidden md:flex items-center gap-4">
+          <ThemeToggle />
           <Link
             href="/login"
-            className="bg-[#003d9b] text-white font-mono text-xs font-semibold tracking-wider uppercase px-6 py-3 rounded-full hover:bg-[#0052cc] transition-all shadow-md active:scale-95 text-center"
+            className="text-xs font-semibold fz-nav-link hover:opacity-100 transition-opacity px-3 py-2 rounded-lg"
           >
-            Acessar Plataforma
+            Entrar no Sistema
+          </Link>
+          <Link
+            href="https://wa.me/5511954297115?text=Ol%C3%A1%2C%20gostaria%20de%20solicitar%20um%20diagn%C3%B3stico%20da%20FZ%20Build%20Solutions."
+            target="_blank"
+            className="fz-btn-primary text-xs font-bold tracking-wider uppercase px-5 py-2.5 rounded-full overflow-hidden relative group"
+          >
+            <span className="relative z-10">Falar com a FZ</span>
+            <span className="fz-btn-shine absolute inset-0 w-1/3 h-full skew-x-[-15deg] translate-x-[-120%] group-hover:translate-x-[400%] transition-transform duration-700" />
           </Link>
         </div>
-      </nav>
 
-      <main className="relative w-full">
-        {/* Hero Section */}
-        <section className="relative min-h-[calc(100vh-80px)] flex items-center px-5 md:px-20 py-12 md:py-20 overflow-hidden bg-white">
-          <div className="absolute top-1/4 right-1/4 w-[500px] h-[500px] bg-[#9cf0ff]/20 rounded-full blur-[120px] pointer-events-none"></div>
+        {/* Mobile controls & Toggle */}
+        <div className="flex md:hidden items-center gap-3">
+          <ThemeToggle />
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="z-50 w-10 h-10 flex items-center justify-center text-[#0d1b3e] dark:text-white focus:outline-none"
+            aria-label="Toggle Menu"
+          >
+            {mobileMenuOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
+          </button>
+        </div>
+      </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center relative z-10 w-full">
-            <div className="max-w-2xl flex flex-col items-start gap-6">
-              <span className="font-mono text-xs font-semibold text-[#003d9b] tracking-widest uppercase">
-                Tecnologia de Alta Performance
-              </span>
-
-              <h1 className="font-heading text-4xl md:text-[64px] text-[#191c1e] leading-tight md:leading-[1.1] font-extrabold tracking-tight">
-                Transformamos processos complexos em{" "}
-                <span className="text-[#003d9b]">software inteligente</span>.
-              </h1>
-
-              <p className="font-sans text-lg md:text-[18px] text-[#434654] max-w-xl leading-relaxed md:leading-[1.6]">
-                A FZ Build Solutions desenvolve plataformas SaaS, Inteligência
-                Artificial, automação de processos e soluções sob medida para
-                empresas que precisam eliminar retrabalho e tomar decisões com
-                dados confiáveis.
-              </p>
-
-              <div className="flex flex-wrap gap-4 mt-4">
-                <Link
-                  href="mailto:contato@fzbuild.solutions"
-                  className="bg-[#003d9b] text-white font-mono text-xs font-semibold tracking-wider uppercase px-8 py-4 rounded-full hover:shadow-lg transition-all flex items-center gap-2"
-                >
-                  Solicitar Diagnóstico
-                  <span className="material-symbols-outlined text-sm">
-                    arrow_forward
+      {/* Mobile Drawer Overlay */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "100vh" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="md:hidden fixed inset-0 w-full h-screen z-40 flex flex-col px-8 pt-28 pb-12 overflow-y-auto fz-mobile-drawer"
+          >
+            <div className="flex flex-col gap-6 items-center text-center">
+              {["Sobre", "Equipe", "Soluções", "Produtos", "Metodologia"].map(
+                (label, idx) => (
+                  <span
+                    key={label}
+                    onClick={() => handleNavClick(idx + 1)}
+                    className="text-lg font-semibold fz-nav-link py-1 cursor-pointer block w-full"
+                  >
+                    {label}
                   </span>
-                </Link>
-                <Link
-                  href="#solucoes"
-                  className="bg-transparent border border-[#737685] text-[#191c1e] font-mono text-xs font-semibold tracking-wider uppercase px-8 py-4 rounded-full hover:bg-[#edeef0] transition-all"
-                >
-                  Conheça nossas soluções
-                </Link>
-              </div>
+                ),
+              )}
 
-              {/* Quick Highlights */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-8 w-full">
-                <div className="flex items-center gap-2 text-[#434654] text-sm font-medium">
-                  <span className="material-symbols-outlined text-[#003d9b] text-xl">
-                    psychology
-                  </span>{" "}
-                  IA aplicada
-                </div>
-                <div className="flex items-center gap-2 text-[#434654] text-sm font-medium">
-                  <span className="material-symbols-outlined text-[#003d9b] text-xl">
-                    cloud_done
-                  </span>{" "}
-                  Desenvolvimento SaaS
-                </div>
-                <div className="flex items-center gap-2 text-[#434654] text-sm font-medium">
-                  <span className="material-symbols-outlined text-[#003d9b] text-xl">
-                    sync_alt
-                  </span>{" "}
-                  Integração
-                </div>
-                <div className="flex items-center gap-2 text-[#434654] text-sm font-medium">
-                  <span className="material-symbols-outlined text-[#003d9b] text-xl">
-                    robot
-                  </span>{" "}
-                  Automação
-                </div>
-                <div className="flex items-center gap-2 text-[#434654] text-sm font-medium">
-                  <span className="material-symbols-outlined text-[#003d9b] text-xl">
-                    bar_chart
-                  </span>{" "}
-                  Dashboards e BI
-                </div>
-                <div className="flex items-center gap-2 text-[#434654] text-sm font-medium">
-                  <span className="material-symbols-outlined text-[#003d9b] text-xl">
-                    security
-                  </span>{" "}
-                  Escalabilidade
-                </div>
-              </div>
+              <hr className="w-12 border-current opacity-10 my-2" />
+
+              <Link
+                href="/login"
+                onClick={closeMenu}
+                className="text-sm font-semibold fz-nav-link py-2 block w-full"
+              >
+                Entrar no Sistema
+              </Link>
+
+              <Link
+                href="https://wa.me/5511954297115?text=Ol%C3%A1%2C%20gostaria%20de%20solicitar%20um%20diagn%C3%B3stico%20da%20FZ%20Build%20Solutions."
+                target="_blank"
+                onClick={closeMenu}
+                className="fz-btn-primary text-sm font-bold tracking-wider uppercase px-8 py-3 rounded-full overflow-hidden relative group w-fit mt-2"
+              >
+                <span className="relative z-10">Falar com a FZ</span>
+              </Link>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.header>
+  );
+}
 
-            <div className="relative h-[400px] md:h-[600px] [perspective:1000px] hidden lg:block">
-              <div className="absolute inset-0 [transform-style:preserve-3d] [transform:rotateY(12deg)_rotateX(5deg)] hover:[transform:rotateY(0deg)_rotateX(0deg)] transition-transform duration-700 ease-out">
-                <img
-                  alt="Visualização 3D dos painéis flutuantes"
-                  className="w-full h-full object-contain filter drop-shadow-2xl"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuANnjJuVwBWwf3tBi0M4Fe1ZU7O6N7xP8JUfDr7b7f64f0H32D_9Cd8nDpLSIxo_1JiugygIc7-xnkdGN2t8UEdC98ueu8lKTQSFgGGKlFaCCZYcbwlc3vXqARkRK5xaLpAXP7ebqu5XOAFK62Ftn_3T_LqeLRonxwpTM5RdG4M-bnT84iBiPo4b9DaY-i9TwlL2qijrlMfUO72Hf1LZUYZDXmEFTnK4D56txpWgHkk0FOYDLB1Gx90"
-                />
+/* ──────────────────────────────────────────────
+   SECTION 1 — HERO
+────────────────────────────────────────────── */
+function HeroSection() {
+  const { isDark } = useTheme();
+  const [count1, setCount1] = useState(0);
+  const [count2, setCount2] = useState(0);
+  const [count3, setCount3] = useState(0);
+
+  useEffect(() => {
+    const animate = (
+      setter: (n: number) => void,
+      target: number,
+      dur = 1800,
+    ) => {
+      let start: number;
+      const step = (ts: number) => {
+        if (!start) start = ts;
+        const p = Math.min((ts - start) / dur, 1);
+        const e = 1 - Math.pow(1 - p, 3);
+        setter(Math.floor(e * target));
+        if (p < 1) requestAnimationFrame(step);
+      };
+      setTimeout(() => requestAnimationFrame(step), 600);
+    };
+    animate(setCount1, 12);
+    animate(setCount2, 99);
+    animate(setCount3, 3);
+  }, []);
+
+  return (
+    <section className="relative h-screen flex flex-col justify-center fz-hero overflow-hidden">
+      {/* Reflection blobs (dark) / gradient shapes (light) */}
+      <div className="fz-hero-blob-1 absolute pointer-events-none" />
+      <div className="fz-hero-blob-2 absolute pointer-events-none" />
+      <div className="fz-hero-blob-3 absolute pointer-events-none" />
+
+      {/* Grid/dot bg */}
+      <div className="absolute inset-0 fz-bg-pattern opacity-40 pointer-events-none" />
+
+      {/* Background large watermark logo in the center */}
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[65%] max-w-[800px] opacity-10 pointer-events-none z-0 flex items-center justify-center select-none">
+        <img
+          src="/fzbuildsemfundo.png"
+          alt=""
+          className={`w-full h-auto object-contain ${isDark ? "brightness-0 invert" : ""}`}
+        />
+      </div>
+
+      <div className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-16 w-full pt-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          {/* Left Column — Text & Info */}
+          <div className="lg:col-span-7 flex flex-col gap-7">
+            {/* Badge */}
+            <motion.span
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.6 }}
+              className="inline-flex items-center gap-2 fz-badge text-xs font-bold tracking-[0.2em] uppercase px-4 py-2 rounded-full w-fit"
+            >
+              <span className="w-1.5 h-1.5 rounded-full fz-badge-dot animate-pulse" />
+              Software House · Brasil
+            </motion.span>
+
+            {/* H1 */}
+            <motion.h1
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                delay: 0.35,
+                duration: 0.7,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              className="font-heading font-extrabold text-5xl md:text-7xl leading-[1.05] tracking-tight fz-hero-h1"
+            >
+              Transformamos
+              <br />
+              processos em <span className="fz-accent-text">software</span>
+              <br />
+              <span className="fz-accent-text">inteligente</span>.
+            </motion.h1>
+
+            {/* Sub */}
+            <motion.p
+              initial={{ opacity: 0, y: 25 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.6 }}
+              className="fz-hero-sub text-lg leading-relaxed max-w-2xl"
+            >
+              Construímos plataformas inteligentes que automatizam operações,
+              conectam sistemas e aceleram empresas através de software e
+              Inteligência Artificial.
+            </motion.p>
+
+            {/* CTAs */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.65, duration: 0.5 }}
+              className="flex flex-wrap gap-4 mt-1"
+            >
+              <Link
+                href="https://wa.me/5511954297115?text=Ol%C3%A1%2C%20gostaria%20de%20solicitar%20um%20diagn%C3%B3stico%20da%20FZ%20Build%20Solutions."
+                target="_blank"
+                className="fz-btn-primary relative overflow-hidden group font-bold text-sm px-8 py-4 rounded-full"
+              >
+                <span className="relative z-10">Solicitar Diagnóstico →</span>
+                <span className="fz-btn-shine absolute inset-0 w-1/3 h-full skew-x-[-15deg] translate-x-[-120%] group-hover:translate-x-[400%] transition-transform duration-700" />
+              </Link>
+              <Link
+                href="mailto:fzbuild.solutions@gmail.com"
+                className="fz-btn-ghost font-medium text-sm px-8 py-4 rounded-full border"
+              >
+                Entrar em Contato
+              </Link>
+            </motion.div>
+
+            {/* Metrics */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.9, duration: 0.7 }}
+              className="grid grid-cols-3 gap-6 pt-8 mt-2 fz-metrics-border"
+            >
+              {[
+                { value: count1, suffix: "+", label: "Projetos" },
+                { value: count2, suffix: "%", label: "Uptime" },
+                { value: count3, suffix: "", label: "Produtos" },
+              ].map((m) => (
+                <div key={m.label} className="flex flex-col gap-1">
+                  <span className="font-heading font-extrabold text-3xl fz-metric-val">
+                    {m.value}
+                    {m.suffix}
+                  </span>
+                  <span className="text-xs font-medium fz-metric-label">
+                    {m.label}
+                  </span>
+                </div>
+              ))}
+            </motion.div>
+          </div>
+
+          {/* Right Column — Build Terminal & Orbiting Floating Tags */}
+          <div className="hidden lg:col-span-5 lg:flex justify-end relative h-[440px] items-center px-4">
+            {/* Soft faded glow background */}
+            <div
+              className="absolute inset-y-2 -left-28 -right-10 rounded-[40px] opacity-75 z-10 pointer-events-none"
+              style={{
+                background:
+                  "radial-gradient(ellipse at center, rgba(30,107,255,0.12) 0%, rgba(30,107,255,0.03) 55%, transparent 75%)",
+                filter: "blur(20px)",
+              }}
+            />
+
+            {/* Build Terminal container */}
+            <div className="relative z-20 w-full max-w-sm xl:max-w-md mr-16">
+              <BuildTerminal />
+
+              {/* Orbiting floating tags around the terminal (positioned to the right) */}
+              <div className="absolute inset-0 pointer-events-none z-30">
+                {[
+                  {
+                    icon: "psychology",
+                    label: "IA Aplicada",
+                    top: "5%",
+                    left: "98%",
+                  },
+                  {
+                    icon: "cloud_done",
+                    label: "SaaS",
+                    top: "25%",
+                    left: "104%",
+                  },
+                  {
+                    icon: "sync_alt",
+                    label: "Integrações",
+                    top: "48%",
+                    left: "106%",
+                  },
+                  {
+                    icon: "robot",
+                    label: "Automação",
+                    top: "70%",
+                    left: "104%",
+                  },
+                  {
+                    icon: "bar_chart",
+                    label: "Dashboards",
+                    top: "90%",
+                    left: "95%",
+                  },
+                ].map((t, i) => (
+                  <motion.div
+                    key={t.label}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.8 + i * 0.1, duration: 0.5 }}
+                    style={{
+                      position: "absolute",
+                      top: t.top,
+                      left: t.left,
+                      animation: `float ${5 + i * 0.7}s ease-in-out ${i * 0.5}s infinite`,
+                    }}
+                    className="fz-float-tag flex items-center gap-2.5 px-4 py-2.5 rounded-xl backdrop-blur-sm shadow-lg whitespace-nowrap"
+                  >
+                    <span className="material-symbols-outlined text-lg fz-icon-accent">
+                      {t.icon}
+                    </span>
+                    <span className="text-[11px] font-semibold fz-float-tag-text">
+                      {t.label}
+                    </span>
+                  </motion.div>
+                ))}
               </div>
             </div>
           </div>
-        </section>
+        </div>
+      </div>
 
-        {/* Quem Somos Section */}
-        <section
-          className="relative px-5 md:px-20 py-[120px] bg-[#f8f9fb] overflow-hidden"
-          id="quem-somos"
-        >
-          <div className="max-w-4xl mx-auto text-center flex flex-col items-center gap-6">
-            <span className="font-mono text-xs font-semibold text-[#003d9b] tracking-widest uppercase">
+      {/* Scroll cue */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+        <span className="text-xs font-mono tracking-widest uppercase fz-scroll-cue">
+          Scroll
+        </span>
+        <div className="w-px h-8 fz-scroll-line animate-pulse" />
+      </div>
+    </section>
+  );
+}
+
+/* ──────────────────────────────────────────────
+   SECTION 2 — ABOUT
+────────────────────────────────────────────── */
+function AboutSection() {
+  const pillars = [
+    {
+      icon: "search_check",
+      title: "Diagnóstico",
+      desc: "Entendemos antes de codar.",
+    },
+    {
+      icon: "hub",
+      title: "Ecossistema",
+      desc: "IA, dados e integrações unidos.",
+    },
+    {
+      icon: "trending_up",
+      title: "Crescimento",
+      desc: "Escalabilidade desde o início.",
+    },
+    {
+      icon: "rocket_launch",
+      title: "Velocidade",
+      desc: "Entregas ágeis com qualidade.",
+    },
+  ];
+
+  return (
+    <section className="relative h-screen flex items-center fz-section overflow-hidden">
+      <div className="fz-hero-blob-1 absolute right-0 top-0 pointer-events-none opacity-50" />
+      <div className="absolute inset-0 fz-bg-pattern opacity-20 pointer-events-none" />
+
+      <div className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-16 w-full pt-20">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          {/* Left */}
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            className="flex flex-col gap-6"
+          >
+            <span className="fz-label font-mono text-xs font-bold tracking-[0.25em] uppercase">
               QUEM SOMOS
             </span>
-            <h2 className="font-heading text-3xl md:text-[48px] text-[#191c1e] font-bold tracking-tight leading-tight md:leading-[1.2]">
-              Construindo o futuro dos negócios através da tecnologia.
+            <h2 className="font-heading font-extrabold text-4xl md:text-5xl leading-tight fz-h2">
+              Construindo o futuro{" "}
+              <span className="fz-accent-text">através da tecnologia</span>.
             </h2>
-            <h3 className="font-heading text-xl md:text-[32px] text-[#0052cc] font-semibold -mt-2">
-              Não desenvolvemos apenas software.
-            </h3>
-            <p className="font-sans text-lg md:text-[18px] text-[#434654] leading-relaxed md:leading-[1.6]">
-              Analisamos processos, identificamos gargalos e construímos
-              ecossistemas tecnológicos completos que unem pessoas, sistemas,
-              inteligência artificial e dados. Nosso objetivo é simples: reduzir
-              custos, eliminar desperdícios e acelerar o crescimento dos nossos
-              clientes.
+            <p className="fz-body text-base leading-relaxed max-w-md">
+              Não desenvolvemos apenas software. Analisamos processos,
+              identificamos gargalos e construímos ecossistemas tecnológicos
+              completos — unindo pessoas, sistemas, IA e dados.
             </p>
-          </div>
-        </section>
-
-        {/* Nosso Diferencial Section */}
-        <section className="relative px-5 md:px-20 py-[120px] bg-[#f3f4f6]">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            <div className="flex flex-col gap-8">
-              <div className="flex flex-col gap-4">
-                <span className="font-mono text-xs font-semibold text-[#003d9b] tracking-widest uppercase">
-                  NOSSO DIFERENCIAL
-                </span>
-                <h2 className="font-heading text-3xl md:text-[48px] text-[#191c1e] font-bold tracking-tight leading-tight md:leading-[1.2]">
-                  Antes de programar, entendemos seu negócio.
-                </h2>
-                <p className="font-sans text-lg md:text-[18px] text-[#434654] leading-relaxed md:leading-[1.6]">
-                  A maioria das empresas cria sistemas. Nós primeiro fazemos um
-                  diagnóstico completo da operação. Depois projetamos uma
-                  solução que realmente resolve o problema.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm border border-[#737685]/5">
-                  <span className="material-symbols-outlined text-[#003d9b]">
-                    search_check
-                  </span>
-                  <span className="font-semibold text-[#191c1e]">
-                    Diagnóstico preciso
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm border border-[#737685]/5">
-                  <span className="material-symbols-outlined text-[#003d9b]">
-                    architecture
-                  </span>
-                  <span className="font-semibold text-[#191c1e]">
-                    Arquitetura robusta
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm border border-[#737685]/5">
-                  <span className="material-symbols-outlined text-[#003d9b]">
-                    code
-                  </span>
-                  <span className="font-semibold text-[#191c1e]">
-                    Desenvolvimento ágil
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm border border-[#737685]/5">
-                  <span className="material-symbols-outlined text-[#003d9b]">
-                    hub
-                  </span>
-                  <span className="font-semibold text-[#191c1e]">
-                    Integração nativa
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="relative h-[500px] flex items-center justify-center">
-              {/* Abstract Cutoff Form style */}
-              <div className="absolute right-[-2rem] md:-right-20 w-[110%] md:w-[120%] h-[400px] bg-[#003d9b] rounded-l-3xl shadow-2xl p-12 pr-16 overflow-hidden flex flex-col justify-center">
-                <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-br from-white/10 to-transparent"></div>
-                <h4 className="text-white font-heading text-2xl font-bold mb-6 relative z-10">
-                  Nosso Processo
-                </h4>
-                <ul className="space-y-4 relative z-10 text-white">
-                  <li className="flex items-center gap-4 text-white/90">
-                    <span className="w-8 h-8 rounded-full bg-[#00e3fd] text-[#001f24] flex items-center justify-center font-bold">
-                      1
-                    </span>
-                    Diagnóstico
-                  </li>
-                  <li className="flex items-center gap-4 text-white/90">
-                    <span className="w-8 h-8 rounded-full bg-[#00e3fd]/50 text-white flex items-center justify-center font-bold">
-                      2
-                    </span>
-                    Arquitetura
-                  </li>
-                  <li className="flex items-center gap-4 text-white/90">
-                    <span className="w-8 h-8 rounded-full bg-[#00e3fd]/50 text-white flex items-center justify-center font-bold">
-                      3
-                    </span>
-                    Desenvolvimento
-                  </li>
-                  <li className="flex items-center gap-4 text-white/90">
-                    <span className="w-8 h-8 rounded-full bg-[#00e3fd]/50 text-white flex items-center justify-center font-bold">
-                      4
-                    </span>
-                    Implantação e Evolução
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Áreas de Atuação Section */}
-        <section
-          className="relative px-5 md:px-20 py-[120px] bg-[#f8f9fb]"
-          id="solucoes"
-        >
-          <div className="text-center mb-16">
-            <span className="font-mono text-xs font-semibold text-[#003d9b] tracking-widest uppercase">
-              ÁREAS DE ATUAÇÃO
-            </span>
-            <h2 className="font-heading text-3xl md:text-[48px] text-[#191c1e] font-bold mt-2 tracking-tight">
-              Soluções que desenvolvemos
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* IA */}
-            <div className="bg-white/80 backdrop-blur-md border border-cyan-400/20 shadow-[0_20px_40px_rgba(0,82,204,0.08)] p-8 rounded-2xl flex flex-col gap-4 border-b-4 border-b-[#003d9b] hover:-translate-y-2 transition-all">
-              <span className="material-symbols-outlined text-[#003d9b] text-4xl">
+            <div className="fz-card-inset flex items-start gap-3 p-4 rounded-xl">
+              <span className="material-symbols-outlined fz-icon-accent text-xl mt-0.5">
                 psychology
               </span>
-              <h3 className="font-heading text-xl font-bold text-[#191c1e]">
-                Inteligência Artificial
-              </h3>
-              <p className="font-sans text-sm text-[#434654] leading-relaxed">
-                Agentes inteligentes, assistentes corporativos, automação com IA
-                e análise inteligente de dados.
-              </p>
+              <div>
+                <p className="font-semibold text-sm fz-h2">
+                  Antes de programar, entendemos seu negócio.
+                </p>
+                <p className="fz-body text-xs mt-0.5">
+                  A maioria cria sistemas. Nós fazemos o diagnóstico primeiro.
+                </p>
+              </div>
             </div>
+          </motion.div>
 
-            {/* SaaS */}
-            <div className="bg-white/80 backdrop-blur-md border border-cyan-400/20 shadow-[0_20px_40px_rgba(0,82,204,0.08)] p-8 rounded-2xl flex flex-col gap-4 border-b-4 border-b-[#003d9b] hover:-translate-y-2 transition-all">
-              <span className="material-symbols-outlined text-[#003d9b] text-4xl">
-                cloud
-              </span>
-              <h3 className="font-heading text-xl font-bold text-[#191c1e]">
-                Sistemas SaaS
-              </h3>
-              <p className="font-sans text-sm text-[#434654] leading-relaxed">
-                Construção de plataformas modernas utilizando tecnologias de
-                última geração.
-              </p>
-            </div>
+          {/* Right — pillars */}
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{
+              duration: 0.7,
+              delay: 0.15,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+            className="grid grid-cols-2 gap-4"
+          >
+            {pillars.map((p, i) => (
+              <motion.div
+                key={p.title}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25 + i * 0.08 }}
+                whileHover={{ scale: 1.04, y: -3 }}
+                className="fz-card rounded-2xl p-5 flex flex-col gap-3 cursor-default transition-all duration-300"
+              >
+                <div className="fz-icon-box w-9 h-9 rounded-xl flex items-center justify-center">
+                  <span className="material-symbols-outlined text-lg fz-icon-accent">
+                    {p.icon}
+                  </span>
+                </div>
+                <div>
+                  <h4 className="font-heading font-bold text-sm fz-h2 mb-0.5">
+                    {p.title}
+                  </h4>
+                  <p className="fz-body text-xs">{p.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+}
 
-            {/* Automação */}
-            <div className="bg-white/80 backdrop-blur-md border border-cyan-400/20 shadow-[0_20px_40px_rgba(0,82,204,0.08)] p-8 rounded-2xl flex flex-col gap-4 border-b-4 border-b-[#003d9b] hover:-translate-y-2 transition-all">
-              <span className="material-symbols-outlined text-[#003d9b] text-4xl">
-                settings_suggest
-              </span>
-              <h3 className="font-heading text-xl font-bold text-[#191c1e]">
-                Automação de Processos
-              </h3>
-              <p className="font-sans text-sm text-[#434654] leading-relaxed">
-                Elimine tarefas repetitivas e aumente a produtividade da sua
-                equipe.
-              </p>
-            </div>
+/* ──────────────────────────────────────────────
+   SECTION 2.5 — TEAM / EQUIPE
+────────────────────────────────────────────── */
+const TEAM = [
+  {
+    name: "Ezequiel Antunes",
+    role: "CEO • Full Stack Developer • Software Architect • AI Engineer",
+    initials: "EA",
+    gradient: "from-[#1e6bff] to-[#38bdf8]",
+    responsibilities: [
+      "Arquitetura de Software",
+      "Inteligência Artificial",
+      "Desenvolvimento Full Stack",
+      "Produtos",
+      "Estratégia",
+    ],
+  },
+  {
+    name: "Felipe Honorato",
+    role: "Marketing • Comercial • Branding",
+    initials: "FH",
+    gradient: "from-[#8b5cf6] to-[#ec4899]",
+    responsibilities: ["Marketing", "Vendas", "Posicionamento", "Marca"],
+  },
+  {
+    name: "Matheus Nandi",
+    role: "Backend Engineer • Database Specialist",
+    initials: "MN",
+    gradient: "from-[#3b82f6] to-[#10b981]",
+    responsibilities: [
+      "APIs",
+      "Banco de Dados",
+      "Infraestrutura",
+      "Performance",
+    ],
+  },
+  {
+    name: "Beatriz Callegari",
+    role: "Project Manager (PM)",
+    initials: "BC",
+    gradient: "from-[#f59e0b] to-[#ef4444]",
+    responsibilities: [
+      "Gestão de Projetos",
+      "Atendimento",
+      "Planejamento",
+      "Organização",
+    ],
+  },
+];
 
-            {/* Integração */}
-            <div className="bg-white/80 backdrop-blur-md border border-cyan-400/20 shadow-[0_20px_40px_rgba(0,82,204,0.08)] p-8 rounded-2xl flex flex-col gap-4 border-b-4 border-b-[#003d9b] hover:-translate-y-2 transition-all">
-              <span className="material-symbols-outlined text-[#003d9b] text-4xl">
-                api
-              </span>
-              <h3 className="font-heading text-xl font-bold text-[#191c1e]">
-                Integração de Sistemas
-              </h3>
-              <p className="font-sans text-sm text-[#434654] leading-relaxed">
-                Conectamos ERPs, APIs, laboratórios, CRMs e qualquer sistema
-                necessário.
-              </p>
-            </div>
+function EquipeSection() {
+  return (
+    <section className="relative h-screen flex items-center fz-section overflow-hidden">
+      <div className="fz-hero-blob-3 absolute left-[-100px] top-[10%] opacity-40 pointer-events-none" />
+      <div className="absolute inset-0 fz-bg-pattern opacity-25 pointer-events-none" />
 
-            {/* BI */}
-            <div className="bg-white/80 backdrop-blur-md border border-cyan-400/20 shadow-[0_20px_40px_rgba(0,82,204,0.08)] p-8 rounded-2xl flex flex-col gap-4 border-b-4 border-b-[#003d9b] hover:-translate-y-2 transition-all">
-              <span className="material-symbols-outlined text-[#003d9b] text-4xl">
-                insights
-              </span>
-              <h3 className="font-heading text-xl font-bold text-[#191c1e]">
-                Dashboards e BI
-              </h3>
-              <p className="font-sans text-sm text-[#434654] leading-relaxed">
-                Dados confiáveis transformados em visualizações para decisões
-                rápidas.
-              </p>
-            </div>
-
-            {/* Sob Medida */}
-            <div className="bg-white/80 backdrop-blur-md border border-cyan-400/20 shadow-[0_20px_40px_rgba(0,82,204,0.08)] p-8 rounded-2xl flex flex-col gap-4 border-b-4 border-b-[#003d9b] hover:-translate-y-2 transition-all">
-              <span className="material-symbols-outlined text-[#003d9b] text-4xl">
-                straighten
-              </span>
-              <h3 className="font-heading text-xl font-bold text-[#191c1e]">
-                Desenvolvimento Sob Medida
-              </h3>
-              <p className="font-sans text-sm text-[#434654] leading-relaxed">
-                Cada empresa possui necessidades diferentes. Criamos o que o seu
-                cenário exige.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Produtos Section */}
-        <section
-          className="relative px-5 md:px-20 py-[120px] bg-white"
-          id="produtos"
+      <div className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-16 w-full pt-20">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="mb-10 text-center"
         >
-          <div className="text-center mb-16">
-            <span className="font-mono text-xs font-semibold text-[#003d9b] tracking-widest uppercase">
-              PRODUTOS
-            </span>
-            <h2 className="font-heading text-3xl md:text-[48px] text-[#191c1e] font-bold mt-2 tracking-tight">
-              Plataformas desenvolvidas pela FZ
-            </h2>
-          </div>
+          <span className="fz-label font-mono text-xs font-bold tracking-[0.25em] uppercase">
+            QUEM FAZ ACONTECER
+          </span>
+          <h2 className="font-heading font-extrabold text-3xl md:text-4xl mt-2 fz-h2">
+            Nossa <span className="fz-accent-text">Equipe</span> de
+            Especialistas
+          </h2>
+        </motion.div>
 
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-            {/* DP Core Card */}
-            <div className="bg-[#003d9b] rounded-3xl p-8 md:p-12 text-white flex flex-col gap-6 relative overflow-hidden group">
-              <div className="absolute -right-16 -top-16 w-64 h-64 bg-[#00e3fd]/20 rounded-full blur-3xl pointer-events-none group-hover:bg-[#00e3fd]/30 transition-all"></div>
-              <div className="flex items-center justify-between">
-                <span className="bg-[#00e3fd] text-[#001f24] px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
-                  Destaque
-                </span>
-                <span className="material-symbols-outlined text-[#00e3fd] text-4xl">
-                  science
-                </span>
-              </div>
-              <div>
-                <h3 className="font-heading text-3xl font-bold mb-2">
-                  DP Core
-                </h3>
-                <p className="text-white/80 font-sans text-lg">
-                  Management of clinical labs & Diagnostic Centers.
-                </p>
-              </div>
-              <ul className="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-6 text-sm">
-                <li className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#00e3fd] text-sm">
-                    check_circle
-                  </span>{" "}
-                  Requisição online
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#00e3fd] text-sm">
-                    check_circle
-                  </span>{" "}
-                  Automação de codificação
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#00e3fd] text-sm">
-                    check_circle
-                  </span>{" "}
-                  Integrações nativas
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#00e3fd] text-sm">
-                    check_circle
-                  </span>{" "}
-                  Painéis gerenciais
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#00e3fd] text-sm">
-                    check_circle
-                  </span>{" "}
-                  IA para apoio operacional
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#00e3fd] text-sm">
-                    check_circle
-                  </span>{" "}
-                  Auditoria de processos
-                </li>
-              </ul>
-            </div>
-
-            {/* FZ OS Card */}
-            <div className="bg-white/80 backdrop-blur-md border border-[#737685]/10 shadow-[0_20px_40px_rgba(0,82,204,0.08)] rounded-3xl p-8 md:p-12 flex flex-col justify-between group">
-              <div className="flex items-center justify-between mb-8">
-                <span className="bg-[#e1e2e4] text-[#434654] px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest font-mono">
-                  Em Desenvolvimento
-                </span>
-                <span className="material-symbols-outlined text-[#003d9b] text-4xl">
-                  terminal
-                </span>
-              </div>
-              <div>
-                <h3 className="font-heading text-3xl font-bold mb-4 text-[#191c1e]">
-                  FZ OS
-                </h3>
-                <p className="text-[#434654] font-sans text-lg mb-8">
-                  Sistema operacional corporativo baseado em agentes
-                  inteligentes para orquestração de tarefas complexas.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-4 py-2 bg-[#f3f4f6] border border-[#737685]/10 rounded-full text-sm font-medium text-[#434654] hover:bg-[#0052cc]/10 hover:text-[#003d9b] transition-all cursor-default">
-                  CRM Inteligente
-                </span>
-                <span className="px-4 py-2 bg-[#f3f4f6] border border-[#737685]/10 rounded-full text-sm font-medium text-[#434654] hover:bg-[#0052cc]/10 hover:text-[#003d9b] transition-all cursor-default">
-                  Automação Total
-                </span>
-                <span className="px-4 py-2 bg-[#f3f4f6] border border-[#737685]/10 rounded-full text-sm font-medium text-[#434654] hover:bg-[#0052cc]/10 hover:text-[#003d9b] transition-all cursor-default">
-                  Analytics
-                </span>
-                <span className="px-4 py-2 bg-[#f3f4f6] border border-[#737685]/10 rounded-full text-sm font-medium text-[#434654] hover:bg-[#0052cc]/10 hover:text-[#003d9b] transition-all cursor-default">
-                  Portal do Cliente
-                </span>
-              </div>
-            </div>
-
-            {/* EZYX Card */}
-            <div className="bg-[#003d9b] rounded-3xl p-8 md:p-12 text-white flex flex-col gap-6 relative overflow-hidden group">
-              <div className="absolute -right-16 -top-16 w-64 h-64 bg-[#00e3fd]/20 rounded-full blur-3xl pointer-events-none group-hover:bg-[#00e3fd]/30 transition-all"></div>
-              <div className="flex items-center justify-between">
-                <span className="bg-[#00e3fd] text-[#001f24] px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
-                  Logística
-                </span>
-                <span className="material-symbols-outlined text-[#00e3fd] text-4xl">
-                  local_shipping
-                </span>
-              </div>
-              <div>
-                <h3 className="font-heading text-3xl font-bold mb-2">EZYX</h3>
-                <p className="text-white/90 font-medium mb-2">
-                  Plataforma de Gerenciamento Logístico.
-                </p>
-                <p className="text-white/80 text-sm font-sans leading-relaxed">
-                  Gestão completa de frotas, rotas otimizadas e controle total
-                  da logística em tempo real.
-                </p>
-              </div>
-              <ul className="grid grid-cols-1 gap-y-3 text-sm">
-                <li className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#00e3fd] text-sm">
-                    check_circle
-                  </span>{" "}
-                  Rastreamento em tempo real
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#00e3fd] text-sm">
-                    check_circle
-                  </span>{" "}
-                  Otimização de rotas e custos
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#00e3fd] text-sm">
-                    check_circle
-                  </span>{" "}
-                  Gestão de ordens de serviço
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#00e3fd] text-sm">
-                    check_circle
-                  </span>{" "}
-                  Aplicativo para motoristas
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#00e3fd] text-sm">
-                    check_circle
-                  </span>{" "}
-                  Dashboards e BI
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#00e3fd] text-sm">
-                    check_circle
-                  </span>{" "}
-                  Integração financeira e fiscal
-                </li>
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        {/* Metodologia Section */}
-        <section
-          className="relative px-5 md:px-20 py-[120px] bg-[#f8f9fb] overflow-hidden"
-          id="metodologia"
-        >
-          <div className="text-center mb-20">
-            <span className="font-mono text-xs font-semibold text-[#003d9b] tracking-widest uppercase">
-              COMO TRABALHAMOS
-            </span>
-            <h2 className="font-heading text-3xl md:text-[48px] text-[#191c1e] font-bold mt-2 tracking-tight">
-              Nossa Metodologia
-            </h2>
-          </div>
-
-          <div className="relative max-w-5xl mx-auto">
-            <div className="absolute top-1/2 left-0 w-full h-0.5 bg-[#737685]/10 -translate-y-1/2 hidden md:block"></div>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-8 relative z-10">
-              {/* Step 1 */}
-              <div className="flex flex-col items-center text-center gap-4 group">
-                <div className="w-16 h-16 rounded-2xl bg-[#edeef0] flex items-center justify-center border border-[#737685]/10 shadow-sm group-hover:bg-[#003d9b] group-hover:text-white transition-all duration-300">
-                  <span className="font-bold text-xl text-[#191c1e] group-hover:text-white">
-                    1
-                  </span>
-                </div>
-                <h4 className="font-bold text-lg text-[#191c1e]">
-                  Diagnóstico
-                </h4>
-              </div>
-
-              {/* Step 2 */}
-              <div className="flex flex-col items-center text-center gap-4 group">
-                <div className="w-16 h-16 rounded-2xl bg-[#edeef0] flex items-center justify-center border border-[#737685]/10 shadow-sm group-hover:bg-[#003d9b] group-hover:text-white transition-all duration-300">
-                  <span className="font-bold text-xl text-[#191c1e] group-hover:text-white">
-                    2
-                  </span>
-                </div>
-                <h4 className="font-bold text-lg text-[#191c1e]">
-                  Arquitetura
-                </h4>
-              </div>
-
-              {/* Step 3 */}
-              <div className="flex flex-col items-center text-center gap-4 group">
-                <div className="w-16 h-16 rounded-2xl bg-[#edeef0] flex items-center justify-center border border-[#737685]/10 shadow-sm group-hover:bg-[#003d9b] group-hover:text-white transition-all duration-300">
-                  <span className="font-bold text-xl text-[#191c1e] group-hover:text-white">
-                    3
-                  </span>
-                </div>
-                <h4 className="font-bold text-lg text-[#191c1e]">
-                  Desenvolvimento
-                </h4>
-              </div>
-
-              {/* Step 4 */}
-              <div className="flex flex-col items-center text-center gap-4 group">
-                <div className="w-16 h-16 rounded-2xl bg-[#edeef0] flex items-center justify-center border border-[#737685]/10 shadow-sm group-hover:bg-[#003d9b] group-hover:text-white transition-all duration-300">
-                  <span className="font-bold text-xl text-[#191c1e] group-hover:text-white">
-                    4
-                  </span>
-                </div>
-                <h4 className="font-bold text-lg text-[#191c1e]">
-                  Implantação
-                </h4>
-              </div>
-
-              {/* Step 5 */}
-              <div className="flex flex-col items-center text-center gap-4 group">
-                <div className="w-16 h-16 rounded-2xl bg-[#edeef0] flex items-center justify-center border border-[#737685]/10 shadow-sm group-hover:bg-[#003d9b] group-hover:text-white transition-all duration-300">
-                  <span className="font-bold text-xl text-[#191c1e] group-hover:text-white">
-                    5
-                  </span>
-                </div>
-                <h4 className="font-bold text-lg text-[#191c1e]">Evolução</h4>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Technologies & Results Section */}
-        <section className="relative px-5 md:px-20 py-[120px] bg-[#f3f4f6]">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-            <div>
-              <h3 className="font-heading text-2xl font-bold mb-8 text-[#191c1e]">
-                Tecnologias que dominamos
-              </h3>
-              <div className="flex flex-wrap gap-3">
-                <span className="px-4 py-2 bg-white border border-[#737685]/10 rounded-full text-sm font-medium text-[#434654] hover:bg-[#0052cc]/10 hover:text-[#003d9b] transition-all cursor-default">
-                  Next.js
-                </span>
-                <span className="px-4 py-2 bg-white border border-[#737685]/10 rounded-full text-sm font-medium text-[#434654] hover:bg-[#0052cc]/10 hover:text-[#003d9b] transition-all cursor-default">
-                  React
-                </span>
-                <span className="px-4 py-2 bg-white border border-[#737685]/10 rounded-full text-sm font-medium text-[#434654] hover:bg-[#0052cc]/10 hover:text-[#003d9b] transition-all cursor-default">
-                  TypeScript
-                </span>
-                <span className="px-4 py-2 bg-white border border-[#737685]/10 rounded-full text-sm font-medium text-[#434654] hover:bg-[#0052cc]/10 hover:text-[#003d9b] transition-all cursor-default">
-                  Node.js
-                </span>
-                <span className="px-4 py-2 bg-white border border-[#737685]/10 rounded-full text-sm font-medium text-[#434654] hover:bg-[#0052cc]/10 hover:text-[#003d9b] transition-all cursor-default">
-                  PostgreSQL
-                </span>
-                <span className="px-4 py-2 bg-white border border-[#737685]/10 rounded-full text-sm font-medium text-[#434654] hover:bg-[#0052cc]/10 hover:text-[#003d9b] transition-all cursor-default">
-                  Docker
-                </span>
-                <span className="px-4 py-2 bg-white border border-[#737685]/10 rounded-full text-sm font-medium text-[#434654] hover:bg-[#0052cc]/10 hover:text-[#003d9b] transition-all cursor-default">
-                  IA Generativa
-                </span>
-                <span className="px-4 py-2 bg-white border border-[#737685]/10 rounded-full text-sm font-medium text-[#434654] hover:bg-[#0052cc]/10 hover:text-[#003d9b] transition-all cursor-default">
-                  APIs REST
-                </span>
-                <span className="px-4 py-2 bg-white border border-[#737685]/10 rounded-full text-sm font-medium text-[#434654] hover:bg-[#0052cc]/10 hover:text-[#003d9b] transition-all cursor-default">
-                  Azure / AWS
-                </span>
-                <span className="px-4 py-2 bg-white border border-[#737685]/10 rounded-full text-sm font-medium text-[#434654] hover:bg-[#0052cc]/10 hover:text-[#003d9b] transition-all cursor-default">
-                  CI/CD
-                </span>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-heading text-2xl font-bold mb-8 text-[#191c1e]">
-                Resultados garantidos
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center gap-3 text-[#434654] font-semibold">
-                  <span className="material-symbols-outlined text-[#003d9b]">
-                    trending_up
-                  </span>
-                  Mais produtividade
-                </div>
-                <div className="flex items-center gap-3 text-[#434654] font-semibold">
-                  <span className="material-symbols-outlined text-[#003d9b]">
-                    replay
-                  </span>
-                  Menos retrabalho
-                </div>
-                <div className="flex items-center gap-3 text-[#434654] font-semibold">
-                  <span className="material-symbols-outlined text-[#003d9b]">
-                    verified
-                  </span>
-                  Dados confiáveis
-                </div>
-                <div className="flex items-center gap-3 text-[#434654] font-semibold">
-                  <span className="material-symbols-outlined text-[#003d9b]">
-                    auto_mode
-                  </span>
-                  Processos automatizados
-                </div>
-                <div className="flex items-center gap-3 text-[#434654] font-semibold">
-                  <span className="material-symbols-outlined text-[#003d9b]">
-                    savings
-                  </span>
-                  Redução de custos
-                </div>
-                <div className="flex items-center gap-3 text-[#434654] font-semibold">
-                  <span className="material-symbols-outlined text-[#003d9b]">
-                    rocket_launch
-                  </span>
-                  Crescimento sustentável
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Why FZ Section (Checklist) */}
-        <section className="relative px-5 md:px-20 py-[120px] bg-[#f8f9fb]">
-          <div className="bg-white/80 backdrop-blur-md border border-[#003d9b]/10 shadow-[0_20px_40px_rgba(0,82,204,0.08)] p-8 md:p-16 rounded-3xl">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-              <div className="lg:col-span-1">
-                <h2 className="font-heading text-3xl font-bold text-[#191c1e] mb-6">
-                  Por que escolher a FZ?
-                </h2>
-                <p className="text-[#434654] font-sans">
-                  Unimos visão estratégica de negócios com excelência técnica
-                  para entregar resultados reais.
-                </p>
-              </div>
-
-              <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 text-[#191c1e]">
-                <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-[#003d9b]">
-                    done_all
-                  </span>
-                  <p className="font-semibold">
-                    Diagnóstico antes do desenvolvimento
-                  </p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-[#003d9b]">
-                    done_all
-                  </span>
-                  <p className="font-semibold">
-                    Produtos próprios consolidados
-                  </p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-[#003d9b]">
-                    done_all
-                  </span>
-                  <p className="font-semibold">IA integrada desde o início</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-[#003d9b]">
-                    done_all
-                  </span>
-                  <p className="font-semibold">
-                    Arquitetura escalável e segura
-                  </p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-[#003d9b]">
-                    done_all
-                  </span>
-                  <p className="font-semibold">Foco absoluto em resultados</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-[#003d9b]">
-                    done_all
-                  </span>
-                  <p className="font-semibold">Suporte contínuo e evolução</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Final CTA */}
-        <section className="relative px-5 md:px-20 py-[120px] bg-[#003d9b] text-white overflow-hidden">
-          <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-[#00e3fd]/20 via-transparent to-transparent"></div>
-          <div className="max-w-4xl mx-auto text-center flex flex-col items-center gap-8 relative z-10">
-            <h2 className="font-heading text-3xl md:text-5xl font-bold tracking-tight">
-              Vamos construir a próxima solução da sua empresa?
-            </h2>
-            <p className="font-sans text-lg md:text-[18px] text-white/80 max-w-2xl leading-relaxed">
-              Cada empresa possui desafios únicos. Agende uma reunião e descubra
-              como a tecnologia pode transformar sua operação e acelerar seus
-              resultados.
-            </p>
-            <Link
-              href="mailto:contato@fzbuild.solutions"
-              className="bg-[#00e3fd] text-[#001f24] font-bold text-lg px-12 py-5 rounded-full hover:scale-105 transition-all shadow-xl shadow-black/20 text-center"
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {TEAM.map((m, i) => (
+            <motion.div
+              key={m.name}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 + i * 0.08, duration: 0.6 }}
+              whileHover={{ y: -6 }}
+              className="fz-card rounded-2xl p-6 flex flex-col gap-5 cursor-default transition-all duration-300"
             >
-              Agendar Diagnóstico
-            </Link>
-          </div>
-        </section>
-      </main>
+              {/* Avatar Initial */}
+              <div
+                className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${m.gradient} flex items-center justify-center text-white font-heading font-extrabold text-lg shadow-md`}
+              >
+                {m.initials}
+              </div>
 
-      {/* Footer */}
-      <footer className="bg-[#e1e2e4] w-full px-5 md:px-20 py-12 flex flex-col gap-12 border-t mt-auto text-[#434654]">
-        <div className="flex flex-col md:flex-row justify-between items-start gap-12">
-          <div className="flex flex-col gap-4 text-left">
-            <div className="flex items-center gap-2">
-              <img
-                src="/fzbuildsemfundo.png"
-                alt="FZ Build Solutions"
-                className="h-10 w-auto"
-              />
+              <div>
+                <h3 className="font-heading font-bold text-base fz-h2 leading-snug">
+                  {m.name}
+                </h3>
+                <p className="text-xs font-semibold fz-accent-text mt-1 line-clamp-2 leading-relaxed h-8">
+                  {m.role}
+                </p>
+              </div>
+
+              <div className="border-t border-white/5 pt-4 flex flex-col gap-2">
+                <span className="text-[10px] font-mono tracking-wider uppercase text-white/40">
+                  Foco Principal:
+                </span>
+                <ul className="flex flex-col gap-1.5">
+                  {m.responsibilities.map((resp) => (
+                    <li
+                      key={resp}
+                      className="flex items-center gap-2 text-xs fz-body"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#1e6bff]" />
+                      {resp}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ──────────────────────────────────────────────
+   SECTION 3 — SOLUTIONS
+────────────────────────────────────────────── */
+const SOLUTIONS = [
+  {
+    icon: "straighten",
+    title: "Software Sob Medida",
+    desc: "Sistemas Web e aplicativos mobile customizados.",
+  },
+  {
+    icon: "cloud",
+    title: "Sistemas SaaS",
+    desc: "Desenvolvimento de plataformas escaláveis por assinatura.",
+  },
+  {
+    icon: "psychology",
+    title: "Inteligência Artificial",
+    desc: "Agentes inteligentes e RAG para sua operação.",
+  },
+  {
+    icon: "settings_suggest",
+    title: "Automação",
+    desc: "Eliminação de retrabalho com workflows inteligentes.",
+  },
+  {
+    icon: "insights",
+    title: "Dashboards & BI",
+    desc: "Dados centralizados e transformados em inteligência.",
+  },
+  {
+    icon: "api",
+    title: "Integrações & APIs",
+    desc: "Conexão nativa entre seus ERPs, CRMs e bancos de dados.",
+  },
+  {
+    icon: "phone_android",
+    title: "Aplicativos Mobile",
+    desc: "Apps de alta performance criados nativamente com Flutter.",
+  },
+  {
+    icon: "contact_support",
+    title: "Consultoria Tecnológica",
+    desc: "Diagnóstico profundo de stack, arquitetura e processos.",
+  },
+];
+
+function SolutionsSection() {
+  return (
+    <section className="relative h-screen flex items-center fz-section overflow-hidden">
+      <div className="fz-hero-blob-2 absolute left-[-200px] top-1/2 pointer-events-none opacity-40" />
+      <div className="absolute inset-0 fz-bg-pattern opacity-30 pointer-events-none" />
+
+      <div className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-16 w-full pt-20">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="mb-10"
+        >
+          <span className="fz-label font-mono text-xs font-bold tracking-[0.25em] uppercase">
+            ÁREAS DE ATUAÇÃO
+          </span>
+          <h2 className="font-heading font-extrabold text-3xl md:text-4xl mt-2 fz-h2">
+            Soluções que <span className="fz-accent-text">desenvolvemos</span>
+          </h2>
+        </motion.div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {SOLUTIONS.map((s, i) => (
+            <motion.div
+              key={s.title}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1 + i * 0.06, duration: 0.5 }}
+              whileHover={{ y: -4, scale: 1.02 }}
+              className="fz-card rounded-2xl p-5 flex flex-col gap-3 cursor-default transition-all duration-300 group relative overflow-hidden"
+            >
+              {/* Sweep */}
+              <div className="absolute inset-0 w-1/3 h-full fz-card-sweep skew-x-[-15deg] translate-x-[-120%] group-hover:translate-x-[400%] transition-transform duration-700 pointer-events-none" />
+              <div className="fz-icon-box w-10 h-10 rounded-xl flex items-center justify-center">
+                <span className="material-symbols-outlined text-xl fz-icon-accent">
+                  {s.icon}
+                </span>
+              </div>
+              <div>
+                <h3 className="font-heading font-bold text-sm fz-h2 mb-1">
+                  {s.title}
+                </h3>
+                <p className="fz-body text-xs leading-relaxed">{s.desc}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ──────────────────────────────────────────────
+   SECTION 4 — PRODUCTS
+────────────────────────────────────────────── */
+const PRODUCTS = [
+  {
+    name: "DP Core",
+    badge: "Em Produção",
+    icon: "science",
+    desc: "Gestão de laboratórios clínicos com IA para apoio operacional e auditoria de processos.",
+    features: [
+      "Requisição online",
+      "Automação de faturamento",
+      "IA operacional",
+      "Auditoria de guias",
+    ],
+    featured: true,
+  },
+  {
+    name: "EZYX Platform",
+    badge: "Logística",
+    icon: "hub",
+    desc: "Ecossistema de gerenciamento logístico com roteirização inteligente e painéis em tempo real.",
+    features: [
+      "Rastreamento ativo",
+      "Otimização de rotas",
+      "App motorista",
+      "Dashboard de fretes",
+    ],
+    featured: false,
+  },
+  {
+    name: "EZYX Fiscal",
+    badge: "Fiscal",
+    icon: "receipt_long",
+    desc: "Emissão e controle fiscal automático integrado de ponta a ponta com as SEFAZ estaduais.",
+    features: [
+      "Emissão em lote",
+      "Validação automatizada",
+      "Manifesto eletrônico",
+      "Custos de frete",
+    ],
+    featured: false,
+  },
+  {
+    name: "LogVida",
+    badge: "Monitoramento",
+    icon: "local_shipping",
+    desc: "Plataforma de gestão e monitoramento logístico em tempo real com alertas operacionais.",
+    features: [
+      "Status de entrega",
+      "Rastreadores IoT",
+      "Alertas de atraso",
+      "Controle de SLA",
+    ],
+    featured: false,
+  },
+  {
+    name: "CIA",
+    badge: "Central de IA",
+    icon: "support_agent",
+    desc: "Central Inteligente de Atendimento automática integrada com agentes autônomos de voz e chat.",
+    features: [
+      "Ura inteligente",
+      "Atendimento via WhatsApp",
+      "IA Generativa",
+      "RAG integrado",
+    ],
+    featured: false,
+  },
+  {
+    name: "FZ OS",
+    badge: "Em Desenvolvimento",
+    icon: "terminal",
+    desc: "Sistema operacional corporativo com orquestração de tarefas por agentes inteligentes de IA.",
+    features: [
+      "CRM inteligente",
+      "Orquestrador de tarefas",
+      "Analytics avançado",
+      "Portal unificado",
+    ],
+    featured: true,
+  },
+];
+
+function ProductsSection() {
+  return (
+    <section className="relative h-screen flex items-center fz-section overflow-hidden">
+      <div className="fz-hero-blob-3 absolute right-[-100px] bottom-0 pointer-events-none opacity-40" />
+
+      <div className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-16 w-full pt-20">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="mb-6"
+        >
+          <span className="fz-label font-mono text-xs font-bold tracking-[0.25em] uppercase">
+            PRODUTOS
+          </span>
+          <h2 className="font-heading font-extrabold text-2xl md:text-3xl mt-1.5 fz-h2">
+            Plataformas da <span className="fz-accent-text">FZ Build</span>
+          </h2>
+        </motion.div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          {PRODUCTS.map((p, i) => (
+            <motion.div
+              key={p.name}
+              initial={{ opacity: 0, y: 35 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 + i * 0.05, duration: 0.5 }}
+              whileHover={{ y: -4 }}
+              className={`fz-product-card rounded-2xl p-5 flex flex-col gap-3.5 transition-all duration-300 ${p.featured ? "fz-product-featured" : ""}`}
+            >
+              {/* Header */}
+              <div className="flex items-start justify-between">
+                <span
+                  className={`text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full fz-product-badge ${p.featured ? "fz-product-badge-featured" : ""}`}
+                >
+                  {p.badge}
+                </span>
+                <div className="w-8 h-8 rounded-lg fz-icon-box flex items-center justify-center">
+                  <span
+                    className={`material-symbols-outlined text-base fz-icon-accent`}
+                  >
+                    {p.icon}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-heading font-bold text-base fz-h2 mb-0.5">
+                  {p.name}
+                </h3>
+                <p className="fz-body text-[11px] leading-relaxed line-clamp-2 h-9">
+                  {p.desc}
+                </p>
+              </div>
+
+              <ul className="grid grid-cols-2 gap-1 border-t border-white/5 pt-3">
+                {p.features.map((f) => (
+                  <li
+                    key={f}
+                    className="flex items-center gap-1.5 text-[10px] fz-body"
+                  >
+                    <span className="material-symbols-outlined fz-icon-accent text-xs">
+                      check_circle
+                    </span>
+                    <span className="truncate">{f}</span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ──────────────────────────────────────────────
+   SECTION 5 — METHODOLOGY
+────────────────────────────────────────────── */
+const STEPS = [
+  {
+    n: "01",
+    title: "Diagnóstico",
+    desc: "Mapeamos gargalos e oportunidades.",
+    icon: "search_check",
+  },
+  {
+    n: "02",
+    title: "Arquitetura",
+    desc: "Stack, integrações e escopo.",
+    icon: "architecture",
+  },
+  {
+    n: "03",
+    title: "Desenvolvimento",
+    desc: "Sprints com entregas incrementais.",
+    icon: "code",
+  },
+  {
+    n: "04",
+    title: "Implantação",
+    desc: "Go-live assistido e treinamento.",
+    icon: "rocket_launch",
+  },
+  {
+    n: "05",
+    title: "Evolução",
+    desc: "Suporte e melhoria contínua.",
+    icon: "trending_up",
+  },
+];
+
+function MethodologySection() {
+  return (
+    <section className="relative h-screen flex items-center fz-section overflow-hidden">
+      <div className="fz-hero-blob-1 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-20 pointer-events-none" />
+      <div className="absolute inset-0 fz-bg-pattern opacity-25 pointer-events-none" />
+
+      <div className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-16 w-full pt-20">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="mb-14 text-center"
+        >
+          <span className="fz-label font-mono text-xs font-bold tracking-[0.25em] uppercase">
+            COMO TRABALHAMOS
+          </span>
+          <h2 className="font-heading font-extrabold text-3xl md:text-4xl mt-2 fz-h2">
+            Nossa <span className="fz-accent-text">Metodologia</span>
+          </h2>
+        </motion.div>
+
+        <div className="relative">
+          {/* Line */}
+          <div className="hidden md:block absolute top-10 left-0 right-0 h-px fz-step-line" />
+
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+            {STEPS.map((s, i) => (
+              <motion.div
+                key={s.n}
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + i * 0.1, duration: 0.6 }}
+                className="flex flex-col items-center text-center gap-4 group"
+              >
+                <div className="relative w-20 h-20 rounded-2xl fz-step-node flex items-center justify-center transition-all duration-400 group-hover:fz-step-node-active">
+                  <span className="material-symbols-outlined text-2xl fz-icon-accent group-hover:scale-110 transition-transform">
+                    {s.icon}
+                  </span>
+                  <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full fz-step-badge flex items-center justify-center text-xs font-bold">
+                    {i + 1}
+                  </span>
+                </div>
+                <div>
+                  <h4 className="font-heading font-bold fz-h2 text-sm mb-1">
+                    {s.title}
+                  </h4>
+                  <p className="fz-body text-xs">{s.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        {/* Bottom trio */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7, duration: 0.6 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-14"
+        >
+          {[
+            {
+              icon: "search_check",
+              title: "Diagnóstico preciso",
+              desc: "Entendemos o negócio antes de codar",
+            },
+            {
+              icon: "architecture",
+              title: "Arquitetura robusta",
+              desc: "Escalabilidade planejada desde o início",
+            },
+            {
+              icon: "hub",
+              title: "Integração nativa",
+              desc: "Conectamos todos os seus sistemas",
+            },
+          ].map((item) => (
+            <div
+              key={item.title}
+              className="fz-card rounded-2xl p-5 flex items-start gap-4 group hover:scale-[1.02] transition-all duration-300"
+            >
+              <div className="fz-icon-box w-9 h-9 rounded-xl flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-lg fz-icon-accent">
+                  {item.icon}
+                </span>
+              </div>
+              <div>
+                <p className="font-semibold text-sm fz-h2 mb-0.5">
+                  {item.title}
+                </p>
+                <p className="fz-body text-xs">{item.desc}</p>
+              </div>
             </div>
-            <p className="text-sm max-w-xs font-sans">
-              Building Future Ecosystems through Intelligent Software.
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+/* ──────────────────────────────────────────────
+   SECTION 6 — WHY FZ
+────────────────────────────────────────────── */
+const WHY = [
+  { icon: "done_all", title: "Diagnóstico antes do desenvolvimento" },
+  { icon: "inventory_2", title: "Produtos próprios consolidados" },
+  { icon: "psychology", title: "IA integrada desde o início" },
+  { icon: "security", title: "Arquitetura escalável e segura" },
+  { icon: "emoji_events", title: "Foco absoluto em resultados" },
+  { icon: "support_agent", title: "Suporte contínuo e evolução" },
+];
+
+const TECH = [
+  "Next.js",
+  "React",
+  "TypeScript",
+  "Node.js",
+  "Firebase",
+  "Firestore",
+  "PostgreSQL",
+  "Flutter",
+  "Tailwind CSS",
+  "Docker",
+  "IA Generativa",
+  "MCP",
+  "RAG",
+  "REST APIs",
+  "Webhooks",
+];
+
+function WhySection() {
+  return (
+    <section className="relative h-screen flex items-center fz-section overflow-hidden">
+      <div className="fz-hero-blob-2 absolute right-[-100px] top-[-100px] opacity-30 pointer-events-none" />
+
+      <div className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-16 w-full pt-20">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-start">
+          {/* Left */}
+          <motion.div
+            initial={{ opacity: 0, x: -40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.7 }}
+            className="flex flex-col gap-5"
+          >
+            <span className="fz-label font-mono text-xs font-bold tracking-[0.25em] uppercase">
+              POR QUE A FZ?
+            </span>
+            <h2 className="font-heading font-extrabold text-4xl md:text-5xl leading-tight fz-h2">
+              Visão estratégica{" "}
+              <span className="fz-accent-text">+ excelência técnica</span>
+            </h2>
+            <p className="fz-body leading-relaxed max-w-sm">
+              Não somos uma fábrica de software. Somos parceiros de tecnologia
+              que entendem o seu negócio e entregam resultados reais.
             </p>
-          </div>
+          </motion.div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-12 text-left">
-            <div className="flex flex-col gap-4 font-semibold text-sm">
-              <h4 className="font-bold text-[#191c1e] uppercase text-xs tracking-widest font-mono">
-                Navegação
-              </h4>
-              <Link
-                href="#quem-somos"
-                className="hover:text-[#003d9b] transition-colors"
+          {/* Right */}
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.7, delay: 0.15 }}
+            className="flex flex-col gap-3"
+          >
+            {WHY.map((item, i) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 + i * 0.07 }}
+                whileHover={{ x: 6 }}
+                className="flex items-center gap-4 p-3 rounded-xl fz-why-item transition-all duration-200"
               >
-                Sobre
-              </Link>
-              <Link
-                href="#solucoes"
-                className="hover:text-[#003d9b] transition-colors"
-              >
-                Soluções
-              </Link>
-              <Link
-                href="#produtos"
-                className="hover:text-[#003d9b] transition-colors"
-              >
-                Produtos
-              </Link>
-            </div>
+                <div className="fz-icon-box w-8 h-8 rounded-lg flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-base fz-icon-accent">
+                    {item.icon}
+                  </span>
+                </div>
+                <span className="font-semibold text-sm fz-h2">
+                  {item.title}
+                </span>
+              </motion.div>
+            ))}
 
-            <div className="flex flex-col gap-4 font-semibold text-sm">
-              <h4 className="font-bold text-[#191c1e] uppercase text-xs tracking-widest font-mono">
-                Institucional
-              </h4>
-              <Link
-                href="#metodologia"
-                className="hover:text-[#003d9b] transition-colors"
-              >
-                Metodologia
-              </Link>
-              <Link
-                href="mailto:contato@fzbuild.solutions"
-                className="hover:text-[#003d9b] transition-colors"
-              >
-                Contato
-              </Link>
-              <Link href="#" className="hover:text-[#003d9b] transition-colors">
-                Privacidade
-              </Link>
+            {/* Tech tags */}
+            <div className="flex flex-wrap gap-2 mt-3">
+              {TECH.map((t, i) => (
+                <motion.span
+                  key={t}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6 + i * 0.04 }}
+                  whileHover={{ scale: 1.08 }}
+                  className="fz-tech-tag px-3 py-1 rounded-full text-xs font-medium cursor-default transition-all duration-200"
+                >
+                  {t}
+                </motion.span>
+              ))}
             </div>
-
-            <div className="flex flex-col gap-4 font-semibold text-sm">
-              <h4 className="font-bold text-[#191c1e] uppercase text-xs tracking-widest font-mono">
-                Social
-              </h4>
-              <Link
-                href="https://linkedin.com"
-                className="hover:text-[#003d9b] transition-colors"
-              >
-                LinkedIn
-              </Link>
-              <Link
-                href="https://github.com/Ezequiel-07/fzbuildsolutions"
-                className="hover:text-[#003d9b] transition-colors"
-              >
-                GitHub
-              </Link>
-            </div>
-          </div>
+          </motion.div>
         </div>
+      </div>
+    </section>
+  );
+}
 
-        <div className="pt-8 border-t border-[#737685]/10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-semibold text-slate-500">
-          <div>
-            © {new Date().getFullYear()} FZ Build Solutions. Todos os direitos
-            reservados.
+/* ──────────────────────────────────────────────
+   SECTION 7 — CTA
+────────────────────────────────────────────── */
+function CTASection() {
+  return (
+    <section className="relative h-screen flex items-center fz-section fz-cta-section overflow-hidden">
+      {/* Rings */}
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="absolute rounded-full fz-ring border animate-pulse"
+            style={{
+              width: `${i * 300}px`,
+              height: `${i * 300}px`,
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              animationDelay: `${i * 0.6}s`,
+              animationDuration: "3s",
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="fz-hero-blob-1 absolute left-[-200px] top-0 opacity-30 pointer-events-none" />
+      <div className="fz-hero-blob-3 absolute right-[-200px] bottom-0 opacity-20 pointer-events-none" />
+
+      <div className="relative z-10 max-w-4xl mx-auto px-6 md:px-16 w-full pt-16 text-center flex flex-col items-center gap-6">
+        <motion.span
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fz-badge flex items-center gap-2 text-xs font-bold tracking-[0.2em] uppercase px-4 py-2 rounded-full"
+        >
+          <span className="w-1.5 h-1.5 rounded-full fz-badge-dot animate-pulse" />
+          Vamos Conversar
+        </motion.span>
+
+        <motion.h2
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="font-heading font-extrabold text-4xl md:text-5xl leading-[1.1] tracking-tight fz-h2"
+        >
+          Vamos construir a próxima{" "}
+          <span className="fz-accent-text">solução da sua empresa?</span>
+        </motion.h2>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="flex flex-wrap gap-4 justify-center mt-2"
+        >
+          <Link
+            href="https://wa.me/5511954297115?text=Ol%C3%A1%2C%20gostaria%20de%20solicitar%20um%20diagn%C3%B3stico%20da%20FZ%20Build%20Solutions."
+            target="_blank"
+            className="fz-btn-primary relative overflow-hidden group font-bold text-sm px-8 py-3.5 rounded-full flex items-center gap-2"
+          >
+            <span className="relative z-10">WhatsApp Comercial (SP)</span>
+            <span className="fz-btn-shine absolute inset-0 w-1/3 h-full skew-x-[-15deg] translate-x-[-120%] group-hover:translate-x-[400%] transition-transform duration-700" />
+          </Link>
+          <Link
+            href="https://wa.me/5548998503327?text=Ol%C3%A1%2C%20gostaria%20de%20falar%20com%20a%20equipe%20da%20FZ%20Build%20Solutions."
+            target="_blank"
+            className="fz-btn-ghost font-medium text-sm px-8 py-3.5 rounded-full border"
+          >
+            WhatsApp Operacional (SC)
+          </Link>
+        </motion.div>
+
+        {/* Corporate Information Grid */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-2xl border-t border-white/5 pt-6 mt-4 text-left text-xs"
+        >
+          <div className="flex flex-col gap-2.5">
+            <div>
+              <span className="font-semibold fz-h2 block mb-0.5">Endereço</span>
+              <span className="fz-body block">
+                Rua Porto Alegre, 520 · Bairro Vila Moema
+              </span>
+              <span className="fz-body block">
+                CEP: 88705-882 · Tubarão – SC
+              </span>
+            </div>
+            <div>
+              <span className="font-semibold fz-h2 block mb-0.5">E-mail</span>
+              <Link
+                href="mailto:fzbuild.solutions@gmail.com"
+                className="hover:text-[#1e6bff] fz-body underline transition-colors block"
+              >
+                fzbuild.solutions@gmail.com
+              </Link>
+            </div>
           </div>
-          <div className="flex gap-4 items-center">
-            <span>Brasil</span>
-            <span className="w-1 h-1 bg-[#737685]/30 rounded-full"></span>
-            <span>Intelligent Ecosystems</span>
+
+          <div className="flex flex-col gap-2.5">
+            <div>
+              <span className="font-semibold text-white block mb-0.5">
+                Dados Corporativos
+              </span>
+              <span className="opacity-80 block">FZ Build Solutions LTDA</span>
+              <span className="opacity-80 block">CNPJ: 67.700.723/0001-74</span>
+              <span className="opacity-80 block">Fundada em 2026</span>
+            </div>
           </div>
-        </div>
-      </footer>
+        </motion.div>
+
+        {/* Footer strip (relative, inline to prevent overlapping on shorter viewports) */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7 }}
+          className="w-full flex flex-col sm:flex-row justify-between items-center border-t border-white/5 pt-4 mt-2 fz-body text-[10px] opacity-40 gap-2"
+        >
+          <span className="flex items-center gap-2">
+            <img
+              src="/fzbuildsemfundo.png"
+              alt=""
+              className="h-5 w-auto fz-logo-img"
+              style={{ height: "20px" }}
+            />
+            <span>
+              © 2026 FZ Build Solutions LTDA. Todos os direitos reservados.
+            </span>
+          </span>
+          <div className="flex items-center gap-3">
+            <span>Tubarão/SC</span>
+            <span>·</span>
+            <span>São Paulo/SP</span>
+            <span>·</span>
+            <span className="font-mono">CNPJ: 67.700.723/0001-74</span>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+/* ──────────────────────────────────────────────
+   ROOT
+────────────────────────────────────────────── */
+const LABELS = [
+  "Início",
+  "Sobre",
+  "Equipe",
+  "Soluções",
+  "Produtos",
+  "Metodologia",
+  "Por que FZ",
+  "Contato",
+];
+
+function LandingPage() {
+  return (
+    <div className="fz-root">
+      <NavBar />
+      <FullPageScroll sectionLabels={LABELS}>
+        <HeroSection />
+        <AboutSection />
+        <EquipeSection />
+        <SolutionsSection />
+        <ProductsSection />
+        <MethodologySection />
+        <WhySection />
+        <CTASection />
+      </FullPageScroll>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <ThemeProvider>
+      {/* Particle network canvas — behind everything (z-index 0) */}
+      <ParticleCanvas />
+      <LandingPage />
+    </ThemeProvider>
   );
 }

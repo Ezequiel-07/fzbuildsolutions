@@ -4,16 +4,98 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Settings, Send, Plus } from "lucide-react";
+import { Bell, Settings, Send, Plus, Activity } from "lucide-react";
 import { NewProjectModal } from "@/features/projects/components/new-project-modal";
 import { useProjects } from "@/features/projects/api/use-projects";
+import { useTeam } from "@/features/team/api/use-team";
+import { AreaChart, Area, ResponsiveContainer } from "recharts";
+import { ReactFlow, Background } from "@xyflow/react";
+import { UserNav } from "@/features/layout/components/user-nav";
+import { ProfileModal } from "@/features/layout/components/profile-modal";
+import "@xyflow/react/dist/style.css";
+
+const mockInfraData = [
+  { name: "00:00", uv: 4000, pv: 2400 },
+  { name: "04:00", uv: 3000, pv: 1398 },
+  { name: "08:00", uv: 2000, pv: 9800 },
+  { name: "12:00", uv: 2780, pv: 3908 },
+  { name: "16:00", uv: 1890, pv: 4800 },
+  { name: "20:00", uv: 2390, pv: 3800 },
+  { name: "24:00", uv: 3490, pv: 4300 },
+];
+
+const miniFlowNodes = [
+  {
+    id: "1",
+    position: { x: 10, y: 30 },
+    data: { label: "API" },
+    style: {
+      width: 40,
+      height: 20,
+      fontSize: 8,
+      padding: 2,
+      background: "#00e3fd",
+      color: "#003d9b",
+      border: "none",
+      borderRadius: 4,
+    },
+  },
+  {
+    id: "2",
+    position: { x: 70, y: 10 },
+    data: { label: "DB" },
+    style: {
+      width: 40,
+      height: 20,
+      fontSize: 8,
+      padding: 2,
+      background: "#f97316",
+      color: "white",
+      border: "none",
+      borderRadius: 4,
+    },
+  },
+  {
+    id: "3",
+    position: { x: 70, y: 60 },
+    data: { label: "Auth" },
+    style: {
+      width: 40,
+      height: 20,
+      fontSize: 8,
+      padding: 2,
+      background: "#003d9b",
+      color: "white",
+      border: "none",
+      borderRadius: 4,
+    },
+  },
+];
+const miniFlowEdges = [
+  {
+    id: "e1-2",
+    source: "1",
+    target: "2",
+    animated: true,
+    style: { stroke: "#003d9b" },
+  },
+  {
+    id: "e1-3",
+    source: "1",
+    target: "3",
+    animated: true,
+    style: { stroke: "#003d9b" },
+  },
+];
 
 export default function DashboardPage() {
   const router = useRouter();
   const [prompt, setPrompt] = useState("");
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const { data: projects = [], isLoading: isLoadingProjects } = useProjects();
+  const { data: teamMembers = [], isLoading: isLoadingTeam } = useTeam();
 
   const handleCardClick = (path: string) => {
     setSelectedCard(path);
@@ -29,18 +111,12 @@ export default function DashboardPage() {
     const handleMouseMove = (e: MouseEvent) => {
       const card = e.currentTarget as HTMLElement;
       const rect = card.getBoundingClientRect();
-
-      // Calculate mouse position relative to card center
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-
       const centerX = rect.width / 2;
       const centerY = rect.height / 2;
-
-      // Max 10 degrees of rotation
       const rotateX = ((y - centerY) / centerY) * -10;
       const rotateY = ((x - centerX) / centerX) * 10;
-
       card.style.transition = "transform 0.1s ease-out";
       card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
     };
@@ -78,36 +154,55 @@ export default function DashboardPage() {
   return (
     <div className="relative min-h-screen font-sans bg-transparent text-[#191c1e] select-none overflow-x-hidden">
       {/* Top Navigation Anchor */}
-      <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-center px-8 md:px-[80px] h-20">
-        <div className="bg-[#f8f9fb]/80 backdrop-blur-xl border border-slate-200/50 rounded-full px-8 py-2.5 flex items-center shadow-sm gap-2">
+      <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-center px-4 md:px-[80px] h-20">
+        <div className="bg-[#f8f9fb]/80 backdrop-blur-xl border border-slate-200/50 rounded-full px-6 md:px-8 py-2.5 flex items-center shadow-sm gap-2 max-w-full overflow-x-auto">
           <img
             src="/fzbuildsemfundo.png"
             alt="FZ Console"
-            className="h-8 w-auto mr-6"
+            className="h-8 w-auto mr-2 md:mr-6 shrink-0"
           />
           <nav className="hidden md:flex gap-6 items-center">
             <Link
               className="font-mono text-xs font-semibold uppercase tracking-wider text-[#003d9b] border-b-2 border-[#003d9b] py-1 transition-colors"
-              href="#"
+              href="/os"
             >
-              Ecossistema
+              Dashboard
             </Link>
             <Link
               className="font-mono text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-[#003d9b] py-1 transition-colors"
-              href="#"
+              href="/os/projects"
             >
-              Previsões
+              Projetos
             </Link>
             <Link
               className="font-mono text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-[#003d9b] py-1 transition-colors"
-              href="#"
+              href="/os/crm"
             >
-              Frota
+              CRM
+            </Link>
+            <Link
+              className="font-mono text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-[#003d9b] py-1 transition-colors"
+              href="/os/team"
+            >
+              Equipe
+            </Link>
+            <Link
+              className="font-mono text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-[#003d9b] py-1 transition-colors"
+              href="/os/finance"
+            >
+              Financeiro
             </Link>
           </nav>
-          <div className="ml-8 flex items-center gap-4 text-[#003d9b]">
+          <div className="ml-2 md:ml-8 flex items-center gap-3 md:gap-4 text-[#003d9b] shrink-0">
             <Bell className="h-5 w-5 cursor-pointer hover:scale-110 duration-150 transition-transform" />
-            <Settings className="h-5 w-5 cursor-pointer hover:scale-110 duration-150 transition-transform" />
+            <button
+              onClick={() => setIsProfileModalOpen(true)}
+              aria-label="Settings"
+              className="hover:scale-110 duration-150 transition-transform focus:outline-none flex items-center justify-center"
+            >
+              <Settings className="h-5 w-5" />
+            </button>
+            <UserNav />
           </div>
         </div>
       </header>
@@ -158,11 +253,7 @@ export default function DashboardPage() {
                       </div>
                       <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                         <div
-                          className={`h-full rounded-full ${
-                            project.status === "completed"
-                              ? "bg-green-500"
-                              : "bg-[#003d9b]"
-                          }`}
+                          className={`h-full rounded-full ${project.status === "completed" ? "bg-green-500" : "bg-[#003d9b]"}`}
                           style={{ width: `${project.progress || 0}%` }}
                         />
                       </div>
@@ -185,145 +276,112 @@ export default function DashboardPage() {
                 ATIVIDADE DA EQUIPE
               </h3>
               <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-3">
-                  <img
-                    className="w-10 h-10 rounded-full border-2 border-white shadow-sm"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhlwfUzpRuULSHyCEvL0c58ubtnS1mLM0mJtRoEVLcLFM0eohVCs42xe1DaNk-SxII1DVNgQydcZnp9xU4R6WTfIV9C3FTjsnfIk080IzfE8-VlpWE-skXKykqP3inrAOphdnuSZjYrjYNuKAIQRubAeIJKphsOUiSoGfJ-am660FM_u9TSWbNYUFKw7rJUvkr9bg6_Yy2mgl-0qM7o9J_5AFSf0kAj8c9rZEk4g2CwpuJFzl_QDZ0"
-                    alt="Engineer 1"
-                  />
-                  <div className="flex flex-col">
-                    <span className="text-xs font-bold text-slate-800">
-                      Ativo
-                    </span>
-                    <span className="text-[10px] text-slate-400">Status</span>
+                {isLoadingTeam ? (
+                  <div className="col-span-2 text-xs text-slate-400">
+                    Carregando membros...
                   </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <img
-                    className="w-10 h-10 rounded-full border-2 border-white shadow-sm"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwhXgttIXq0vOzGTr4aGClKqxPJeIUDMEOxFLjuoAy4mCN9SJ-yyihB6qG7JQWKhaY9rWl3rnWu60cVITRU9JsRHLtjw4oP1IZcoQTAEwxZydgbrRyot7TTuKncaTewuPrys_u-Vg_wo4kE9U1aCmoIZPhXoWaxV-f_bk0x1obX6jIvbjE56jfyU8z8hebjtksoe7S-VKFBVET3Zdv3UIXPnVptYaI74TnQaYS2EMixjvYPoDyRPls"
-                    alt="Engineer 2"
-                  />
-                  <div className="flex flex-col">
-                    <span className="text-xs font-bold text-slate-800">
-                      Ausente
-                    </span>
-                    <span className="text-[10px] text-slate-400">Status</span>
+                ) : teamMembers.length === 0 ? (
+                  <div className="col-span-2 text-xs text-slate-400">
+                    Nenhum membro cadastrado.
                   </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <img
-                    className="w-10 h-10 rounded-full border-2 border-white shadow-sm"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwOKrdy4iNYPdoY2J-3ZTDfYnGbsvCR5_pcguT4b4j3ljKDH_cEFhJyyVXGdvGkY8dehvEsArdT1Lsq1T4si8TKgY5rhrcZdFSJBxYq-AV14vYg59D5QhvJzEJ74APLjj-9GsBRESWSGsc0ZqVsSDD5DJK1YyME-72fwgQVqMwyna2_aleZBEAmmzwKvEBOvf9tVpZ2g34lRsfX1ib1H8Sr9lVpOyFcEihFmOutE6KSRSkF70ISIRd"
-                    alt="Designer"
-                  />
-                  <div className="flex flex-col">
-                    <span className="text-xs font-bold text-slate-800">
-                      Ocupado
-                    </span>
-                    <span className="text-[10px] text-slate-400">Status</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <img
-                    className="w-10 h-10 rounded-full border-2 border-white shadow-sm"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZa_ztu8y4ao3gg8RvnWmyRqL7zNtLk-7Uq7fw4D_fItMqWDQrF6KC4MO-bf-rYJR_Pt9GkMcvE1EG6zf8KUwmdjaf8y3pvlONmxpkoHx7LlimNAhWPX-XW1vLcE9U-31BWeluTQTjrV3PrEklhIxX-JX6G7RtwBVGJOHQoN8UBZaIHUThcK5WkINRwBO9_btBOk8D9WbVUsbNaPYGeY_8wabQr-NmvBb4mzu0lXp87S4HApGX-5y1"
-                    alt="Lead"
-                  />
-                  <div className="flex flex-col">
-                    <span className="text-xs font-bold text-slate-800">
-                      Offline
-                    </span>
-                    <span className="text-[10px] text-slate-400">Status</span>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Workflow Visualization Bottom */}
-            <motion.div
-              layoutId="/os/workflow-viz"
-              onClick={() => handleCardClick("/os/workflow")}
-              className="glass-card bg-white/80 backdrop-blur-xl border border-white/40 p-6 rounded-2xl h-48 flex flex-col shadow-xl shadow-blue-900/5 cursor-pointer hover:shadow-2xl hover:scale-[1.02]"
-              style={{
-                transform: "perspective(1000px) rotateX(0deg) rotateY(0deg)",
-              }}
-            >
-              <h3 className="font-mono text-xs font-bold tracking-widest text-[#003d9b] mb-2">
-                VISUALIZAÇÃO DE FLUXOS
-              </h3>
-              <div className="flex-grow flex items-end">
-                <div className="w-full h-full relative overflow-hidden" />
+                ) : (
+                  teamMembers.slice(0, 4).map((member) => (
+                    <div key={member.id} className="flex items-center gap-3">
+                      <img
+                        src={member.avatarUrl}
+                        alt={member.name}
+                        className="w-10 h-10 rounded-full border-2 border-white shadow-sm"
+                      />
+                      <div className="flex flex-col">
+                        <span
+                          className="text-xs font-bold text-slate-800 line-clamp-1"
+                          title={member.name}
+                        >
+                          {member.name.split(" ")[0]}
+                        </span>
+                        <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                          <div
+                            className={`w-1.5 h-1.5 rounded-full ${member.color}`}
+                          />
+                          {member.status}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </motion.div>
           </div>
 
           {/* CENTRAL HUB */}
-          <div className="col-span-12 lg:col-span-6 flex flex-col items-center justify-center relative">
-            {/* Large Rotating Orb Background */}
-            <div className="absolute w-[600px] h-[600px] rounded-full border border-blue-900/10 flex items-center justify-center pointer-events-none">
-              <div className="w-[500px] h-[500px] rounded-full border border-cyan-500/20 animate-[spin_60s_linear_infinite] relative">
+          <div className="col-span-12 lg:col-span-6 flex flex-col items-center justify-center relative w-full px-4">
+            <div className="absolute w-[320px] h-[320px] md:w-[600px] md:h-[600px] rounded-full border border-blue-900/10 flex items-center justify-center pointer-events-none hidden sm:flex">
+              <div className="w-[280px] h-[280px] md:w-[500px] md:h-[500px] rounded-full border border-cyan-500/20 animate-[spin_60s_linear_infinite] relative">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-[#003d9b] rounded-full blur-sm" />
               </div>
             </div>
 
-            {/* Main AI Command Circle */}
             <div
-              className="w-[520px] h-[520px] rounded-full bg-white/70 backdrop-blur-lg glass-card border border-white/45 flex flex-col items-center justify-center p-12 text-center relative z-20 shadow-2xl shadow-blue-900/15"
+              className="w-full max-w-[520px] aspect-square rounded-full bg-white/70 backdrop-blur-lg glass-card border border-white/45 flex flex-col items-center justify-center p-6 sm:p-12 text-center relative z-20 shadow-2xl shadow-blue-900/15"
               style={{
                 transform: "perspective(1000px) rotateX(0deg) rotateY(0deg)",
               }}
             >
-              <div className="mb-6 flex flex-col items-center select-none">
-                <div className="mb-4">
+              <div className="mb-4 sm:mb-6 flex flex-col items-center select-none">
+                <div className="mb-2 sm:mb-4">
                   <img
                     src="/fzbuildsemfundo.png"
                     alt="FZ Logo"
-                    className="h-16 w-auto drop-shadow-md"
+                    className="h-16 sm:h-28 w-auto drop-shadow-md"
                   />
                 </div>
-                <h2 className="font-heading text-[28px] font-extrabold tracking-tight leading-tight text-slate-800 uppercase">
+                <h2 className="font-heading text-lg sm:text-[28px] font-extrabold tracking-tight leading-tight text-slate-800 uppercase">
                   CENTRAL DE COMANDO IA
                 </h2>
               </div>
 
-              {/* AI Input Field */}
-              <form onSubmit={handleSendPrompt} className="w-full mb-8">
+              <form onSubmit={handleSendPrompt} className="w-full mb-4 sm:mb-8">
                 <div className="relative group">
                   <input
                     type="text"
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                     placeholder="Descreva o fluxo do projeto para implantação..."
-                    className="w-full bg-[#f3f4f6]/80 border border-slate-200 px-6 py-4 rounded-full text-sm font-sans focus:ring-2 focus:ring-[#00e3fd]/50 focus:border-[#00e3fd] outline-none transition-all pr-12 shadow-inner text-slate-800 placeholder-slate-400"
+                    className="w-full bg-[#f3f4f6]/80 border border-slate-200 px-4 sm:px-6 py-3 sm:py-4 rounded-full text-xs sm:text-sm font-sans focus:ring-2 focus:ring-[#00e3fd]/50 focus:border-[#00e3fd] outline-none transition-all pr-12 shadow-inner text-slate-800 placeholder-slate-400"
                   />
                   <button
                     type="submit"
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-[#003d9b] hover:scale-110 transition-transform duration-200"
                   >
-                    <Send className="h-5 w-5" />
+                    <Send className="h-4 w-4 sm:h-5 sm:w-5" />
                   </button>
                 </div>
               </form>
 
-              {/* Charts Grid */}
-              <div className="grid grid-cols-2 gap-8 w-full select-none">
+              <div className="grid grid-cols-2 gap-4 sm:gap-8 w-full select-none">
                 <div className="flex flex-col items-center">
-                  <div className="w-full h-24 mb-2 bg-[#f8f9fb] rounded-xl border border-slate-100 flex items-center justify-center text-slate-300 font-mono text-xs">
-                    Gráfico de Insights
+                  <div className="w-full h-16 sm:h-24 mb-1 sm:mb-2 bg-[#f8f9fb] rounded-xl border border-slate-100 flex items-center justify-center text-[#003d9b] font-mono text-xs">
+                    <Activity className="w-5 h-5 sm:w-6 sm:h-6 animate-pulse" />
                   </div>
-                  <span className="font-mono text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  <span className="font-mono text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                     INSIGHTS DE IA
                   </span>
                 </div>
                 <div className="flex flex-col items-center">
-                  <div className="w-full h-24 mb-2 bg-[#f8f9fb] rounded-xl border border-slate-100 flex items-center justify-center text-slate-300 font-mono text-xs">
-                    Mapa de Previsão
+                  <div className="w-full h-16 sm:h-24 mb-1 sm:mb-2 bg-[#f8f9fb] rounded-xl border border-slate-100 flex items-center justify-center text-slate-300 font-mono text-xs overflow-hidden px-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={mockInfraData}>
+                        <Area
+                          type="monotone"
+                          dataKey="uv"
+                          stroke="#003d9b"
+                          fill="#003d9b"
+                          fillOpacity={0.1}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
                   </div>
-                  <span className="font-mono text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  <span className="font-mono text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                     PREVISÕES
                   </span>
                 </div>
@@ -333,11 +391,11 @@ export default function DashboardPage() {
 
           {/* RIGHT COLUMN */}
           <div className="col-span-12 lg:col-span-3 space-y-8 flex flex-col justify-center">
-            {/* Workflow Nodes */}
+            {/* Workflow Nodes Preview */}
             <motion.div
               layoutId="/os/workflow"
               onClick={() => handleCardClick("/os/workflow")}
-              className="glass-card bg-white/80 backdrop-blur-xl border border-white/40 p-6 rounded-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500 h-64 overflow-hidden relative shadow-xl shadow-blue-900/5 cursor-pointer hover:shadow-2xl hover:scale-[1.02]"
+              className="glass-card bg-white/80 backdrop-blur-xl border border-white/40 p-6 rounded-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500 h-64 overflow-hidden relative shadow-xl shadow-blue-900/5 cursor-pointer hover:shadow-2xl hover:scale-[1.02] flex flex-col"
               style={{
                 transform: "perspective(1000px) rotateX(0deg) rotateY(0deg)",
               }}
@@ -345,22 +403,25 @@ export default function DashboardPage() {
               <h3 className="font-mono text-xs font-bold tracking-widest text-[#003d9b] mb-4">
                 VISUALIZAÇÃO DE FLUXOS
               </h3>
-              <div className="w-full h-full flex items-center justify-center select-none">
-                <div
-                  className="w-full h-full bg-contain bg-no-repeat bg-center"
-                  style={{
-                    backgroundImage:
-                      "url('https://lh3.googleusercontent.com/aida-public/AB6AXuA3x5MISy9r_yq-GzGvmKV0gRUUThH0TGhvnF7T4uxXsUPdAaidgQD2PNWxI2vvogXSmxqWD6yFwV_72ljVWbzAEW3cDowBK_I9PAyFy9buovTZkFu5olHU8lzMAZoHtYpjLFgjJKQMD-e2edaI1dR163NhSgdAgxbVf3zed1_lGnpa1C7R858GJz6OltHvltxVRHT_xBFuxjko-zA4__kR4rFczy9TU1GyULUhGQ9oIc49jYbDgGQE')",
-                  }}
-                />
+              <div className="w-full h-full flex-grow relative bg-slate-50/50 rounded-xl border border-slate-100 overflow-hidden pointer-events-none">
+                <ReactFlow
+                  nodes={miniFlowNodes}
+                  edges={miniFlowEdges}
+                  panOnDrag={false}
+                  zoomOnScroll={false}
+                  nodesDraggable={false}
+                  fitView
+                >
+                  <Background color="#cbd5e1" gap={12} size={1} />
+                </ReactFlow>
               </div>
             </motion.div>
 
             {/* Infrastructure Map */}
             <motion.div
               layoutId="/os/infrastructure"
-              onClick={() => handleCardClick("/os/infrastructure")}
-              className="glass-card bg-white/80 backdrop-blur-xl border border-white/40 p-6 rounded-2xl transform -rotate-2 hover:rotate-0 transition-transform duration-500 h-72 shadow-xl shadow-blue-900/5 cursor-pointer hover:shadow-2xl hover:scale-[1.02]"
+              onClick={() => handleCardClick("/os/finance")}
+              className="glass-card bg-white/80 backdrop-blur-xl border border-white/40 p-6 rounded-2xl transform -rotate-2 hover:rotate-0 transition-transform duration-500 h-72 shadow-xl shadow-blue-900/5 cursor-pointer hover:shadow-2xl hover:scale-[1.02] flex flex-col"
               style={{
                 transform: "perspective(1000px) rotateX(0deg) rotateY(0deg)",
               }}
@@ -368,15 +429,32 @@ export default function DashboardPage() {
               <h3 className="font-mono text-xs font-bold tracking-widest text-[#003d9b] mb-4">
                 MAPA DE INFRAESTRUTURA
               </h3>
-              <div className="w-full h-full relative select-none">
-                {/* Wireframe Mesh Background */}
-                <div
-                  className="absolute inset-0 bg-contain bg-no-repeat bg-center opacity-55 pointer-events-none"
-                  style={{
-                    backgroundImage:
-                      "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDs8dTuDWWZ_aBVawpCmlXCHIFfuxlJE3E15uQQaNiot1DvWAoDGqgcW6CQcP726pPF9T-n7dJNGXmE1TmHhTIOEKdEAmLXIxZeJoPy6lnQo2clWokl9ad5D_28rzeSr3InPJA2Ix0dw9F2tOOEwAplTQAv5Y4J-U0YeOM7K12sPTlx3WLZk7DXkpZRYOhqsgefdcUBXq4bWYu4Pq8teO04mzeSNTrXm1a5qyU0Tw-uHgwTByET-Jtr')",
-                  }}
-                />
+              <div className="w-full flex-grow relative select-none">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={mockInfraData}>
+                    <defs>
+                      <linearGradient id="colorPv" x1="0" y1="0" x2="0" y2="1">
+                        <stop
+                          offset="5%"
+                          stopColor="#00e3fd"
+                          stopOpacity={0.8}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#00e3fd"
+                          stopOpacity={0}
+                        />
+                      </linearGradient>
+                    </defs>
+                    <Area
+                      type="monotone"
+                      dataKey="pv"
+                      stroke="#00e3fd"
+                      fillOpacity={1}
+                      fill="url(#colorPv)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
             </motion.div>
           </div>
@@ -413,6 +491,10 @@ export default function DashboardPage() {
       <NewProjectModal
         isOpen={isNewProjectModalOpen}
         onClose={() => setIsNewProjectModalOpen(false)}
+      />
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
       />
     </div>
   );
