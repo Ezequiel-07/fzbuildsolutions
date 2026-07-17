@@ -14,7 +14,7 @@ const nextConfig: NextConfig = {
           {
             key: "Content-Security-Policy",
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-inline' https://*.googleapis.com https://*.firebaseapp.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://identitytoolkit.googleapis.com https://*.firebaseio.com https://*.googleapis.com;",
+              "default-src 'self'; script-src 'self' 'unsafe-inline' https://*.googleapis.com https://*.firebaseapp.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;",
           },
         ],
       },
@@ -23,6 +23,12 @@ const nextConfig: NextConfig = {
   // Prevent Firebase App Hosting from activating Pages Router
   skipTrailingSlashRedirect: true,
   skipMiddlewareUrlNormalize: true,
+  // Desabilitar timeout de geração estática de páginas
+  staticPageGenerationTimeout: 0,
+  // Configurações experimentais para melhor compatibilidade
+  experimental: {
+    esmExternals: false,
+  },
 };
 
 export default nextConfig;
