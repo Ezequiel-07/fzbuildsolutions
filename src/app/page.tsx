@@ -225,7 +225,7 @@ function HeroSection() {
           alt=""
           fill
           priority
-          className="object-cover opacity-80"
+          className={`object-cover ${isDark ? "opacity-10" : "opacity-80"}`}
         />
       </div>
 

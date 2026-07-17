@@ -89,30 +89,11 @@ export function ParticleCanvas() {
       mousePrev.current = { ...mouse.current };
       mouse.current = { x: e.clientX, y: e.clientY };
 
-      // Spawn ripple on significant mouse movements (Layer 5)
-      const dx = mouse.current.x - mousePrev.current.x;
-      const dy = mouse.current.y - mousePrev.current.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist > 15 && Math.random() < 0.12 && ripples.length < 8) {
-        ripples.push({
-          x: mouse.current.x,
-          y: mouse.current.y,
-          radius: 0,
-          maxRadius: Math.random() * 80 + 70,
-          alpha: 0.28,
-        });
-      }
+      // Removed ripple effect on hover
     };
 
-    const onClick = (e: MouseEvent) => {
-      // Direct clicks generate larger ripples
-      ripples.push({
-        x: e.clientX,
-        y: e.clientY,
-        radius: 0,
-        maxRadius: 180,
-        alpha: 0.45,
-      });
+    const onClick = () => {
+      // Removed ripple effect on click
     };
 
     const onLeave = () => {
