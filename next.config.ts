@@ -23,12 +23,8 @@ const nextConfig: NextConfig = {
   // Prevent Firebase App Hosting from activating Pages Router
   skipTrailingSlashRedirect: true,
   skipMiddlewareUrlNormalize: true,
-  // Desabilitar timeout de geração estática de páginas
-  staticPageGenerationTimeout: 0,
-  // Configurações experimentais para melhor compatibilidade
-  experimental: {
-    esmExternals: false,
-  },
+  // Désabilitar geração estática de páginas dinâmicas client-side
+  dynamicIO: true,
 };
 
 export default nextConfig;
