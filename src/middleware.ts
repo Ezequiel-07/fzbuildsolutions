@@ -44,9 +44,9 @@ export default function middleware(req: NextRequest) {
     script-src 'self' 'unsafe-eval' 'unsafe-inline' https://apis.google.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     font-src 'self' https://fonts.gstatic.com;
-    img-src 'self' data: https://images.unsplash.com https://*.googleusercontent.com https://firebasestorage.googleapis.com https://*.firebasestorage.googleapis.com;
+    img-src 'self' data: https://images.unsplash.com https://*.googleusercontent.com https://firebasestorage.googleapis.com https://*.firebasestorage.googleapis.com https://i.pravatar.cc;
     media-src 'self';
-    connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.googleapis.com wss://*.firebaseio.com https://*.firebaseio.com;
+    connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.googleapis.com wss://*.firebaseio.com https://*.firebaseio.com https://fonts.gstatic.com https://fonts.googleapis.com;
     frame-src 'self' https://www.google.com/recaptcha/ https://recaptcha.google.com/;
     frame-ancestors 'none';
     object-src 'none';
