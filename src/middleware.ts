@@ -41,7 +41,7 @@ export default function middleware(req: NextRequest) {
   // CSP: Allow self, Google fonts, inline scripts for Framer Motion / next.js hydration, and images
   const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://apis.google.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/;
+    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://apis.google.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://www.googletagmanager.com;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     font-src 'self' https://fonts.gstatic.com;
     img-src 'self' data: https://images.unsplash.com https://*.googleusercontent.com https://firebasestorage.googleapis.com https://*.firebasestorage.googleapis.com https://i.pravatar.cc;

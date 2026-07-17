@@ -218,10 +218,21 @@ function HeroSection() {
 
   return (
     <section className="relative h-screen flex flex-col justify-center fz-hero overflow-hidden">
+      {/* Absolute Background Image based on Theme */}
+      <div className="absolute inset-0 z-0 pointer-events-none select-none">
+        <Image
+          src={isDark ? "/fundoescuro.png" : "/fundoclaro.png"}
+          alt=""
+          fill
+          priority
+          className="object-cover opacity-80"
+        />
+      </div>
+
       {/* Reflection blobs (dark) / gradient shapes (light) */}
-      <div className="fz-hero-blob-1 absolute pointer-events-none" />
-      <div className="fz-hero-blob-2 absolute pointer-events-none" />
-      <div className="fz-hero-blob-3 absolute pointer-events-none" />
+      <div className="fz-hero-blob-1 absolute pointer-events-none z-0" />
+      <div className="fz-hero-blob-2 absolute pointer-events-none z-0" />
+      <div className="fz-hero-blob-3 absolute pointer-events-none z-0" />
 
       {/* Grid/dot bg */}
       <div className="absolute inset-0 fz-bg-pattern opacity-40 pointer-events-none" />
