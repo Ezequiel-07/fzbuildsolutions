@@ -1,8 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Enable React Strict Mode
-  reactStrictMode: true,
+  // Recommended output for Firebase App Hosting
+  output: "standalone",
+
   // Custom headers for Content Security Policy to allow Firebase Auth requests
   async headers() {
     return [
@@ -19,6 +20,9 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // Prevent Firebase App Hosting from activating Pages Router
+  skipTrailingSlashRedirect: true,
+  skipMiddlewareUrlNormalize: true,
 };
 
 export default nextConfig;
