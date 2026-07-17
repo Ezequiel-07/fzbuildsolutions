@@ -54,7 +54,7 @@ export const metadata: Metadata = {
   },
 };
 
-import { AppProviders } from "@/providers";
+import { AppProviders } from "@/providers"; // Esta linha já existe, mas agora será usada.
 import { Toaster } from "@/components/ui/sonner";
 
 export default function RootLayout({

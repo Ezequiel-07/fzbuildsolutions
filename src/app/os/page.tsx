@@ -103,7 +103,7 @@ export default function DashboardPage() {
     setSelectedCard(path);
     setTimeout(() => {
       router.push(path);
-    }, 500); // Wait for animation to finish
+    }, 800); // Wait for animation to finish
   };
 
   const handleSendPrompt = (e: React.FormEvent) => {
@@ -116,49 +116,59 @@ export default function DashboardPage() {
   return (
     <div className="relative min-h-screen font-sans bg-transparent text-[#191c1e] select-none overflow-x-hidden">
       {/* Top Navigation Anchor */}
-      <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-center px-4 md:px-[80px] h-20">
-        <div className="bg-[#f8f9fb]/80 backdrop-blur-xl border border-slate-200/50 rounded-full px-6 md:px-8 py-2.5 flex items-center shadow-sm gap-2 max-w-full overflow-x-auto">
-          <Image
-            src="/fzbuildsemfundo.png"
-            alt="FZ Console"
-            width={32}
-            height={32}
-            className="h-8 w-auto mr-2 md:mr-6 shrink-0"
-          />
-          <nav className="hidden md:flex gap-6 items-center">
-            <Link
-              className="font-mono text-xs font-semibold uppercase tracking-wider text-[#003d9b] border-b-2 border-[#003d9b] py-1 transition-colors"
-              href="/os"
+      <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-center px-4 h-20">
+        <div className="w-full max-w-screen-xl bg-[#f8f9fb]/80 backdrop-blur-xl border border-slate-200/50 rounded-full px-4 md:px-6 py-2.5 flex items-center justify-between shadow-sm">
+          {/* Left Group: Logo + Desktop Nav */}
+          <div className="flex items-center gap-6">
+            <Image
+              src="/fzbuildsemfundo.png"
+              alt="FZ Console"
+              width={32}
+              height={32}
+              className="h-8 w-auto shrink-0"
+            />
+            <nav className="hidden md:flex gap-6 items-center">
+              <Link
+                className="font-mono text-xs font-semibold uppercase tracking-wider text-[#003d9b] border-b-2 border-[#003d9b] py-1 transition-colors"
+                href="/os"
+              >
+                Dashboard
+              </Link>
+              <Link
+                className="font-mono text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-[#003d9b] py-1 transition-colors"
+                href="/os/projects"
+              >
+                Projetos
+              </Link>
+              <Link
+                className="font-mono text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-[#003d9b] py-1 transition-colors"
+                href="/os/crm"
+              >
+                CRM
+              </Link>
+              <Link
+                className="font-mono text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-[#003d9b] py-1 transition-colors"
+                href="/os/team"
+              >
+                Equipe
+              </Link>
+              <Link
+                className="font-mono text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-[#003d9b] py-1 transition-colors"
+                href="/os/finance"
+              >
+                Financeiro
+              </Link>
+            </nav>
+          </div>
+
+          {/* Right Group: Actions */}
+          <div className="flex items-center gap-3 md:gap-4 text-[#003d9b] shrink-0">
+            <button
+              aria-label="Notifications"
+              className="hover:scale-110 duration-150 transition-transform focus:outline-none flex items-center justify-center"
             >
-              Dashboard
-            </Link>
-            <Link
-              className="font-mono text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-[#003d9b] py-1 transition-colors"
-              href="/os/projects"
-            >
-              Projetos
-            </Link>
-            <Link
-              className="font-mono text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-[#003d9b] py-1 transition-colors"
-              href="/os/crm"
-            >
-              CRM
-            </Link>
-            <Link
-              className="font-mono text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-[#003d9b] py-1 transition-colors"
-              href="/os/team"
-            >
-              Equipe
-            </Link>
-            <Link
-              className="font-mono text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-[#003d9b] py-1 transition-colors"
-              href="/os/finance"
-            >
-              Financeiro
-            </Link>
-          </nav>
-          <div className="ml-2 md:ml-8 flex items-center gap-3 md:gap-4 text-[#003d9b] shrink-0">
-            <Bell className="h-5 w-5 cursor-pointer hover:scale-110 duration-150 transition-transform" />
+              <Bell className="h-5 w-5" />
+            </button>
             <button
               onClick={() => setIsProfileModalOpen(true)}
               aria-label="Settings"
@@ -435,7 +445,7 @@ export default function DashboardPage() {
             initial={{ borderRadius: 24, opacity: 0.8 }}
             animate={{ borderRadius: 0, opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ type: "spring", bounce: 0, duration: 0.5 }}
+            transition={{ type: "spring", bounce: 0, duration: 0.8 }}
           />
         )}
       </AnimatePresence>

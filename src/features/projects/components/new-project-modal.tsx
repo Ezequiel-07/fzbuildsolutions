@@ -10,7 +10,7 @@ interface NewProjectModalProps {
 
 export function NewProjectModal({ isOpen, onClose }: NewProjectModalProps) {
   const [name, setName] = useState("");
-  const [status, setStatus] = useState("active");
+  const [status, setStatus] = useState("To Do");
   const createProject = useCreateProject();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,7 +24,7 @@ export function NewProjectModal({ isOpen, onClose }: NewProjectModalProps) {
         progress: 0,
       });
       setName("");
-      setStatus("active");
+      setStatus("To Do");
       onClose();
     } catch (error) {
       console.error("Erro ao criar projeto:", error);

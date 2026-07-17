@@ -8,13 +8,25 @@ import { FullPageScroll } from "@/components/landing/FullPageScroll";
 import { ParticleCanvas } from "@/components/landing/ParticleCanvas";
 import { BuildTerminal } from "@/components/landing/BuildTerminal";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Sun, Moon } from "lucide-react";
 
 /* ──────────────────────────────────────────────
    THEME TOGGLE BUTTON
 ────────────────────────────────────────────── */
 function ThemeToggle() {
   const { isDark, toggle } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted) {
+    return (
+      <button
+        className="relative w-12 h-6 rounded-full border fz-toggle-track"
+        aria-label="Alternar tema"
+      />
+    );
+  }
+
   return (
     <button
       onClick={toggle}
@@ -24,9 +36,11 @@ function ThemeToggle() {
       <motion.span
         layout
         transition={{ type: "spring", stiffness: 500, damping: 35 }}
-        className="w-5 h-5 rounded-full fz-toggle-thumb"
+        className="w-5 h-5 rounded-full fz-toggle-thumb flex items-center justify-center overflow-hidden"
         style={{ marginLeft: isDark ? 0 : "calc(100% - 20px)" }}
-      />
+      >
+        {isDark ? <Moon className="h-3 w-3" /> : <Sun className="h-3 w-3" />}
+      </motion.span>
     </button>
   );
 }
@@ -94,7 +108,7 @@ function NavBar() {
             href="/login"
             className="text-xs font-semibold fz-nav-link hover:opacity-100 transition-opacity px-3 py-2 rounded-lg"
           >
-            Entrar no Sistema
+            Login
           </Link>
           <Link
             href="https://wa.me/5511954297115?text=Ol%C3%A1%2C%20gostaria%20de%20solicitar%20um%20diagn%C3%B3stico%20da%20FZ%20Build%20Solutions."
@@ -153,7 +167,7 @@ function NavBar() {
                 onClick={closeMenu}
                 className="text-sm font-semibold fz-nav-link py-2 block w-full"
               >
-                Entrar no Sistema
+                Login
               </Link>
 
               <Link

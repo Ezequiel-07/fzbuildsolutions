@@ -4,7 +4,6 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useRouter, usePathname } from "next/navigation";
-import { Loader2 } from "lucide-react";
 
 interface AuthContextType {
   user: User | null;
@@ -47,36 +46,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
   }, [user, loading, pathname, router]);
-
-  const isProtectedRoute =
-    pathname.startsWith("/os") || pathname.startsWith("/portal");
-  const isAuthRoute = pathname.startsWith("/login");
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  // Prevent flash of protected content during redirect
-  if (isProtectedRoute && !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  // Prevent flash of login screen if already logged in and redirecting to dashboard
-  if (isAuthRoute && user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   return (
     <AuthContext.Provider value={{ user, loading }}>

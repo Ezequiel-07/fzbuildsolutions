@@ -37,6 +37,14 @@ export default function ProjectsPage() {
     { name: "Done", color: "bg-green-400" },
   ];
 
+  const getNormalizedStatus = (status?: string) => {
+    let s = status || "To Do";
+    if (!["To Do", "Doing", "In Review", "Done"].includes(s)) {
+      s = s === "completed" ? "Done" : "To Do";
+    }
+    return s;
+  };
+
   const handleStatusChange = async (
     projectId: string,
     currentStatus: string,
@@ -100,7 +108,7 @@ export default function ProjectsPage() {
             ) : (
               columns.map((col, idx) => {
                 const colProjects = projects.filter(
-                  (p) => (p.status || "To Do") === col.name,
+                  (p) => getNormalizedStatus(p.status) === col.name,
                 );
 
                 return (
@@ -266,7 +274,7 @@ export default function ProjectsPage() {
                                     : "bg-slate-200 text-slate-600"
                             }`}
                           >
-                            {project.status || "To Do"}
+                            {getNormalizedStatus(project.status)}
                           </span>
                         </td>
                         <td className="py-4 px-4 w-48">

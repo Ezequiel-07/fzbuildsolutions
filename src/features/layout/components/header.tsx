@@ -2,7 +2,6 @@
 
 import { UserNav } from "./user-nav";
 import { ThemeSwitcher } from "./theme-switcher";
-import { TenantSwitcher } from "./tenant-switcher";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -21,7 +20,7 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-white/20 bg-white/70 backdrop-blur-xl supports-[backdrop-filter]:bg-white/40 shadow-sm">
       <div className="container flex h-16 items-center justify-between px-4 md:px-8 max-w-[1600px] mx-auto">
         <div className="flex items-center gap-4">
-          <TenantSwitcher />
+          {/* Logo or placeholder could go here */}
         </div>
 
         {/* Top Navigation Links */}

@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import { Header } from "@/features/layout/components/header";
 import Link from "next/link";
 import { signOut } from "firebase/auth";
@@ -12,21 +13,27 @@ import {
   Building2,
   HelpCircle,
   LogOut,
+  Moon,
+  Sun,
 } from "lucide-react";
 
 export default function OSLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const isMainDashboard = pathname === "/os";
+  const { theme, setTheme } = useTheme();
 
   const handleLogout = async () => {
     try {
       await signOut(auth);
       router.push("/login");
-      router.refresh();
     } catch (err) {
       console.error("Logout Error:", err);
     }
+  };
+
+  const toggleTheme = () => {
+    setTheme(theme === "light" ? "dark" : "light");
   };
 
   return (
@@ -100,6 +107,16 @@ export default function OSLayout({ children }: { children: React.ReactNode }) {
           >
             <HelpCircle className="h-5 w-5" />
           </Link>
+
+          <button
+            onClick={toggleTheme}
+            className="w-12 h-12 flex items-center justify-center text-slate-400 transition-all duration-300 hover:scale-110 hover:text-amber-500 rounded-xl border border-transparent"
+            aria-label="Alternar tema"
+          >
+            <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            <span className="sr-only">Alternar tema</span>
+          </button>
 
           <button
             onClick={handleLogout}
