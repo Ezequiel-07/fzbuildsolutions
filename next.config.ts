@@ -31,8 +31,6 @@ const nextConfig: NextConfig = {
   // Prevent Firebase App Hosting from activating Pages Router
   skipTrailingSlashRedirect: true,
   skipMiddlewareUrlNormalize: true,
-  // Désabilitar geração estática de páginas dinâmicas client-side
-  dynamicIO: true,
 };
 
 export default withSerwist(nextConfig);

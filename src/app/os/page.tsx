@@ -1,13 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, Settings, Send, Plus, Activity } from "lucide-react";
 import { NewProjectModal } from "@/features/projects/components/new-project-modal";
 import { useProjects } from "@/features/projects/api/use-projects";
+import { TiltCard } from "@/components/ui/tilt-card";
 import { useTeam } from "@/features/team/api/use-team";
 import { AreaChart, Area, ResponsiveContainer } from "recharts";
 import { ReactFlow, Background } from "@xyflow/react";
@@ -105,46 +106,6 @@ export default function DashboardPage() {
     }, 500); // Wait for animation to finish
   };
 
-  // Parallax / Hover tilt effect for individual cards
-  useEffect(() => {
-    const cards = document.querySelectorAll(".glass-card");
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const card = e.currentTarget as HTMLElement;
-      const rect = card.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const centerX = rect.width / 2;
-      const centerY = rect.height / 2;
-      const rotateX = ((y - centerY) / centerY) * -10;
-      const rotateY = ((x - centerX) / centerX) * 10;
-      card.style.transition = "transform 0.1s ease-out";
-      card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
-    };
-
-    const handleMouseLeave = (e: MouseEvent) => {
-      const card = e.currentTarget as HTMLElement;
-      card.style.transition = "transform 0.5s ease-out";
-      card.style.transform =
-        "perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)";
-    };
-
-    cards.forEach((card) => {
-      card.addEventListener("mousemove", handleMouseMove as EventListener);
-      card.addEventListener("mouseleave", handleMouseLeave as EventListener);
-    });
-
-    return () => {
-      cards.forEach((card) => {
-        card.removeEventListener("mousemove", handleMouseMove as EventListener);
-        card.removeEventListener(
-          "mouseleave",
-          handleMouseLeave as EventListener,
-        );
-      });
-    };
-  }, []);
-
   const handleSendPrompt = (e: React.FormEvent) => {
     e.preventDefault();
     if (!prompt.trim()) return;
@@ -222,13 +183,10 @@ export default function DashboardPage() {
           {/* LEFT COLUMN */}
           <div className="col-span-12 lg:col-span-3 space-y-8 flex flex-col justify-center">
             {/* Projects Panel */}
-            <motion.div
+            <TiltCard
               layoutId="/os/projects"
               onClick={() => handleCardClick("/os/projects")}
               className="glass-card bg-white/80 backdrop-blur-xl border border-white/40 p-6 rounded-2xl shadow-xl shadow-blue-900/5 transition-transform duration-500 transform -rotate-1 hover:rotate-0 cursor-pointer hover:shadow-2xl hover:scale-[1.02]"
-              style={{
-                transform: "perspective(1000px) rotateX(0deg) rotateY(0deg)",
-              }}
             >
               <div className="flex justify-between items-center mb-6">
                 <h3 className="font-mono text-xs font-bold tracking-widest text-[#003d9b]">
@@ -264,16 +222,13 @@ export default function DashboardPage() {
                   ))
                 )}
               </div>
-            </motion.div>
+            </TiltCard>
 
             {/* Team Activity */}
-            <motion.div
+            <TiltCard
               layoutId="/os/team"
               onClick={() => handleCardClick("/os/team")}
               className="glass-card bg-white/80 backdrop-blur-xl border border-white/40 p-6 rounded-2xl shadow-xl shadow-blue-900/5 transition-transform duration-500 transform rotate-1 hover:rotate-0 cursor-pointer hover:shadow-2xl hover:scale-[1.02]"
-              style={{
-                transform: "perspective(1000px) rotateX(0deg) rotateY(0deg)",
-              }}
             >
               <h3 className="font-mono text-xs font-bold tracking-widest text-[#003d9b] mb-6">
                 ATIVIDADE DA EQUIPE
@@ -315,7 +270,7 @@ export default function DashboardPage() {
                   ))
                 )}
               </div>
-            </motion.div>
+            </TiltCard>
           </div>
 
           {/* CENTRAL HUB */}
@@ -326,12 +281,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div
-              className="w-full max-w-[520px] aspect-square rounded-full bg-white/70 backdrop-blur-lg glass-card border border-white/45 flex flex-col items-center justify-center p-6 sm:p-12 text-center relative z-20 shadow-2xl shadow-blue-900/15"
-              style={{
-                transform: "perspective(1000px) rotateX(0deg) rotateY(0deg)",
-              }}
-            >
+            <TiltCard className="w-full max-w-[520px] aspect-square rounded-full bg-white/70 backdrop-blur-lg glass-card border border-white/45 flex flex-col items-center justify-center p-6 sm:p-12 text-center relative z-20 shadow-2xl shadow-blue-900/15">
               <div className="mb-4 sm:mb-6 flex flex-col items-center select-none">
                 <div className="mb-2 sm:mb-4">
                   <Image
@@ -393,19 +343,16 @@ export default function DashboardPage() {
                   </span>
                 </div>
               </div>
-            </div>
+            </TiltCard>
           </div>
 
           {/* RIGHT COLUMN */}
           <div className="col-span-12 lg:col-span-3 space-y-8 flex flex-col justify-center">
             {/* Workflow Nodes Preview */}
-            <motion.div
+            <TiltCard
               layoutId="/os/workflow"
               onClick={() => handleCardClick("/os/workflow")}
               className="glass-card bg-white/80 backdrop-blur-xl border border-white/40 p-6 rounded-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500 h-64 overflow-hidden relative shadow-xl shadow-blue-900/5 cursor-pointer hover:shadow-2xl hover:scale-[1.02] flex flex-col"
-              style={{
-                transform: "perspective(1000px) rotateX(0deg) rotateY(0deg)",
-              }}
             >
               <h3 className="font-mono text-xs font-bold tracking-widest text-[#003d9b] mb-4">
                 VISUALIZAÇÃO DE FLUXOS
@@ -422,16 +369,13 @@ export default function DashboardPage() {
                   <Background color="#cbd5e1" gap={12} size={1} />
                 </ReactFlow>
               </div>
-            </motion.div>
+            </TiltCard>
 
             {/* Infrastructure Map */}
-            <motion.div
+            <TiltCard
               layoutId="/os/infrastructure"
               onClick={() => handleCardClick("/os/finance")}
               className="glass-card bg-white/80 backdrop-blur-xl border border-white/40 p-6 rounded-2xl transform -rotate-2 hover:rotate-0 transition-transform duration-500 h-72 shadow-xl shadow-blue-900/5 cursor-pointer hover:shadow-2xl hover:scale-[1.02] flex flex-col"
-              style={{
-                transform: "perspective(1000px) rotateX(0deg) rotateY(0deg)",
-              }}
             >
               <h3 className="font-mono text-xs font-bold tracking-widest text-[#003d9b] mb-4">
                 MAPA DE INFRAESTRUTURA
@@ -463,7 +407,7 @@ export default function DashboardPage() {
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
-            </motion.div>
+            </TiltCard>
           </div>
         </div>
       </main>
