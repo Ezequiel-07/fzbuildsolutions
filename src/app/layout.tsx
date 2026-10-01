@@ -35,9 +35,9 @@ export const metadata: Metadata = {
     "FZ Build",
   ],
   icons: {
-    icon: "/favicon.ico?v=2",
-    shortcut: "/favicon.ico?v=2",
-    apple: "/fzbuild.png?v=2",
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/fzbuild.png",
   },
   manifest: "/manifest.json",
   appleWebApp: {

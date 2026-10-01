@@ -17,11 +17,17 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "firebasestorage.googleapis.com",
-        pathname: "/v0/b/fz-build-solutions.firebasestorage.app/o/**",
+        pathname: "/**",
       },
       {
         protocol: "https",
         hostname: "i.pravatar.cc",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+        pathname: "/**",
       },
     ],
   },

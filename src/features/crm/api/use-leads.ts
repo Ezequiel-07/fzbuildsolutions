@@ -6,6 +6,7 @@ import {
   collection,
   getDocs,
   doc,
+  getDoc,
   addDoc,
   updateDoc,
   deleteDoc,
@@ -40,6 +41,23 @@ export function useLeads() {
         ...doc.data(),
       })) as Lead[];
     },
+  });
+}
+
+export function useLead(id: string) {
+  return useQuery({
+    queryKey: ["leads", id],
+    queryFn: async () => {
+      const docRef = doc(db, "leads", id);
+      const snapshot = await getDoc(docRef);
+      if (!snapshot.exists()) throw new Error("Lead não encontrado");
+
+      return {
+        id: snapshot.id,
+        ...snapshot.data(),
+      } as Lead;
+    },
+    enabled: !!id,
   });
 }
 

@@ -1102,3 +1102,59 @@
     padding-top: 0 !important;
   }
 }
+
+/* ============================================================
+   FZ OS DESIGN SYSTEM TOKENS — LIGHT & DARK MODES
+   ============================================================ */
+
+.fz-os-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.03),
+    0 1px 2px -1px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark .fz-os-card {
+  background-color: #0a1624;
+  border-color: #162235;
+  box-shadow: none;
+}
+
+.fz-os-card:hover {
+  border-color: rgba(0, 61, 155, 0.3);
+}
+
+.dark .fz-os-card:hover {
+  border-color: rgba(0, 227, 253, 0.3);
+}
+
+/* Sidebar Item Active Indicator */
+.fz-nav-active-light {
+  background-color: rgba(0, 61, 155, 0.08);
+  color: #003d9b;
+  position: relative;
+}
+
+.fz-nav-active-light::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 15%;
+  bottom: 15%;
+  width: 3.5px;
+  background-color: #003d9b;
+  border-radius: 0 4px 4px 0;
+}
+
+.dark .fz-nav-active-light {
+  background-color: rgba(0, 61, 155, 0.25);
+  color: #00e3fd;
+}
+
+.dark .fz-nav-active-light::before {
+  background-color: #00e3fd;
+  box-shadow: 0 0 10px rgba(0, 227, 253, 0.6);
+}
