@@ -39,6 +39,7 @@
     "react-dom": "19.0.0-rc-65a56d0e-20241020",
     "react-hook-form": "^7.54.2",
     "recharts": "^2.15.0",
+    "serwist": "^9.5.12",
     "shadcn": "^4.13.0",
     "sharp": "^0.35.3",
     "sonner": "^2.0.7",
