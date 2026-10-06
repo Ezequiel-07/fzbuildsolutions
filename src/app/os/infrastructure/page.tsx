@@ -1,205 +1,185 @@
 "use client";
 
-import { motion } from "framer-motion";
 import {
   Server,
   Activity,
-  ShieldAlert,
+  ShieldCheck,
   Cpu,
-  HardDrive,
   RefreshCw,
+  Database,
 } from "lucide-react";
+import { useInfrastructureTelemetry } from "@/features/infrastructure/api/use-infrastructure";
+import { PageHeader } from "@/components/os/page-header";
+import { Panel } from "@/components/os/panel";
+import { Button } from "@/components/os/button";
+import { StatusBadge } from "@/components/os/status-badge";
+import { Skeleton } from "@/components/os/skeleton";
 
 export default function InfrastructurePage() {
+  const {
+    data: telemetry,
+    isLoading,
+    refetch,
+    isRefetching,
+  } = useInfrastructureTelemetry();
+
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 min-h-screen bg-transparent select-none">
-      <div className="max-w-[1600px] mx-auto w-full">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8 glass-card bg-white/70 backdrop-blur-xl border border-white/40 p-6 rounded-2xl shadow-xl shadow-blue-900/5">
+    <div className="space-y-6">
+      <PageHeader
+        title="Mapa de Infraestrutura & Cloud"
+        description="Monitoramento ativo de servidores, latência Firestore e integridade dos nós em produção"
+        actions={
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => refetch()}
+              disabled={isRefetching}
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${isRefetching ? "animate-spin" : ""}`}
+              />
+              <span>Atualizar Telemetria</span>
+            </Button>
+          </div>
+        }
+      />
+
+      {/* Global Status Overview */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Panel className="p-4 flex items-center gap-3.5">
+          <div className="p-2.5 rounded-xl bg-os-success/10 text-os-success">
+            <Activity className="h-5 w-5" />
+          </div>
           <div>
-            <h1 className="font-heading text-2xl font-extrabold tracking-tight text-slate-800 uppercase">
-              Mapa de Infraestrutura
-            </h1>
-            <p className="text-sm text-slate-500 mt-1">
-              Monitoramento de ambientes, servidores e deploys
+            <p className="text-xs text-os-muted">Uptime Global</p>
+            <p className="text-xl font-bold text-os-fg">
+              {telemetry ? `${telemetry.globalUptime}%` : "99.98%"}
             </p>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-              </span>
-              Sistemas Operacionais
-            </span>
-            <button className="bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-lg font-bold shadow-sm flex items-center gap-2 hover:bg-slate-50 active:scale-95 transition-all text-xs font-sans">
-              <RefreshCw className="h-4 w-4" />
-              <span>Atualizar Dados</span>
-            </button>
+        </Panel>
+
+        <Panel className="p-4 flex items-center gap-3.5">
+          <div className="p-2.5 rounded-xl bg-os-primary/10 text-os-primary">
+            <Database className="h-5 w-5" />
           </div>
-        </div>
-
-        {/* Global Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          {[
-            {
-              title: "Status Global",
-              value: "99.98%",
-              sub: "Uptime (30d)",
-              icon: Activity,
-              color: "text-green-500",
-            },
-            {
-              title: "Servidores Ativos",
-              value: "24",
-              sub: "AWS / Vercel",
-              icon: Server,
-              color: "text-[#003d9b]",
-            },
-            {
-              title: "Consumo de CPU",
-              value: "42%",
-              sub: "Média Global",
-              icon: Cpu,
-              color: "text-[#00e3fd]",
-            },
-            {
-              title: "Erros Críticos",
-              value: "0",
-              sub: "Últimas 24h",
-              icon: ShieldAlert,
-              color: "text-red-500",
-            },
-          ].map((stat, i) => (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              key={i}
-              className="glass-card bg-white/70 backdrop-blur-xl border border-white/40 p-6 rounded-2xl shadow-lg shadow-blue-900/5 flex items-start justify-between group hover:scale-[1.02] transition-transform"
-            >
-              <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                  {stat.title}
-                </p>
-                <h3 className="font-heading text-3xl font-extrabold text-slate-800">
-                  {stat.value}
-                </h3>
-                <p className="text-xs text-slate-500 mt-2 font-medium">
-                  {stat.sub}
-                </p>
-              </div>
-              <div
-                className={`p-3 rounded-xl bg-white shadow-sm border border-slate-100 ${stat.color}`}
-              >
-                <stat.icon className="w-5 h-5" />
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Environment Map */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Production */}
-          <div className="lg:col-span-2 glass-card bg-[#f8f9fb]/80 backdrop-blur-xl border border-white/40 p-6 rounded-3xl shadow-xl shadow-blue-900/5 min-h-[400px]">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="font-mono text-xs font-bold tracking-widest text-[#003d9b] uppercase">
-                Produção (Live)
-              </h3>
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-xs font-bold text-slate-500">
-                  Tudo operante
-                </span>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              {[1, 2, 3].map((server) => (
-                <div
-                  key={server}
-                  className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="bg-blue-50 text-blue-600 p-2.5 rounded-lg">
-                      <HardDrive className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-sm text-slate-800">
-                        app-cluster-prod-{server}
-                      </h4>
-                      <p className="text-xs text-slate-500">
-                        AWS us-east-1 • Ubuntu 22.04
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-8">
-                    <div className="flex flex-col items-end">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase">
-                        CPU
-                      </span>
-                      <span className="text-sm font-bold text-slate-700">
-                        {30 + server * 12}%
-                      </span>
-                    </div>
-                    <div className="flex flex-col items-end">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase">
-                        RAM
-                      </span>
-                      <span className="text-sm font-bold text-slate-700">
-                        {40 + server * 8}%
-                      </span>
-                    </div>
-                    <div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-green-400 to-[#00e3fd]"
-                        style={{ width: `${30 + server * 12}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div>
+            <p className="text-xs text-os-muted">Latência do Firestore</p>
+            <p className="text-xl font-bold text-os-fg font-mono">
+              {telemetry ? `${telemetry.pingMs}ms` : "—"}
+            </p>
           </div>
+        </Panel>
 
-          {/* Staging / Dev */}
-          <div className="glass-card bg-white/60 backdrop-blur-xl border border-white/40 p-6 rounded-3xl shadow-xl shadow-blue-900/5">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="font-mono text-xs font-bold tracking-widest text-[#003d9b] uppercase">
-                Staging & Dev
-              </h3>
-            </div>
-
-            <div className="space-y-4">
-              {[1, 2].map((env) => (
-                <div
-                  key={env}
-                  className="bg-[#f8f9fb] p-4 rounded-2xl border border-slate-100 flex flex-col gap-3"
-                >
-                  <div className="flex justify-between items-center">
-                    <h4 className="font-bold text-sm text-slate-800">
-                      {env === 1 ? "staging-api" : "dev-frontend"}
-                    </h4>
-                    <span className="text-[10px] font-bold bg-slate-200 text-slate-600 px-2 py-1 rounded-md uppercase">
-                      Vercel
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs text-slate-500">
-                    <span>Último deploy:</span>
-                    <span className="font-mono text-slate-700">
-                      {env === 1 ? "10m atrás" : "2h atrás"}
-                    </span>
-                  </div>
-                  <button className="w-full py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors">
-                    Ver Logs
-                  </button>
-                </div>
-              ))}
-            </div>
+        <Panel className="p-4 flex items-center gap-3.5">
+          <div className="p-2.5 rounded-xl bg-os-accent/10 text-os-accent">
+            <Cpu className="h-5 w-5" />
           </div>
-        </div>
+          <div>
+            <p className="text-xs text-os-muted">Média de CPU</p>
+            <p className="text-xl font-bold text-os-fg font-mono">
+              {telemetry ? `${telemetry.averageCpu}%` : "28%"}
+            </p>
+          </div>
+        </Panel>
+
+        <Panel className="p-4 flex items-center gap-3.5">
+          <div className="p-2.5 rounded-xl bg-os-success/10 text-os-success">
+            <ShieldCheck className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-xs text-os-muted">Conexão BaaS</p>
+            <p className="text-xl font-bold text-os-success">
+              {telemetry?.dbConnected ? "Conectado" : "Verificando"}
+            </p>
+          </div>
+        </Panel>
       </div>
+
+      {/* Clusters List */}
+      <Panel className="overflow-hidden">
+        <div className="p-4 border-b border-os-border flex items-center justify-between">
+          <h3 className="text-sm font-bold text-os-fg flex items-center gap-2">
+            <Server className="h-4 w-4 text-os-primary" />
+            <span>Clusters e Ambientes Ativos</span>
+          </h3>
+          <span className="text-xs text-os-muted">
+            Telemetria em tempo real (atualização a cada 30s)
+          </span>
+        </div>
+
+        {isLoading ? (
+          <div className="p-6 space-y-3">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-os-border bg-os-surface-2/60 text-os-muted font-mono font-medium">
+                  <th className="py-3 px-4">CLUSTER / AMBIENTE</th>
+                  <th className="py-3 px-4">PROVEDOR</th>
+                  <th className="py-3 px-4">REGIÃO</th>
+                  <th className="py-3 px-4">LATÊNCIA</th>
+                  <th className="py-3 px-4">CPU / MEM</th>
+                  <th className="py-3 px-4">UPTIME</th>
+                  <th className="py-3 px-4 text-right">STATUS</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-os-border">
+                {telemetry?.clusters.map((cluster) => (
+                  <tr
+                    key={cluster.id}
+                    className="hover:bg-os-surface-2/40 transition-colors"
+                  >
+                    <td className="py-3 px-4">
+                      <p className="font-semibold text-os-fg">{cluster.name}</p>
+                      <p className="text-[10px] text-os-muted font-mono">
+                        {cluster.id}
+                      </p>
+                    </td>
+
+                    <td className="py-3 px-4">
+                      <span className="px-2 py-0.5 rounded-md bg-os-surface-2 text-os-fg text-[11px] font-medium border border-os-border">
+                        {cluster.provider}
+                      </span>
+                    </td>
+
+                    <td className="py-3 px-4 font-mono text-[11px] text-os-muted">
+                      {cluster.region}
+                    </td>
+
+                    <td className="py-3 px-4 font-mono font-bold text-os-fg">
+                      {cluster.latencyMs}ms
+                    </td>
+
+                    <td className="py-3 px-4 font-mono text-os-muted">
+                      {cluster.cpuPercent}% / {cluster.memoryPercent}%
+                    </td>
+
+                    <td className="py-3 px-4 font-mono text-os-success font-semibold">
+                      {cluster.uptimePercent}%
+                    </td>
+
+                    <td className="py-3 px-4 text-right">
+                      <StatusBadge
+                        tone={
+                          cluster.status === "healthy" ? "success" : "danger"
+                        }
+                      >
+                        {cluster.status === "healthy"
+                          ? "Operacional"
+                          : "Incidente"}
+                      </StatusBadge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Panel>
     </div>
   );
 }

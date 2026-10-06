@@ -1,384 +1,402 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
+import { Users, Plus, Search, Edit3, Trash2 } from "lucide-react";
 import {
-  Users,
-  UserCog,
-  Shield,
-  Plus,
-  Search,
-  Edit3,
-  Trash2,
-  Crown,
-  Eye,
-} from "lucide-react";
-
-type UserRole = "SUPER_ADMIN" | "ADMIN" | "MANAGER" | "MEMBER" | "VIEWER";
-
-interface SystemUser {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  status: "active" | "inactive" | "pending";
-  lastLogin: string;
-  avatar: string;
-}
-
-const MOCK_USERS: SystemUser[] = [
-  {
-    id: "1",
-    name: "Ezequiel Admin",
-    email: "ezequiel@fzbuild.com",
-    role: "SUPER_ADMIN",
-    status: "active",
-    lastLogin: "agora",
-    avatar: "EA",
-  },
-  {
-    id: "2",
-    name: "Felipe Costa",
-    email: "felipe@fzbuild.com",
-    role: "MANAGER",
-    status: "active",
-    lastLogin: "1h atrás",
-    avatar: "FC",
-  },
-  {
-    id: "3",
-    name: "Matheus Silva",
-    email: "matheus@fzbuild.com",
-    role: "MEMBER",
-    status: "active",
-    lastLogin: "2h atrás",
-    avatar: "MS",
-  },
-  {
-    id: "4",
-    name: "Beatriz Santos",
-    email: "beatriz@fzbuild.com",
-    role: "MEMBER",
-    status: "active",
-    lastLogin: "3h atrás",
-    avatar: "BS",
-  },
-  {
-    id: "5",
-    name: "Cliente Externo",
-    email: "cliente@empresa.com",
-    role: "VIEWER",
-    status: "pending",
-    lastLogin: "—",
-    avatar: "CE",
-  },
-];
+  useSystemUsers,
+  useCreateSystemUser,
+  useUpdateSystemUser,
+  useDeleteSystemUser,
+  type SystemUser,
+  type UserRole,
+  type UserStatus,
+} from "@/features/admin/api/use-system-users";
+import { PageHeader } from "@/components/os/page-header";
+import { Panel } from "@/components/os/panel";
+import { Button } from "@/components/os/button";
+import { StatusBadge } from "@/components/os/status-badge";
+import { EmptyState } from "@/components/os/empty-state";
+import { Skeleton } from "@/components/os/skeleton";
+import { ConfirmDialog } from "@/components/os/confirm-dialog";
+import { toast } from "sonner";
 
 const ROLE_CONFIG: Record<
   UserRole,
-  { label: string; color: string; bg: string; icon: React.ElementType }
+  { label: string; tone: "accent" | "danger" | "info" | "success" | "neutral" }
 > = {
-  SUPER_ADMIN: {
-    label: "Super Admin",
-    color: "text-purple-700",
-    bg: "bg-purple-100 dark:bg-purple-900/30",
-    icon: Crown,
-  },
-  ADMIN: {
-    label: "Admin",
-    color: "text-red-600",
-    bg: "bg-red-100 dark:bg-red-900/30",
-    icon: Shield,
-  },
-  MANAGER: {
-    label: "Manager",
-    color: "text-blue-600",
-    bg: "bg-blue-100 dark:bg-blue-900/30",
-    icon: UserCog,
-  },
-  MEMBER: {
-    label: "Member",
-    color: "text-green-600",
-    bg: "bg-green-100 dark:bg-green-900/30",
-    icon: Users,
-  },
-  VIEWER: {
-    label: "Viewer",
-    color: "text-slate-600",
-    bg: "bg-slate-100 dark:bg-slate-700/50",
-    icon: Eye,
-  },
-};
-
-const STATUS_CONFIG = {
-  active: { label: "Ativo", color: "text-green-600", dot: "bg-green-500" },
-  inactive: { label: "Inativo", color: "text-slate-400", dot: "bg-slate-300" },
-  pending: { label: "Pendente", color: "text-amber-600", dot: "bg-amber-400" },
-};
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 16 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.06, duration: 0.35, ease: [0.4, 0, 0.2, 1] },
-  }),
+  SUPER_ADMIN: { label: "Super Admin", tone: "accent" },
+  ADMIN: { label: "Admin", tone: "danger" },
+  MANAGER: { label: "Manager", tone: "info" },
+  MEMBER: { label: "Member", tone: "success" },
+  VIEWER: { label: "Viewer", tone: "neutral" },
 };
 
 export default function AdminUsersPage() {
+  const { data: users = [], isLoading } = useSystemUsers();
+  const createUser = useCreateSystemUser();
+  const updateUser = useUpdateSystemUser();
+  const deleteUser = useDeleteSystemUser();
+
   const [search, setSearch] = useState("");
-  const [users] = useState(MOCK_USERS);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<SystemUser | null>(null);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
 
-  const filtered = useMemo(
-    () =>
-      users.filter(
-        (u) =>
-          u.name.toLowerCase().includes(search.toLowerCase()) ||
-          u.email.toLowerCase().includes(search.toLowerCase()) ||
-          u.role.toLowerCase().includes(search.toLowerCase()),
-      ),
-    [users, search],
-  );
+  // Form State
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<UserRole>("MEMBER");
+  const [status, setStatus] = useState<UserStatus>("ACTIVE");
+  const [department, setDepartment] = useState("Engenharia");
 
-  const roleCount = Object.keys(ROLE_CONFIG).reduce(
-    (acc, role) => ({
-      ...acc,
-      [role]: users.filter((u) => u.role === role).length,
-    }),
-    {} as Record<UserRole, number>,
-  );
+  const openNewModal = () => {
+    setEditingUser(null);
+    setName("");
+    setEmail("");
+    setRole("MEMBER");
+    setStatus("ACTIVE");
+    setDepartment("Engenharia");
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (u: SystemUser) => {
+    setEditingUser(u);
+    setName(u.name);
+    setEmail(u.email);
+    setRole(u.role);
+    setStatus(u.status);
+    setDepartment(u.department || "Geral");
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !email.trim()) {
+      toast.error("Preencha nome e e-mail.");
+      return;
+    }
+
+    try {
+      if (editingUser) {
+        await updateUser.mutateAsync({
+          id: editingUser.id,
+          data: { name, email, role, status, department },
+        });
+        toast.success("Usuário atualizado com sucesso!");
+      } else {
+        await createUser.mutateAsync({
+          name,
+          email,
+          role,
+          status,
+          department,
+          avatar: name
+            .split(" ")
+            .map((w) => w[0])
+            .slice(0, 2)
+            .join("")
+            .toUpperCase(),
+        });
+        toast.success("Usuário cadastrado com sucesso!");
+      }
+      setIsModalOpen(false);
+    } catch {
+      toast.error("Erro ao salvar usuário.");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deletingUserId) return;
+    try {
+      await deleteUser.mutateAsync(deletingUserId);
+      toast.success("Usuário removido.");
+      setDeletingUserId(null);
+    } catch {
+      toast.error("Erro ao remover usuário.");
+    }
+  };
+
+  const filteredUsers = users.filter((u) => {
+    const q = search.toLowerCase();
+    return (
+      u.name.toLowerCase().includes(q) ||
+      u.email.toLowerCase().includes(q) ||
+      u.role.toLowerCase().includes(q)
+    );
+  });
 
   return (
-    <div className="max-w-[1200px] mx-auto w-full space-y-6">
-      <motion.div
-        custom={0}
-        variants={fadeUp}
-        initial="hidden"
-        animate="visible"
-        className="flex flex-col md:flex-row md:items-center justify-between gap-4"
-      >
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-            Gestão de Usuários
-          </h1>
-          <p className="text-sm text-slate-500 mt-0.5">
-            {users.length} usuário{users.length !== 1 ? "s" : ""} · Controle de
-            roles e permissões
-          </p>
-        </div>
-        <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#003d9b] hover:bg-[#003280] text-white text-sm font-semibold shadow-lg shadow-blue-900/20 hover:-translate-y-0.5 transition-all duration-200">
-          <Plus className="h-4 w-4" />
-          Convidar Usuário
-        </button>
-      </motion.div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Gestão de Usuários & RBAC"
+        description="Controle granular de contas de acesso, papéis e permissões do sistema operacional"
+        actions={
+          <Button variant="primary" onClick={openNewModal}>
+            <Plus className="h-4 w-4" />
+            <span>Convidar Usuário</span>
+          </Button>
+        }
+      />
 
-      {/* Role summary */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        {(
-          Object.entries(ROLE_CONFIG) as [
-            UserRole,
-            (typeof ROLE_CONFIG)[UserRole],
-          ][]
-        ).map(([role, cfg], i) => (
-          <motion.div
-            key={role}
-            custom={i + 1}
-            variants={fadeUp}
-            initial="hidden"
-            animate="visible"
-            className="bg-white dark:bg-[#0D1C2C] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 text-center"
-          >
-            <div
-              className={`w-8 h-8 rounded-xl ${cfg.bg} flex items-center justify-center mx-auto mb-2`}
-            >
-              <cfg.icon className={`h-4 w-4 ${cfg.color}`} />
-            </div>
-            <p className={`text-xs font-bold ${cfg.color} mb-0.5`}>
-              {cfg.label}
-            </p>
-            <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
-              {roleCount[role] || 0}
-            </p>
-          </motion.div>
-        ))}
+      {/* Role Counts */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        {(Object.keys(ROLE_CONFIG) as UserRole[]).map((r) => {
+          const cfg = ROLE_CONFIG[r];
+          const count = users.filter((u) => u.role === r).length;
+
+          return (
+            <Panel key={r} className="p-3.5 text-center space-y-1">
+              <StatusBadge tone={cfg.tone}>{cfg.label}</StatusBadge>
+              <p className="text-xl font-bold text-os-fg">{count}</p>
+            </Panel>
+          );
+        })}
       </div>
 
-      {/* Users table */}
-      <motion.div
-        custom={6}
-        variants={fadeUp}
-        initial="hidden"
-        animate="visible"
-        className="bg-white dark:bg-[#0D1C2C] rounded-2xl border border-slate-200/80 dark:border-slate-800 overflow-hidden"
-      >
-        <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar usuários..."
-              className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-700 dark:text-slate-300 outline-none focus:ring-2 focus:ring-[#003d9b]/20 focus:border-[#003d9b] transition-all"
+      {/* Search Input */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-os-muted" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por nome, e-mail ou perfil de acesso..."
+            className="w-full pl-9 pr-4 py-2 rounded-xl border border-os-border bg-os-surface text-xs text-os-fg focus:outline-none focus:ring-2 focus:ring-os-ring"
+          />
+        </div>
+      </div>
+
+      {/* Users Table */}
+      <Panel className="overflow-hidden">
+        {isLoading ? (
+          <div className="p-6 space-y-3">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        ) : filteredUsers.length === 0 ? (
+          <div className="p-8">
+            <EmptyState
+              icon={Users}
+              title="Nenhum usuário encontrado"
+              description="Cadastre colaboradores para atribuir papéis de governança na software house."
+              action={
+                <Button variant="primary" size="sm" onClick={openNewModal}>
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>Cadastrar Usuário</span>
+                </Button>
+              }
             />
           </div>
-        </div>
-        <div className="divide-y divide-slate-50 dark:divide-slate-800">
-          {filtered.map((user, i) => {
-            const roleCfg = ROLE_CONFIG[user.role];
-            const statusCfg = STATUS_CONFIG[user.status];
-            const RoleIcon = roleCfg.icon;
-            return (
-              <motion.div
-                key={user.id}
-                custom={i + 7}
-                variants={fadeUp}
-                initial="hidden"
-                animate="visible"
-                className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors group"
-              >
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#003d9b] to-[#006875] flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-                  {user.avatar}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">
-                      {user.name}
-                    </p>
-                    <div
-                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${roleCfg.bg} ${roleCfg.color}`}
-                    >
-                      <RoleIcon className="h-2.5 w-2.5" />
-                      {roleCfg.label}
-                    </div>
-                  </div>
-                  <p className="text-xs text-slate-500 truncate">
-                    {user.email}
-                  </p>
-                </div>
-                <div className="hidden md:flex items-center gap-2 flex-shrink-0">
-                  <div
-                    className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`}
-                  />
-                  <span className={`text-xs font-medium ${statusCfg.color}`}>
-                    {statusCfg.label}
-                  </span>
-                </div>
-                <div className="hidden lg:block text-xs text-slate-400 flex-shrink-0 w-24 text-right">
-                  {user.lastLogin}
-                </div>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                  <button className="p-1.5 rounded-lg text-slate-400 hover:bg-blue-50 hover:text-[#003d9b] transition-colors">
-                    <Edit3 className="h-3.5 w-3.5" />
-                  </button>
-                  <button className="p-1.5 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors">
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-      </motion.div>
-
-      {/* RBAC info */}
-      <motion.div
-        custom={12}
-        variants={fadeUp}
-        initial="hidden"
-        animate="visible"
-        className="bg-white dark:bg-[#0D1C2C] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6"
-      >
-        <h2 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
-          <Shield className="h-4 w-4 text-[#003d9b]" />
-          Permissões por Role (RBAC)
-        </h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b border-slate-100 dark:border-slate-800">
-                <th className="py-2 text-left text-slate-500 font-bold uppercase tracking-wider">
-                  Permissão
-                </th>
-                {(
-                  [
-                    "SUPER_ADMIN",
-                    "ADMIN",
-                    "MANAGER",
-                    "MEMBER",
-                    "VIEWER",
-                  ] as UserRole[]
-                ).map((r) => (
-                  <th
-                    key={r}
-                    className={`py-2 px-3 text-center font-bold ${ROLE_CONFIG[r].color}`}
-                  >
-                    {ROLE_CONFIG[r].label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-              {[
-                {
-                  perm: "Projetos — Ler",
-                  vals: [true, true, true, true, true],
-                },
-                {
-                  perm: "Projetos — Criar/Editar",
-                  vals: [true, true, true, true, false],
-                },
-                {
-                  perm: "Projetos — Excluir",
-                  vals: [true, true, true, false, false],
-                },
-                {
-                  perm: "Financeiro — Ver",
-                  vals: [true, true, true, false, false],
-                },
-                {
-                  perm: "Financeiro — Criar transações",
-                  vals: [true, true, true, false, false],
-                },
-                {
-                  perm: "CRM — Acesso completo",
-                  vals: [true, true, true, true, false],
-                },
-                {
-                  perm: "Admin — Usuários",
-                  vals: [true, true, false, false, false],
-                },
-                {
-                  perm: "Admin — Configurações",
-                  vals: [true, true, false, false, false],
-                },
-                {
-                  perm: "Admin — Logs",
-                  vals: [true, true, false, false, false],
-                },
-              ].map((row) => (
-                <tr
-                  key={row.perm}
-                  className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30"
-                >
-                  <td className="py-2.5 text-slate-600 dark:text-slate-400">
-                    {row.perm}
-                  </td>
-                  {row.vals.map((v, i) => (
-                    <td key={i} className="py-2.5 px-3 text-center">
-                      {v ? (
-                        <span className="text-green-500 font-bold">✓</span>
-                      ) : (
-                        <span className="text-slate-300">—</span>
-                      )}
-                    </td>
-                  ))}
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-os-border bg-os-surface-2/60 text-os-muted font-mono font-medium">
+                  <th className="py-3 px-4">USUÁRIO</th>
+                  <th className="py-3 px-4">DEPARTAMENTO</th>
+                  <th className="py-3 px-4">PAPEL (RBAC)</th>
+                  <th className="py-3 px-4">STATUS</th>
+                  <th className="py-3 px-4 text-right">AÇÕES</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-os-border">
+                {filteredUsers.map((user) => {
+                  const roleCfg = ROLE_CONFIG[user.role] || ROLE_CONFIG.MEMBER;
+                  return (
+                    <tr
+                      key={user.id}
+                      className="hover:bg-os-surface-2/40 transition-colors"
+                    >
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-os-primary/10 text-os-primary flex items-center justify-center font-bold text-xs flex-shrink-0">
+                            {user.avatar || user.name.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-os-fg">
+                              {user.name}
+                            </p>
+                            <p className="text-[11px] text-os-muted">
+                              {user.email}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="py-3 px-4 text-os-muted font-mono text-[11px]">
+                        {user.department || "Engenharia"}
+                      </td>
+
+                      <td className="py-3 px-4">
+                        <StatusBadge tone={roleCfg.tone}>
+                          {roleCfg.label}
+                        </StatusBadge>
+                      </td>
+
+                      <td className="py-3 px-4">
+                        <StatusBadge
+                          tone={
+                            user.status === "ACTIVE"
+                              ? "success"
+                              : user.status === "PENDING"
+                                ? "warning"
+                                : "neutral"
+                          }
+                        >
+                          {user.status === "ACTIVE"
+                            ? "Ativo"
+                            : user.status === "PENDING"
+                              ? "Pendente"
+                              : "Inativo"}
+                        </StatusBadge>
+                      </td>
+
+                      <td className="py-3 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => openEditModal(user)}
+                            className="p-1.5 text-os-muted hover:text-os-primary hover:bg-os-surface-2 rounded-lg transition-colors"
+                            title="Editar Usuário"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => setDeletingUserId(user.id)}
+                            className="p-1.5 text-os-muted hover:text-os-danger hover:bg-os-danger/10 rounded-lg transition-colors"
+                            title="Remover Usuário"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Panel>
+
+      {/* Modal Criar / Editar Usuário */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-md bg-os-surface rounded-2xl border border-os-border shadow-2xl p-6 space-y-4"
+          >
+            <h2 className="text-base font-bold text-os-fg">
+              {editingUser ? "Editar Usuário" : "Convidar Usuário"}
+            </h2>
+
+            <form onSubmit={handleSubmit} className="space-y-3.5">
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-os-fg">
+                  Nome Completo *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Ex: Ezequiel Antunes"
+                  className="w-full p-2 rounded-xl border border-os-border bg-os-surface text-xs text-os-fg focus:outline-none focus:ring-2 focus:ring-os-ring"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-os-fg">
+                  E-mail Corporativo *
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="usuario@fzbuild.com"
+                  className="w-full p-2 rounded-xl border border-os-border bg-os-surface text-xs text-os-fg focus:outline-none focus:ring-2 focus:ring-os-ring"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-os-fg">
+                    Papel (RBAC)
+                  </label>
+                  <select
+                    value={role}
+                    onChange={(e) => setRole(e.target.value as UserRole)}
+                    className="w-full p-2 rounded-xl border border-os-border bg-os-surface text-xs text-os-fg focus:outline-none focus:ring-2 focus:ring-os-ring"
+                  >
+                    <option value="SUPER_ADMIN">Super Admin</option>
+                    <option value="ADMIN">Admin</option>
+                    <option value="MANAGER">Manager</option>
+                    <option value="MEMBER">Member</option>
+                    <option value="VIEWER">Viewer</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-os-fg">
+                    Status
+                  </label>
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value as UserStatus)}
+                    className="w-full p-2 rounded-xl border border-os-border bg-os-surface text-xs text-os-fg focus:outline-none focus:ring-2 focus:ring-os-ring"
+                  >
+                    <option value="ACTIVE">Ativo</option>
+                    <option value="PENDING">Pendente</option>
+                    <option value="INACTIVE">Inativo</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-os-fg">
+                  Departamento / Squad
+                </label>
+                <input
+                  type="text"
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
+                  placeholder="Ex: Engenharia, Comercial, Operações"
+                  className="w-full p-2 rounded-xl border border-os-border bg-os-surface text-xs text-os-fg focus:outline-none focus:ring-2 focus:ring-os-ring"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-os-border">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button variant="primary" size="sm" type="submit">
+                  {editingUser ? "Salvar Alterações" : "Convidar"}
+                </Button>
+              </div>
+            </form>
+          </motion.div>
         </div>
-      </motion.div>
+      )}
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        open={!!deletingUserId}
+        onOpenChange={(open) => !open && setDeletingUserId(null)}
+        title="Remover Usuário"
+        description="Tem certeza que deseja remover este usuário do sistema? O acesso será revogado imediatamente."
+        confirmLabel="Sim, remover"
+        cancelLabel="Cancelar"
+        tone="danger"
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

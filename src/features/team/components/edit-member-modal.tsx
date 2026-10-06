@@ -12,6 +12,7 @@ import {
 import { useProjects } from "@/features/projects/api/use-projects";
 import { storage } from "@/lib/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ConfirmDialog } from "@/components/os/confirm-dialog";
 
 interface EditMemberModalProps {
   isOpen: boolean;
@@ -94,14 +95,13 @@ export function EditMemberModal({
     }
   };
 
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+
   const handleDelete = async () => {
-    if (
-      member &&
-      window.confirm("Deseja excluir este membro da equipe permanentemente?")
-    ) {
-      await deleteMember.mutateAsync(member.id);
-      onClose();
-    }
+    if (!member) return;
+    await deleteMember.mutateAsync(member.id);
+    setConfirmDeleteOpen(false);
+    onClose();
   };
 
   const addAllocation = (projectId: string) => {
@@ -180,7 +180,7 @@ export function EditMemberModal({
               <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={handleDelete}
+                  onClick={() => setConfirmDeleteOpen(true)}
                   className="p-2 bg-red-50 text-red-500 hover:bg-red-100 rounded-full transition-colors"
                   title="Excluir Membro"
                 >
@@ -349,6 +349,17 @@ export function EditMemberModal({
               </div>
             </form>
           </motion.div>
+
+          <ConfirmDialog
+            isOpen={confirmDeleteOpen}
+            onClose={() => setConfirmDeleteOpen(false)}
+            onConfirm={handleDelete}
+            title="Excluir Membro da Equipe?"
+            description={`Deseja excluir "${member.name}" permanentemente da equipe? Esta ação removerá o membro e suas alocações.`}
+            confirmLabel="Excluir Membro"
+            tone="danger"
+            isLoading={deleteMember.isPending}
+          />
         </div>
       )}
     </AnimatePresence>

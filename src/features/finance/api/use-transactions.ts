@@ -20,6 +20,7 @@ export interface Transaction {
   category: string;
   amount: number;
   type: "in" | "out";
+  projectId?: string;
   createdAt?: { seconds: number; nanoseconds: number };
 }
 

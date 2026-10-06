@@ -71,6 +71,50 @@
     --sidebar-border: oklch(0.22 0.02 264);
     --sidebar-ring: oklch(0.55 0.2 264);
   }
+
+  /* ============================================================
+     FZ OS v2 — SEMANTIC TOKENS (RGB channels → Tailwind `os-*`)
+     Single source of truth for the internal system (/os).
+     ============================================================ */
+  :root {
+    --os-bg: 246 248 251;
+    --os-surface: 255 255 255;
+    --os-surface-2: 241 244 248;
+    --os-border: 226 232 240;
+    --os-border-strong: 203 213 225;
+    --os-fg: 15 23 42;
+    --os-muted: 71 85 105;
+    --os-subtle: 100 116 139;
+    --os-primary: 0 61 155;
+    --os-primary-hover: 0 45 115;
+    --os-primary-fg: 255 255 255;
+    --os-accent: 0 104 117;
+    --os-ring: 0 61 155;
+    --os-success: 5 150 105;
+    --os-warning: 217 119 6;
+    --os-danger: 220 38 38;
+    --os-info: 37 99 235;
+  }
+  .dark {
+    --os-bg: 6 17 31;
+    --os-surface: 13 28 44;
+    --os-surface-2: 18 34 53;
+    --os-border: 27 41 62;
+    --os-border-strong: 40 58 84;
+    --os-fg: 226 232 240;
+    --os-muted: 148 163 184;
+    --os-subtle: 125 140 163;
+    --os-primary: 37 99 235;
+    --os-primary-hover: 29 78 216;
+    --os-primary-fg: 255 255 255;
+    --os-accent: 0 227 253;
+    --os-ring: 0 227 253;
+    --os-success: 52 211 153;
+    --os-warning: 251 191 36;
+    --os-danger: 248 113 113;
+    --os-info: 96 165 250;
+  }
+
   * {
     @apply border-border outline-ring;
   }

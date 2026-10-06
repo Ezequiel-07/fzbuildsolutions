@@ -25,6 +25,13 @@ export interface Lead {
     email?: string;
     phone?: string;
   };
+  segment?: string;
+  cityState?: string;
+  website?: string;
+  aiScore?: number;
+  aiPitch?: string;
+  detectedPain?: string;
+  source?: string;
   createdAt?: { seconds: number; nanoseconds: number };
 }
 

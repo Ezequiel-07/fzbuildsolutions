@@ -1,312 +1,247 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
-import {
-  Building2,
-  Bell,
-  Lock,
-  Globe,
-  Save,
-  Database,
-  Key,
-  Shield,
-  Check,
-} from "lucide-react";
+import { Building2, Bell, Lock, Globe, Save, Shield } from "lucide-react";
 import Image from "next/image";
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 16 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.06, duration: 0.35, ease: [0.4, 0, 0.2, 1] },
-  }),
-};
+import { toast } from "sonner";
+import { PageHeader } from "@/components/os/page-header";
+import { Panel } from "@/components/os/panel";
+import { Button } from "@/components/os/button";
 
 const tabs = [
   { id: "company", label: "Empresa", icon: Building2 },
+  { id: "security", label: "Segurança & MFA", icon: Lock },
   { id: "notifications", label: "Notificações", icon: Bell },
-  { id: "security", label: "Segurança", icon: Lock },
   { id: "integrations", label: "Integrações", icon: Globe },
 ];
 
 export default function AdminSettingsPage() {
   const [activeTab, setActiveTab] = useState("company");
-  const [saved, setSaved] = useState(false);
+  const [companyName, setCompanyName] = useState("FZ Build Solutions");
+  const [companyEmail, setCompanyEmail] = useState("contato@fzbuild.com");
+  const [companyPhone, setCompanyPhone] = useState("+55 11 99999-9999");
+  const [city, setCity] = useState("São Paulo, SP");
 
   const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    toast.success("Configurações do sistema salvas com sucesso!");
   };
 
   return (
     <div className="max-w-[900px] mx-auto w-full space-y-6">
-      <motion.div
-        custom={0}
-        variants={fadeUp}
-        initial="hidden"
-        animate="visible"
-        className="flex items-center justify-between"
-      >
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-            Configurações
-          </h1>
-          <p className="text-sm text-slate-500 mt-0.5">
-            Empresa, segurança, notificações e integrações
-          </p>
-        </div>
-        <button
-          onClick={handleSave}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold shadow-lg transition-all duration-200 hover:-translate-y-0.5 ${saved ? "bg-green-600 text-white shadow-green-900/20" : "bg-[#003d9b] hover:bg-[#003280] text-white shadow-blue-900/20"}`}
-        >
-          {saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
-          {saved ? "Salvo!" : "Salvar"}
-        </button>
-      </motion.div>
+      <PageHeader
+        title="Configurações Globais"
+        description="Parâmetros da organização, segurança multifator e integrações corporativas"
+        actions={
+          <Button variant="primary" onClick={handleSave}>
+            <Save className="h-4 w-4" />
+            <span>Salvar Alterações</span>
+          </Button>
+        }
+      />
 
       {/* Tabs */}
-      <motion.div
-        custom={1}
-        variants={fadeUp}
-        initial="hidden"
-        animate="visible"
-        className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl w-fit"
-      >
+      <div className="flex items-center gap-1 bg-os-surface-2 p-1 rounded-2xl w-fit border border-os-border">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeTab === tab.id ? "bg-white dark:bg-[#0D1C2C] text-slate-900 dark:text-slate-100 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+              activeTab === tab.id
+                ? "bg-os-surface text-os-primary dark:text-os-accent shadow-sm"
+                : "text-os-muted hover:text-os-fg"
+            }`}
           >
-            <tab.icon className="h-4 w-4" />
-            {tab.label}
+            <tab.icon className="h-3.5 w-3.5" />
+            <span>{tab.label}</span>
           </button>
         ))}
-      </motion.div>
+      </div>
 
       {/* Company Tab */}
       {activeTab === "company" && (
-        <motion.div
-          custom={2}
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          className="space-y-4"
-        >
-          <div className="bg-white dark:bg-[#0D1C2C] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 space-y-5">
-            <h2 className="font-semibold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-[#003d9b]" />
-              Informações da Empresa
-            </h2>
-            <div className="flex items-center gap-4">
-              <Image
-                src="/fzbuildsemfundo.png"
-                alt="Logo"
-                width={56}
-                height={56}
-                className="w-14 h-14 rounded-2xl border border-slate-200 object-contain p-1"
-              />
-              <div>
-                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                  FZ Build Solutions
-                </p>
-                <p className="text-xs text-slate-500">
-                  Software House · São Paulo, Brasil
-                </p>
-                <button className="text-xs text-[#003d9b] hover:underline mt-1">
-                  Trocar logo
-                </button>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[
-                {
-                  label: "Nome da Empresa",
-                  value: "FZ Build Solutions",
-                  type: "text",
-                },
-                {
-                  label: "E-mail",
-                  value: "contato@fzbuild.com",
-                  type: "email",
-                },
-                { label: "Telefone", value: "+55 11 99999-9999", type: "tel" },
-                { label: "Cidade", value: "São Paulo, SP", type: "text" },
-              ].map((field) => (
-                <div key={field.label}>
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">
-                    {field.label}
-                  </label>
-                  <input
-                    type={field.type}
-                    defaultValue={field.value}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-700 dark:text-slate-300 outline-none focus:ring-2 focus:ring-[#003d9b]/20 focus:border-[#003d9b] transition-all"
-                  />
-                </div>
-              ))}
+        <Panel className="p-6 space-y-5">
+          <h2 className="font-semibold text-sm text-os-fg flex items-center gap-2">
+            <Building2 className="h-4 w-4 text-os-primary" />
+            <span>Informações da Organização</span>
+          </h2>
+
+          <div className="flex items-center gap-4">
+            <Image
+              src="/fzbuildsemfundo.png"
+              alt="Logo"
+              width={52}
+              height={52}
+              className="w-12 h-12 rounded-2xl border border-os-border object-contain p-1 bg-os-surface-2"
+            />
+            <div>
+              <p className="text-xs font-bold text-os-fg">FZ Build Solutions</p>
+              <p className="text-[11px] text-os-muted">
+                Software House · São Paulo, Brasil
+              </p>
             </div>
           </div>
-        </motion.div>
-      )}
 
-      {/* Notifications Tab */}
-      {activeTab === "notifications" && (
-        <motion.div
-          custom={2}
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          className="bg-white dark:bg-[#0D1C2C] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 space-y-4"
-        >
-          <h2 className="font-semibold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
-            <Bell className="h-4 w-4 text-[#003d9b]" />
-            Preferências de Notificação
-          </h2>
-          {[
-            { label: "Novos projetos criados", on: true },
-            { label: "Atualizações de leads no CRM", on: true },
-            { label: "Transações financeiras", on: false },
-            { label: "Alertas de segurança", on: true },
-            { label: "Relatórios semanais", on: false },
-            { label: "Alertas de infraestrutura", on: true },
-          ].map((item) => (
-            <div
-              key={item.label}
-              className="flex items-center justify-between py-2.5 border-b border-slate-50 dark:border-slate-800 last:border-0"
-            >
-              <span className="text-sm text-slate-700 dark:text-slate-300">
-                {item.label}
-              </span>
-              <button
-                className={`relative w-10 h-5.5 rounded-full transition-colors ${item.on ? "bg-[#003d9b]" : "bg-slate-200 dark:bg-slate-600"}`}
-              >
-                <span
-                  className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${item.on ? "left-5" : "left-0.5"}`}
-                />
-              </button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-os-fg">
+                Nome da Empresa
+              </label>
+              <input
+                type="text"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-os-border bg-os-surface text-xs text-os-fg focus:outline-none focus:ring-2 focus:ring-os-ring"
+              />
             </div>
-          ))}
-        </motion.div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-os-fg">
+                E-mail Corporativo
+              </label>
+              <input
+                type="email"
+                value={companyEmail}
+                onChange={(e) => setCompanyEmail(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-os-border bg-os-surface text-xs text-os-fg focus:outline-none focus:ring-2 focus:ring-os-ring"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-os-fg">
+                Telefone de Contato
+              </label>
+              <input
+                type="tel"
+                value={companyPhone}
+                onChange={(e) => setCompanyPhone(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-os-border bg-os-surface text-xs text-os-fg focus:outline-none focus:ring-2 focus:ring-os-ring"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-os-fg">
+                Sede / Localização
+              </label>
+              <input
+                type="text"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-os-border bg-os-surface text-xs text-os-fg focus:outline-none focus:ring-2 focus:ring-os-ring"
+              />
+            </div>
+          </div>
+        </Panel>
       )}
 
       {/* Security Tab */}
       {activeTab === "security" && (
-        <motion.div
-          custom={2}
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          className="space-y-4"
-        >
-          <div className="bg-white dark:bg-[#0D1C2C] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 space-y-4">
-            <h2 className="font-semibold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <Lock className="h-4 w-4 text-[#003d9b]" />
-              Segurança
-            </h2>
-            {[
-              {
-                icon: Shield,
-                label: "Autenticação de dois fatores (MFA)",
-                desc: "Proteja sua conta com verificação adicional",
-                active: true,
-              },
-              {
-                icon: Key,
-                label: "Timeout de Sessão",
-                desc: "30 minutos de inatividade",
-                active: true,
-              },
-              {
-                icon: Database,
-                label: "Logs de Auditoria",
-                desc: "Registro de todas as ações críticas",
-                active: true,
-              },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="flex items-start gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700"
-              >
-                <div className="p-2 bg-[#003d9b]/10 rounded-xl flex-shrink-0">
-                  <item.icon className="h-4.5 w-4.5 text-[#003d9b]" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                    {item.label}
-                  </p>
-                  <p className="text-xs text-slate-500 mt-0.5">{item.desc}</p>
-                </div>
-                <span
-                  className={`text-xs font-semibold px-2.5 py-1 rounded-full ${item.active ? "bg-green-100 text-green-700" : "bg-slate-200 text-slate-500"}`}
-                >
-                  {item.active ? "Ativo" : "Inativo"}
-                </span>
+        <Panel className="p-6 space-y-4">
+          <h2 className="font-semibold text-sm text-os-fg flex items-center gap-2">
+            <Shield className="h-4 w-4 text-os-primary" />
+            <span>Segurança de Acesso & MFA</span>
+          </h2>
+
+          <div className="space-y-3">
+            <div className="p-4 rounded-xl border border-os-border bg-os-surface-2/40 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-os-fg">
+                  Autenticação Multifator (MFA)
+                </p>
+                <p className="text-[11px] text-os-muted">
+                  Exigir código OTP para administradores em novo login
+                </p>
               </div>
-            ))}
+              <span className="px-2.5 py-1 rounded-md bg-os-success/10 text-os-success text-xs font-bold font-mono">
+                HABILITADO
+              </span>
+            </div>
+
+            <div className="p-4 rounded-xl border border-os-border bg-os-surface-2/40 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-os-fg">
+                  Duração da Sessão
+                </p>
+                <p className="text-[11px] text-os-muted">
+                  Expiração automática de tokens JWT inativos
+                </p>
+              </div>
+              <span className="text-xs font-mono font-bold text-os-fg">
+                24 horas
+              </span>
+            </div>
           </div>
-        </motion.div>
+        </Panel>
+      )}
+
+      {/* Notifications Tab */}
+      {activeTab === "notifications" && (
+        <Panel className="p-6 space-y-4">
+          <h2 className="font-semibold text-sm text-os-fg flex items-center gap-2">
+            <Bell className="h-4 w-4 text-os-primary" />
+            <span>Preferências de Notificações</span>
+          </h2>
+          <div className="space-y-2 text-xs text-os-fg">
+            <label className="flex items-center gap-2.5 p-3 rounded-xl border border-os-border cursor-pointer hover:bg-os-surface-2/50">
+              <input
+                type="checkbox"
+                defaultChecked
+                className="rounded text-os-primary"
+              />
+              <span>Notificar sobre novas propostas ganhas no CRM</span>
+            </label>
+            <label className="flex items-center gap-2.5 p-3 rounded-xl border border-os-border cursor-pointer hover:bg-os-surface-2/50">
+              <input
+                type="checkbox"
+                defaultChecked
+                className="rounded text-os-primary"
+              />
+              <span>Alertas de estouro de orçamento (&gt;80%) em projetos</span>
+            </label>
+            <label className="flex items-center gap-2.5 p-3 rounded-xl border border-os-border cursor-pointer hover:bg-os-surface-2/50">
+              <input
+                type="checkbox"
+                defaultChecked
+                className="rounded text-os-primary"
+              />
+              <span>
+                Relatório executivo consolidado por e-mail semanalmente
+              </span>
+            </label>
+          </div>
+        </Panel>
       )}
 
       {/* Integrations Tab */}
       {activeTab === "integrations" && (
-        <motion.div
-          custom={2}
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          className="bg-white dark:bg-[#0D1C2C] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 space-y-4"
-        >
-          <h2 className="font-semibold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
-            <Globe className="h-4 w-4 text-[#003d9b]" />
-            Integrações
+        <Panel className="p-6 space-y-4">
+          <h2 className="font-semibold text-sm text-os-fg flex items-center gap-2">
+            <Globe className="h-4 w-4 text-os-primary" />
+            <span>Integrações em Nuvem</span>
           </h2>
-          {[
-            {
-              name: "Firebase",
-              desc: "Auth, Firestore, Storage",
-              connected: true,
-              icon: "🔥",
-            },
-            {
-              name: "Google Analytics",
-              desc: "Análise de uso e comportamento",
-              connected: false,
-              icon: "📊",
-            },
-            {
-              name: "Slack",
-              desc: "Notificações no canal da equipe",
-              connected: false,
-              icon: "💬",
-            },
-            {
-              name: "GitHub",
-              desc: "Deploy e versionamento de código",
-              connected: false,
-              icon: "🐙",
-            },
-          ].map((integration) => (
-            <div
-              key={integration.name}
-              className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 transition-colors"
-            >
-              <span className="text-2xl flex-shrink-0">{integration.icon}</span>
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                  {integration.name}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div className="p-3.5 rounded-xl border border-os-border bg-os-surface-2/40 flex items-center justify-between">
+              <div>
+                <p className="font-bold text-os-fg">Firebase App Hosting</p>
+                <p className="text-[11px] text-os-muted">
+                  Banco NoSQL & Storage
                 </p>
-                <p className="text-xs text-slate-500">{integration.desc}</p>
               </div>
-              <button
-                className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all ${integration.connected ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-[#003d9b]/10 text-[#003d9b] hover:bg-[#003d9b] hover:text-white"}`}
-              >
-                {integration.connected ? "✓ Conectado" : "Conectar"}
-              </button>
+              <span className="text-os-success font-bold font-mono">
+                CONECTADO
+              </span>
             </div>
-          ))}
-        </motion.div>
+
+            <div className="p-3.5 rounded-xl border border-os-border bg-os-surface-2/40 flex items-center justify-between">
+              <div>
+                <p className="font-bold text-os-fg">FZ AI Gateway</p>
+                <p className="text-[11px] text-os-muted">
+                  Modelos LLM Contextuais
+                </p>
+              </div>
+              <span className="text-os-success font-bold font-mono">ATIVO</span>
+            </div>
+          </div>
+        </Panel>
       )}
     </div>
   );

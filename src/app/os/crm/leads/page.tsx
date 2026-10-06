@@ -15,49 +15,45 @@ import {
   CheckSquare,
   Square,
   X,
+  ExternalLink,
+  Sparkles,
 } from "lucide-react";
 import { useLeads, useDeleteLead, Lead } from "@/features/crm/api/use-leads";
 import { NewLeadModal } from "@/features/crm/components/new-lead-modal";
 import { EditLeadModal } from "@/features/crm/components/edit-lead-modal";
+import { AIProspectorDrawer } from "@/features/crm/components/ai-prospector-drawer";
+import { PageHeader } from "@/components/os/page-header";
+import { Button } from "@/components/os/button";
+import { Panel } from "@/components/os/panel";
+import { StatusBadge } from "@/components/os/status-badge";
+import { ConfirmDialog } from "@/components/os/confirm-dialog";
+import {
+  LEAD_STAGES,
+  LEAD_STAGE_META,
+  normalizeLeadStage,
+  type LeadStage,
+} from "@/domain/lead";
+import Link from "next/link";
 
 type SortKey = "clientName" | "projectName" | "stage" | "value" | "createdAt";
 type SortDir = "asc" | "desc";
 
-const STAGE_COLORS: Record<string, string> = {
-  "Leads Novos":
-    "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-  Qualificação:
-    "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
-  "Proposta Enviada":
-    "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
-  Negociação:
-    "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400",
-  Fechado:
-    "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-};
-
-const STAGES = [
-  "Leads Novos",
-  "Qualificação",
-  "Proposta Enviada",
-  "Negociação",
-  "Fechado",
-];
-
 const fadeUp = {
-  hidden: { opacity: 0, y: 16 },
+  hidden: { opacity: 0, y: 14 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.04, duration: 0.35, ease: [0.4, 0, 0.2, 1] },
+    transition: { delay: i * 0.03, duration: 0.3, ease: [0.4, 0, 0.2, 1] },
   }),
 };
 
 export default function LeadsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isRadarOpen, setIsRadarOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
   const [search, setSearch] = useState("");
-  const [filterStage, setFilterStage] = useState("all");
+  const [filterStage, setFilterStage] = useState<string>("all");
   const [sortKey, setSortKey] = useState<SortKey>("createdAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -75,8 +71,9 @@ export default function LeadsPage() {
 
   const filtered = useMemo(() => {
     let data = [...leads];
-    if (filterStage !== "all")
-      data = data.filter((l) => l.stage === filterStage);
+    if (filterStage !== "all") {
+      data = data.filter((l) => normalizeLeadStage(l.stage) === filterStage);
+    }
     if (search.trim()) {
       const q = search.toLowerCase();
       data = data.filter(
@@ -110,7 +107,7 @@ export default function LeadsPage() {
 
   const totalValue = filtered.reduce((a, c) => a + (c.value || 0), 0);
   const closedValue = filtered
-    .filter((l) => l.stage === "Fechado")
+    .filter((l) => normalizeLeadStage(l.stage) === "won")
     .reduce((a, c) => a + (c.value || 0), 0);
 
   const toggleSelect = (id: string) =>
@@ -120,6 +117,7 @@ export default function LeadsPage() {
       else next.add(id);
       return next;
     });
+
   const toggleSelectAll = () => {
     if (selected.size === filtered.length) setSelected(new Set());
     else setSelected(new Set(filtered.map((l) => l.id)));
@@ -130,73 +128,92 @@ export default function LeadsPage() {
       style: "currency",
       currency: "BRL",
     }).format(v);
+
   const formatDate = (ts?: { seconds: number }) =>
     ts ? new Date(ts.seconds * 1000).toLocaleDateString("pt-BR") : "—";
 
   const SortIcon = ({ col }: { col: SortKey }) =>
     sortKey !== col ? (
-      <ChevronsUpDown className="h-3.5 w-3.5 text-slate-300" />
+      <ChevronsUpDown className="h-3.5 w-3.5 text-os-muted" />
     ) : sortDir === "asc" ? (
-      <ChevronUp className="h-3.5 w-3.5 text-[#003d9b]" />
+      <ChevronUp className="h-3.5 w-3.5 text-os-primary" />
     ) : (
-      <ChevronDown className="h-3.5 w-3.5 text-[#003d9b]" />
+      <ChevronDown className="h-3.5 w-3.5 text-os-primary" />
     );
+
+  const handleDeleteConfirm = async () => {
+    if (!leadToDelete) return;
+    await deleteLead.mutateAsync(leadToDelete.id);
+    setLeadToDelete(null);
+  };
 
   return (
     <div className="max-w-[1400px] mx-auto w-full space-y-6">
-      {/* HEADER */}
-      <motion.div
-        custom={0}
-        variants={fadeUp}
-        initial="hidden"
-        animate="visible"
-        className="flex flex-col md:flex-row md:items-center justify-between gap-4"
-      >
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-            Leads
-          </h1>
-          <p className="text-sm text-slate-500 mt-0.5">
-            {filtered.length} lead{filtered.length !== 1 ? "s" : ""} · Pipeline
-            commercial
-          </p>
-        </div>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#003d9b] hover:bg-[#003280] text-white text-sm font-semibold shadow-lg shadow-blue-900/20 hover:-translate-y-0.5 transition-all duration-200"
-        >
-          <Plus className="h-4 w-4" />
-          Novo Lead
-        </button>
-      </motion.div>
+      <PageHeader
+        title="Oportunidades & Leads"
+        description={`${filtered.length} lead${filtered.length !== 1 ? "s" : ""} · Tabela analítica e gestão de pipeline`}
+        breadcrumbs={[
+          { label: "CRM", href: "/os/crm" },
+          { label: "Oportunidades" },
+        ]}
+        actions={
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setIsRadarOpen(true)}
+              className="border-os-primary/30 text-os-primary hover:bg-os-primary/10 shadow-sm"
+              leadingIcon={<Sparkles className="h-4 w-4 text-os-primary" />}
+            >
+              Radar IA
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              leadingIcon={<Plus className="h-4 w-4" />}
+              onClick={() => setIsModalOpen(true)}
+            >
+              Novo Lead
+            </Button>
+          </div>
+        }
+      />
 
-      {/* KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {STAGES.map((stage, i) => {
-          const count = leads.filter((l) => l.stage === stage).length;
+      {/* KPI FILTER CHIPS */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {LEAD_STAGES.map((stageKey, i) => {
+          const meta = LEAD_STAGE_META[stageKey];
+          const count = leads.filter(
+            (l) => normalizeLeadStage(l.stage) === stageKey,
+          ).length;
           const val = leads
-            .filter((l) => l.stage === stage)
+            .filter((l) => normalizeLeadStage(l.stage) === stageKey)
             .reduce((a, c) => a + (c.value || 0), 0);
+          const isSelected = filterStage === stageKey;
+
           return (
             <motion.button
-              key={stage}
+              key={stageKey}
               custom={i + 1}
               variants={fadeUp}
               initial="hidden"
               animate="visible"
-              onClick={() =>
-                setFilterStage(filterStage === stage ? "all" : stage)
-              }
-              className={`p-4 rounded-2xl border text-left transition-all duration-200 hover:-translate-y-0.5 ${filterStage === stage ? "border-[#003d9b]/40 bg-[#003d9b]/5 shadow-md shadow-blue-900/10" : "bg-white dark:bg-[#0D1C2C] border-slate-200/80 dark:border-slate-800 hover:border-slate-300 hover:shadow-sm"}`}
+              onClick={() => setFilterStage(isSelected ? "all" : stageKey)}
+              className={`p-3.5 rounded-2xl border text-left transition-all ${
+                isSelected
+                  ? "border-os-primary bg-os-primary/10 ring-1 ring-os-primary"
+                  : "bg-os-surface border-os-border hover:border-os-border-strong hover:bg-os-bg"
+              }`}
             >
-              <p className="text-xs font-semibold text-slate-500 mb-2">
-                {stage}
-              </p>
-              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                {count}
-              </p>
+              <div className="flex items-center justify-between gap-1 mb-1.5">
+                <p className="text-xs font-semibold text-os-muted truncate">
+                  {meta.label}
+                </p>
+                <StatusBadge tone={meta.tone} size="sm" dotOnly />
+              </div>
+              <p className="text-2xl font-bold text-os-text">{count}</p>
               {val > 0 && (
-                <p className="text-xs text-green-600 font-medium mt-0.5">
+                <p className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 font-medium mt-0.5 truncate">
                   {formatCurrency(val)}
                 </p>
               )}
@@ -205,239 +222,261 @@ export default function LeadsPage() {
         })}
       </div>
 
-      {/* TABLE */}
+      {/* TABLE PANEL */}
       <motion.div
-        custom={6}
+        custom={7}
         variants={fadeUp}
         initial="hidden"
         animate="visible"
-        className="bg-white dark:bg-[#0D1C2C] rounded-2xl border border-slate-200/80 dark:border-slate-800 overflow-hidden"
       >
-        {/* Toolbar */}
-        <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center gap-3">
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar leads..."
-              className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-700 dark:text-slate-300 outline-none focus:ring-2 focus:ring-[#003d9b]/20 focus:border-[#003d9b] transition-all"
-            />
-          </div>
-          {filterStage !== "all" && (
-            <button
-              onClick={() => setFilterStage("all")}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#003d9b]/10 text-[#003d9b] text-xs font-semibold"
-            >
-              {filterStage} <X className="h-3 w-3" />
-            </button>
-          )}
-          {selected.size > 0 && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-50 border border-red-100">
-              <span className="text-xs font-semibold text-red-600">
-                {selected.size} selecionado{selected.size > 1 ? "s" : ""}
-              </span>
-              <button
-                onClick={() => setSelected(new Set())}
-                className="text-red-400 hover:text-red-600"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
+        <Panel className="overflow-hidden">
+          {/* Toolbar */}
+          <div className="px-5 py-3.5 border-b border-os-border flex flex-wrap items-center gap-3">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-os-muted" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar leads por cliente ou projeto..."
+                className="w-full pl-9 pr-4 py-2 rounded-xl border border-os-border bg-os-bg text-sm text-os-text outline-none focus:ring-2 focus:ring-os-primary/30 transition-all placeholder:text-os-muted"
+              />
             </div>
-          )}
-          <div className="ml-auto flex items-center gap-3 text-xs text-slate-500">
-            <span>
-              Pipeline:{" "}
-              <span className="font-semibold text-slate-700 dark:text-slate-300">
-                {formatCurrency(totalValue)}
+            {filterStage !== "all" && (
+              <button
+                onClick={() => setFilterStage("all")}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-os-primary/10 text-os-primary text-xs font-semibold"
+              >
+                {LEAD_STAGE_META[filterStage as LeadStage]?.label ||
+                  filterStage}{" "}
+                <X className="h-3 w-3" />
+              </button>
+            )}
+            {selected.size > 0 && (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/20">
+                <span className="text-xs font-semibold text-red-600 dark:text-red-400">
+                  {selected.size} selecionado{selected.size > 1 ? "s" : ""}
+                </span>
+                <button
+                  onClick={() => setSelected(new Set())}
+                  className="text-red-400 hover:text-red-600"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
+            <div className="ml-auto flex items-center gap-4 text-xs text-os-muted font-mono">
+              <span>
+                Pipeline:{" "}
+                <span className="font-semibold text-os-text">
+                  {formatCurrency(totalValue)}
+                </span>
               </span>
-            </span>
-            <span>
-              Fechado:{" "}
-              <span className="font-semibold text-green-600">
-                {formatCurrency(closedValue)}
+              <span>
+                Ganho:{" "}
+                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                  {formatCurrency(closedValue)}
+                </span>
               </span>
-            </span>
+            </div>
           </div>
-        </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
-                <th className="pl-5 py-3 w-10">
-                  <button onClick={toggleSelectAll}>
-                    {selected.size === filtered.length &&
-                    filtered.length > 0 ? (
-                      <CheckSquare className="h-4 w-4 text-[#003d9b]" />
-                    ) : (
-                      <Square className="h-4 w-4 text-slate-300" />
-                    )}
-                  </button>
-                </th>
-                {[
-                  { key: "clientName" as SortKey, label: "Cliente" },
-                  { key: "projectName" as SortKey, label: "Projeto" },
-                  { key: "stage" as SortKey, label: "Fase" },
-                  { key: "value" as SortKey, label: "Valor Previsto" },
-                  { key: "createdAt" as SortKey, label: "Data" },
-                ].map((col) => (
-                  <th
-                    key={col.key}
-                    className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider cursor-pointer select-none"
-                    onClick={() => handleSort(col.key)}
-                  >
-                    <span className="flex items-center gap-1.5">
-                      {col.label}
-                      <SortIcon col={col.key} />
-                    </span>
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-os-bg border-b border-os-border">
+                  <th className="pl-5 py-3 w-10">
+                    <button onClick={toggleSelectAll}>
+                      {selected.size === filtered.length &&
+                      filtered.length > 0 ? (
+                        <CheckSquare className="h-4 w-4 text-os-primary" />
+                      ) : (
+                        <Square className="h-4 w-4 text-os-muted" />
+                      )}
+                    </button>
                   </th>
-                ))}
-                <th className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  Contato
-                </th>
-                <th className="px-4 py-3 w-20" />
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i}>
-                    <td colSpan={8} className="px-5 py-4">
-                      <div className="h-5 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />
+                  {[
+                    { key: "clientName" as SortKey, label: "Cliente" },
+                    { key: "projectName" as SortKey, label: "Projeto" },
+                    { key: "stage" as SortKey, label: "Fase" },
+                    { key: "value" as SortKey, label: "Valor Previsto" },
+                    { key: "createdAt" as SortKey, label: "Data" },
+                  ].map((col) => (
+                    <th
+                      key={col.key}
+                      className="px-4 py-3 text-xs font-bold text-os-muted uppercase tracking-wider cursor-pointer select-none"
+                      onClick={() => handleSort(col.key)}
+                    >
+                      <span className="flex items-center gap-1.5">
+                        {col.label}
+                        <SortIcon col={col.key} />
+                      </span>
+                    </th>
+                  ))}
+                  <th className="px-4 py-3 text-xs font-bold text-os-muted uppercase tracking-wider">
+                    Contato
+                  </th>
+                  <th className="px-4 py-3 w-28 text-right pr-5">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {isLoading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i}>
+                      <td colSpan={8} className="px-5 py-4">
+                        <div className="h-5 bg-os-bg rounded-lg animate-pulse" />
+                      </td>
+                    </tr>
+                  ))
+                ) : filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="py-20 text-center">
+                      <p className="text-sm text-os-muted">
+                        Nenhum lead encontrado com os filtros atuais.
+                      </p>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setIsModalOpen(true)}
+                        className="mt-3"
+                      >
+                        + Novo Lead
+                      </Button>
                     </td>
                   </tr>
-                ))
-              ) : filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="py-20 text-center">
-                    <p className="text-sm text-slate-500">
-                      Nenhum lead encontrado.
-                    </p>
-                    <button
-                      onClick={() => setIsModalOpen(true)}
-                      className="mt-3 px-4 py-2 bg-[#003d9b] text-white text-xs font-semibold rounded-xl hover:bg-[#003280] transition-colors"
-                    >
-                      + Novo Lead
-                    </button>
-                  </td>
-                </tr>
-              ) : (
-                filtered.map((lead, i) => (
-                  <motion.tr
-                    key={lead.id}
-                    custom={i}
-                    variants={fadeUp}
-                    initial="hidden"
-                    animate="visible"
-                    className={`border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors group ${selected.has(lead.id) ? "bg-blue-50/50 dark:bg-blue-900/10" : ""}`}
-                  >
-                    <td className="pl-5 py-3.5">
-                      <button onClick={() => toggleSelect(lead.id)}>
-                        {selected.has(lead.id) ? (
-                          <CheckSquare className="h-4 w-4 text-[#003d9b]" />
-                        ) : (
-                          <Square className="h-4 w-4 text-slate-300 group-hover:text-slate-400" />
-                        )}
-                      </button>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#003d9b] to-[#006875] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                          {lead.clientName.charAt(0)}
-                        </div>
-                        <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                          {lead.clientName}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3.5 text-sm text-slate-600 dark:text-slate-400">
-                      {lead.projectName}
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <span
-                        className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full ${STAGE_COLORS[lead.stage] || "bg-slate-100 text-slate-700"}`}
-                      >
-                        {lead.stage}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <span className="font-mono text-sm font-semibold text-green-600">
-                        {lead.value ? formatCurrency(lead.value) : "—"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3.5 font-mono text-xs text-slate-500">
-                      {formatDate(
-                        lead.createdAt as { seconds: number } | undefined,
-                      )}
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <div className="flex items-center gap-1.5">
-                        {lead.contact?.phone && (
-                          <a
-                            href={`https://wa.me/${lead.contact.phone.replace(/\D/g, "")}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="p-1.5 rounded-lg text-slate-400 hover:bg-green-50 hover:text-green-600 transition-colors"
-                            title={lead.contact.phone}
-                          >
-                            <Phone className="h-3.5 w-3.5" />
-                          </a>
-                        )}
-                        {lead.contact?.email && (
-                          <a
-                            href={`mailto:${lead.contact.email}`}
-                            className="p-1.5 rounded-lg text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                            title={lead.contact.email}
-                          >
-                            <Mail className="h-3.5 w-3.5" />
-                          </a>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => setSelectedLead(lead)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:bg-blue-50 hover:text-[#003d9b] transition-colors"
-                        >
-                          <Edit3 className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (window.confirm("Excluir este lead?"))
-                              deleteLead.mutate(lead.id);
-                          }}
-                          className="p-1.5 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ) : (
+                  filtered.map((lead, i) => {
+                    const normStage = normalizeLeadStage(lead.stage);
+                    const meta = LEAD_STAGE_META[normStage];
 
-        {filtered.length > 0 && (
-          <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400">
-            <span>
-              {filtered.length} lead{filtered.length !== 1 ? "s" : ""}
-            </span>
-            <span>
-              Pipeline total:{" "}
-              <span className="font-bold text-slate-700 dark:text-slate-300">
-                {formatCurrency(totalValue)}
-              </span>
-            </span>
+                    return (
+                      <motion.tr
+                        key={lead.id}
+                        custom={i}
+                        variants={fadeUp}
+                        initial="hidden"
+                        animate="visible"
+                        className={`border-b border-os-border/60 hover:bg-os-bg/50 transition-colors group ${
+                          selected.has(lead.id) ? "bg-os-primary/5" : ""
+                        }`}
+                      >
+                        <td className="pl-5 py-3.5">
+                          <button onClick={() => toggleSelect(lead.id)}>
+                            {selected.has(lead.id) ? (
+                              <CheckSquare className="h-4 w-4 text-os-primary" />
+                            ) : (
+                              <Square className="h-4 w-4 text-os-muted group-hover:text-os-text" />
+                            )}
+                          </button>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <Link
+                            href={`/os/crm/${lead.id}`}
+                            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                          >
+                            <div className="w-8 h-8 rounded-xl bg-os-primary text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+                              {lead.clientName.charAt(0)}
+                            </div>
+                            <span className="text-sm font-semibold text-os-text group-hover:text-os-primary transition-colors">
+                              {lead.clientName}
+                            </span>
+                          </Link>
+                        </td>
+                        <td className="px-4 py-3.5 text-sm text-os-muted">
+                          {lead.projectName || "—"}
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <StatusBadge label={meta.label} tone={meta.tone} />
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span className="font-mono text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                            {lead.value ? formatCurrency(lead.value) : "—"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5 font-mono text-xs text-os-muted">
+                          {formatDate(
+                            lead.createdAt as { seconds: number } | undefined,
+                          )}
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <div className="flex items-center gap-1.5">
+                            {lead.contact?.phone && (
+                              <a
+                                href={`https://wa.me/${lead.contact.phone.replace(/\D/g, "")}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="p-1.5 rounded-lg text-os-muted hover:bg-emerald-500/10 hover:text-emerald-600 transition-colors"
+                                title={lead.contact.phone}
+                              >
+                                <Phone className="h-3.5 w-3.5" />
+                              </a>
+                            )}
+                            {lead.contact?.email && (
+                              <a
+                                href={`mailto:${lead.contact.email}`}
+                                className="p-1.5 rounded-lg text-os-muted hover:bg-blue-500/10 hover:text-blue-600 transition-colors"
+                                title={lead.contact.email}
+                              >
+                                <Mail className="h-3.5 w-3.5" />
+                              </a>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3.5 text-right pr-5">
+                          <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Link
+                              href={`/os/crm/${lead.id}`}
+                              className="p-1.5 rounded-lg text-os-muted hover:bg-os-bg hover:text-os-primary transition-colors"
+                              title="Ver Detalhes 360"
+                            >
+                              <ExternalLink className="h-3.5 w-3.5" />
+                            </Link>
+                            <button
+                              onClick={() => setSelectedLead(lead)}
+                              className="p-1.5 rounded-lg text-os-muted hover:bg-os-bg hover:text-os-primary transition-colors"
+                              title="Editar"
+                            >
+                              <Edit3 className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              onClick={() => setLeadToDelete(lead)}
+                              className="p-1.5 rounded-lg text-os-muted hover:bg-red-500/10 hover:text-red-500 transition-colors"
+                              title="Excluir"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </motion.tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
           </div>
-        )}
+
+          {filtered.length > 0 && (
+            <div className="px-5 py-3 border-t border-os-border flex items-center justify-between text-xs text-os-muted font-mono">
+              <span>
+                {filtered.length} lead{filtered.length !== 1 ? "s" : ""} exibido
+                {filtered.length !== 1 ? "s" : ""}
+              </span>
+              <span>
+                Total selecionado:{" "}
+                <span className="font-bold text-os-text">
+                  {formatCurrency(totalValue)}
+                </span>
+              </span>
+            </div>
+          )}
+        </Panel>
       </motion.div>
 
+      <AIProspectorDrawer
+        isOpen={isRadarOpen}
+        onClose={() => setIsRadarOpen(false)}
+      />
       <NewLeadModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -446,6 +485,17 @@ export default function LeadsPage() {
         isOpen={!!selectedLead}
         onClose={() => setSelectedLead(null)}
         lead={selectedLead}
+      />
+
+      <ConfirmDialog
+        isOpen={!!leadToDelete}
+        onClose={() => setLeadToDelete(null)}
+        onConfirm={handleDeleteConfirm}
+        title="Excluir Lead?"
+        description={`Tem certeza que deseja excluir o lead de "${leadToDelete?.clientName}"? Esta ação removerá a oportunidade do CRM.`}
+        confirmLabel="Excluir Lead"
+        tone="danger"
+        isLoading={deleteLead.isPending}
       />
     </div>
   );
