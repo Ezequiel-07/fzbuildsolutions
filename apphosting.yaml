@@ -1,0 +1,10 @@
+# Firebase App Hosting Configuration
+runConfig:
+  cpu: 1
+  memoryMiB: 2048
+
+env:
+  - variable: NODE_OPTIONS
+    value: "--max-old-space-size=4096"
+    availability:
+      - BUILD

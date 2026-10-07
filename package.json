@@ -9,7 +9,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "seed": "prisma db seed",
-    "prepare": "husky"
+    "prepare": "node -e \"if (process.env.NODE_ENV !== 'production') { try { require('child_process').execSync('npx husky', { stdio: 'inherit' }); } catch (e) {} }\""
   },
   "prisma": {
     "seed": "node --import tsx/esm prisma/seed.ts"
@@ -28,6 +28,7 @@
     "@xyflow/react": "^12.11.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cross-env": "^10.1.0",
     "date-fns": "^4.4.0",
     "firebase": "^12.15.0",
     "framer-motion": "^11.16.2",
@@ -57,7 +58,6 @@
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
     "@vitejs/plugin-react": "^4.3.4",
-    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "^15.1.9",
     "eslint-config-prettier": "^9.1.0",
