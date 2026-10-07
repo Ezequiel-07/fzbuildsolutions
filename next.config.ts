@@ -12,6 +12,15 @@ const nextConfig: NextConfig = {
   // Recommended output for Firebase App Hosting
   output: "standalone",
 
+  typescript: {
+    // Type checking is enforced via husky and npm run typecheck
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    // Linting is enforced via husky and npm run lint
+    ignoreDuringBuilds: true,
+  },
+
   images: {
     remotePatterns: [
       {
