@@ -43,7 +43,7 @@ export function EmailViewer({
     );
   }
 
-  if (isLoading || !message) {
+  if (isLoading) {
     return (
       <div className="flex-1 p-8 space-y-4 bg-os-surface">
         <Skeleton className="h-6 w-2/3" />
@@ -53,6 +53,23 @@ export function EmailViewer({
           <Skeleton className="h-4 w-5/6" />
           <Skeleton className="h-4 w-4/6" />
         </div>
+      </div>
+    );
+  }
+
+  if (!message) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-12 text-center text-os-muted bg-os-surface/40">
+        <div className="h-14 w-14 rounded-2xl bg-os-surface-2 flex items-center justify-center text-os-muted mb-4 border border-os-border">
+          <Mail className="h-7 w-7 opacity-60" />
+        </div>
+        <h4 className="text-sm font-semibold text-os-fg">
+          Mensagem não encontrada
+        </h4>
+        <p className="text-xs text-os-muted max-w-xs mt-1">
+          A mensagem selecionada não pôde ser carregada ou já foi removida da
+          caixa de entrada.
+        </p>
       </div>
     );
   }

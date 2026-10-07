@@ -380,193 +380,220 @@ export function AIProspectorDrawer({
               {/* Results Section */}
               {!isScanning && result && (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-bold text-os-fg flex items-center gap-2">
-                        <span>Oportunidades Mapeadas</span>
-                        <span className="px-2 py-0.5 rounded-full text-xs bg-os-primary/15 text-os-primary font-semibold">
-                          {result.leads.length}
-                        </span>
-                      </h3>
-                      <p className="text-xs text-os-muted mt-0.5">
-                        {result.searchSummary}
+                  {result.error ? (
+                    <div className="p-5 rounded-2xl bg-os-danger/10 border border-os-danger/30 space-y-2">
+                      <div className="flex items-center gap-2 text-os-danger font-semibold text-sm">
+                        <AlertCircle className="h-5 w-5 shrink-0" />
+                        <span>Radar de IA Indisponível</span>
+                      </div>
+                      <p className="text-xs text-os-fg/80 leading-relaxed">
+                        {result.error}
                       </p>
                     </div>
-
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={handleImportAll}
-                      disabled={isImportingAll}
-                      leadingIcon={
-                        isImportingAll ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <CheckCircle2 className="h-3.5 w-3.5 text-os-success" />
-                        )
-                      }
-                    >
-                      Importar Todos
-                    </Button>
-                  </div>
-
-                  {/* Candidate Lead Cards */}
-                  <div className="space-y-3.5">
-                    {result.leads.map((lead) => {
-                      const isImported = importedIds.has(lead.id);
-
-                      return (
-                        <div
-                          key={lead.id}
-                          className="p-5 rounded-2xl bg-os-surface border border-os-border shadow-sm hover:border-os-primary/40 transition-all space-y-3.5"
-                        >
-                          {/* Card Top */}
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <h4 className="text-sm font-bold text-os-fg">
-                                  {lead.tradeName || lead.companyName}
-                                </h4>
-                                {lead.tradeName && (
-                                  <span className="text-xs text-os-muted">
-                                    ({lead.companyName})
-                                  </span>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-3 text-xs text-os-muted flex-wrap">
-                                <span className="flex items-center gap-1">
-                                  <Building2 className="h-3.5 w-3.5 text-os-primary" />
-                                  {lead.segment}
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <MapPin className="h-3.5 w-3.5 text-os-muted" />
-                                  {lead.cityState}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Fit Score Badge */}
-                            <div className="flex flex-col items-end gap-1 shrink-0">
-                              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-os-success/15 text-os-success flex items-center gap-1">
-                                <Flame className="h-3.5 w-3.5 fill-os-success text-os-success" />
-                                {lead.fitScore}% Match
-                              </span>
-                              <span className="text-[11px] font-bold text-os-fg">
-                                {formatCurrency(lead.estimatedBudget)}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Opportunity description */}
-                          <div className="p-3 rounded-xl bg-os-surface-2/50 border border-os-border/60 text-xs text-os-fg space-y-1">
-                            <div className="font-semibold text-os-primary flex items-center gap-1.5">
-                              <Lightbulb className="h-3.5 w-3.5" />
-                              Oportunidade Mapeada
-                            </div>
-                            <p>{lead.projectOpportunity}</p>
-                          </div>
-
-                          {/* Pain & Pitch */}
-                          <div className="space-y-2 text-xs">
-                            <div className="flex items-start gap-2 text-os-muted">
-                              <AlertCircle className="h-3.5 w-3.5 text-amber-500 shrink-0 mt-0.5" />
-                              <div>
-                                <strong className="text-amber-500 font-medium">
-                                  Dor identificada:
-                                </strong>{" "}
-                                <span className="text-os-fg/90">
-                                  {lead.detectedPain}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="flex items-start gap-2 text-os-muted">
-                              <ArrowRight className="h-3.5 w-3.5 text-os-primary shrink-0 mt-0.5" />
-                              <div>
-                                <strong className="text-os-primary font-medium">
-                                  Pitch de abordagem:
-                                </strong>{" "}
-                                <span className="text-os-fg/90">
-                                  {lead.recommendedPitch}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Triggers Tags */}
-                          {lead.triggers && lead.triggers.length > 0 && (
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              {lead.triggers.map((trig, i) => (
-                                <span
-                                  key={i}
-                                  className="px-2 py-0.5 rounded-md text-[10px] bg-os-surface-2 text-os-muted border border-os-border"
-                                >
-                                  {trig}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-
-                          {/* Card Footer Actions */}
-                          <div className="pt-2 border-t border-os-border/60 flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3 text-xs text-os-muted">
-                              {lead.contactPhone && (
-                                <span className="flex items-center gap-1">
-                                  <Phone className="h-3 w-3" />
-                                  {lead.contactPhone}
-                                </span>
-                              )}
-                              {lead.contactEmail && (
-                                <span className="flex items-center gap-1">
-                                  <Mail className="h-3 w-3" />
-                                  {lead.contactEmail}
-                                </span>
-                              )}
-                              {lead.website && (
-                                <a
-                                  href={lead.website}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-os-primary hover:underline flex items-center gap-0.5"
-                                >
-                                  Web
-                                  <ExternalLink className="h-3 w-3" />
-                                </a>
-                              )}
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="secondary"
-                                size="sm"
-                                onClick={() => handleDraftProposal(lead)}
-                                className="border-os-primary/30 text-os-primary hover:bg-os-primary/10"
-                                leadingIcon={
-                                  <Send className="h-3.5 w-3.5 text-os-primary" />
-                                }
-                              >
-                                Proposta IA
-                              </Button>
-                              <Button
-                                variant={isImported ? "secondary" : "primary"}
-                                size="sm"
-                                onClick={() => handleImportLead(lead)}
-                                disabled={isImported}
-                                leadingIcon={
-                                  isImported ? (
-                                    <CheckCircle2 className="h-3.5 w-3.5 text-os-success" />
-                                  ) : (
-                                    <Plus className="h-3.5 w-3.5" />
-                                  )
-                                }
-                              >
-                                {isImported ? "No Funil" : "Importar Lead"}
-                              </Button>
-                            </div>
-                          </div>
+                  ) : result.leads.length === 0 ? (
+                    <div className="p-8 text-center text-xs text-os-muted space-y-2 rounded-2xl bg-os-surface-2/40 border border-os-border">
+                      <AlertCircle className="h-8 w-8 mx-auto text-os-muted opacity-40" />
+                      <p className="font-semibold text-os-fg">
+                        Nenhuma oportunidade mapeada
+                      </p>
+                      <p>
+                        Nenhuma empresa correspondente foi encontrada para os
+                        filtros selecionados.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-sm font-bold text-os-fg flex items-center gap-2">
+                            <span>Oportunidades Mapeadas</span>
+                            <span className="px-2 py-0.5 rounded-full text-xs bg-os-primary/15 text-os-primary font-semibold">
+                              {result.leads.length}
+                            </span>
+                          </h3>
+                          <p className="text-xs text-os-muted mt-0.5">
+                            {result.searchSummary}
+                          </p>
                         </div>
-                      );
-                    })}
-                  </div>
+
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={handleImportAll}
+                          disabled={isImportingAll}
+                          leadingIcon={
+                            isImportingAll ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <CheckCircle2 className="h-3.5 w-3.5 text-os-success" />
+                            )
+                          }
+                        >
+                          Importar Todos
+                        </Button>
+                      </div>
+
+                      {/* Candidate Lead Cards */}
+                      <div className="space-y-3.5">
+                        {result.leads.map((lead) => {
+                          const isImported = importedIds.has(lead.id);
+
+                          return (
+                            <div
+                              key={lead.id}
+                              className="p-5 rounded-2xl bg-os-surface border border-os-border shadow-sm hover:border-os-primary/40 transition-all space-y-3.5"
+                            >
+                              {/* Card Top */}
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <h4 className="text-sm font-bold text-os-fg">
+                                      {lead.tradeName || lead.companyName}
+                                    </h4>
+                                    {lead.tradeName && (
+                                      <span className="text-xs text-os-muted">
+                                        ({lead.companyName})
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-3 text-xs text-os-muted flex-wrap">
+                                    <span className="flex items-center gap-1">
+                                      <Building2 className="h-3.5 w-3.5 text-os-primary" />
+                                      {lead.segment}
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      <MapPin className="h-3.5 w-3.5 text-os-muted" />
+                                      {lead.cityState}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Fit Score Badge */}
+                                <div className="flex flex-col items-end gap-1 shrink-0">
+                                  <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-os-success/15 text-os-success flex items-center gap-1">
+                                    <Flame className="h-3.5 w-3.5 fill-os-success text-os-success" />
+                                    {lead.fitScore}% Match
+                                  </span>
+                                  <span className="text-[11px] font-bold text-os-fg">
+                                    {formatCurrency(lead.estimatedBudget)}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Opportunity description */}
+                              <div className="p-3 rounded-xl bg-os-surface-2/50 border border-os-border/60 text-xs text-os-fg space-y-1">
+                                <div className="font-semibold text-os-primary flex items-center gap-1.5">
+                                  <Lightbulb className="h-3.5 w-3.5" />
+                                  Oportunidade Mapeada
+                                </div>
+                                <p>{lead.projectOpportunity}</p>
+                              </div>
+
+                              {/* Pain & Pitch */}
+                              <div className="space-y-2 text-xs">
+                                <div className="flex items-start gap-2 text-os-muted">
+                                  <AlertCircle className="h-3.5 w-3.5 text-amber-500 shrink-0 mt-0.5" />
+                                  <div>
+                                    <strong className="text-amber-500 font-medium">
+                                      Dor identificada:
+                                    </strong>{" "}
+                                    <span className="text-os-fg/90">
+                                      {lead.detectedPain}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="flex items-start gap-2 text-os-muted">
+                                  <ArrowRight className="h-3.5 w-3.5 text-os-primary shrink-0 mt-0.5" />
+                                  <div>
+                                    <strong className="text-os-primary font-medium">
+                                      Pitch de abordagem:
+                                    </strong>{" "}
+                                    <span className="text-os-fg/90">
+                                      {lead.recommendedPitch}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Triggers Tags */}
+                              {lead.triggers && lead.triggers.length > 0 && (
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  {lead.triggers.map((trig, i) => (
+                                    <span
+                                      key={i}
+                                      className="px-2 py-0.5 rounded-md text-[10px] bg-os-surface-2 text-os-muted border border-os-border"
+                                    >
+                                      {trig}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Card Footer Actions */}
+                              <div className="pt-2 border-t border-os-border/60 flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-3 text-xs text-os-muted">
+                                  {lead.contactPhone && (
+                                    <span className="flex items-center gap-1">
+                                      <Phone className="h-3 w-3" />
+                                      {lead.contactPhone}
+                                    </span>
+                                  )}
+                                  {lead.contactEmail && (
+                                    <span className="flex items-center gap-1">
+                                      <Mail className="h-3 w-3" />
+                                      {lead.contactEmail}
+                                    </span>
+                                  )}
+                                  {lead.website && (
+                                    <a
+                                      href={lead.website}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-os-primary hover:underline flex items-center gap-0.5"
+                                    >
+                                      Web
+                                      <ExternalLink className="h-3 w-3" />
+                                    </a>
+                                  )}
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => handleDraftProposal(lead)}
+                                    className="border-os-primary/30 text-os-primary hover:bg-os-primary/10"
+                                    leadingIcon={
+                                      <Send className="h-3.5 w-3.5 text-os-primary" />
+                                    }
+                                  >
+                                    Proposta IA
+                                  </Button>
+                                  <Button
+                                    variant={
+                                      isImported ? "secondary" : "primary"
+                                    }
+                                    size="sm"
+                                    onClick={() => handleImportLead(lead)}
+                                    disabled={isImported}
+                                    leadingIcon={
+                                      isImported ? (
+                                        <CheckCircle2 className="h-3.5 w-3.5 text-os-success" />
+                                      ) : (
+                                        <Plus className="h-3.5 w-3.5" />
+                                      )
+                                    }
+                                  >
+                                    {isImported ? "No Funil" : "Importar Lead"}
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 

@@ -11,7 +11,7 @@ export async function GET() {
   } catch (error) {
     console.error("[GMAIL_STATUS_ERROR]", error);
     return NextResponse.json(
-      { connected: false, isDemoMode: true },
+      { connected: false, isDemoMode: false },
       { status: 500 },
     );
   }

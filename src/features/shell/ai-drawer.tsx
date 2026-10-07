@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, X, Send } from "lucide-react";
+import { Sparkles, X, Send, Loader2 } from "lucide-react";
 
 export function AiDrawer({
   open,
@@ -16,54 +16,45 @@ export function AiDrawer({
   >([
     {
       role: "ai",
-      text: "Olá! Sou a FZ AI do seu sistema operacional. Posso analisar fluxo financeiro, saúde dos projetos, leads comerciais e telemetria de infraestrutura. Em que posso ajudar hoje?",
+      text: "Olá! Sou a FZ AI do seu sistema operacional. Posso analisar fluxo financeiro, projetos e leads comerciais com dados reais do sistema. Em que posso ajudar hoje?",
     },
   ]);
   const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSend = (overrideText?: string) => {
+  const handleSend = async (overrideText?: string) => {
     const query = (overrideText || input).trim();
-    if (!query) return;
+    if (!query || isLoading) return;
 
     const userMsg = { role: "user" as const, text: query };
-    let aiResponse = "Analisando contexto do sistema operacional FZ Build...";
-
-    const q = query.toLowerCase();
-    if (q.includes("ezyx") || q.includes("gasto") || q.includes("custo")) {
-      aiResponse =
-        "O projeto EZYX Logistics está com progresso estável. Principais custos associados: Infraestrutura Cloud e Desenvolvimento. Saldo de orçamento restante em conformidade com o cronograma.";
-    } else if (
-      q.includes("fluxo") ||
-      q.includes("caixa") ||
-      q.includes("saldo") ||
-      q.includes("receita")
-    ) {
-      aiResponse =
-        "O fluxo de caixa operacional demonstra saldo positivo com pagamentos recorrentes e novas entradas no pipeline comercial. Todas as transações estão sincronizadas com o Firestore.";
-    } else if (
-      q.includes("infra") ||
-      q.includes("servidor") ||
-      q.includes("uptime")
-    ) {
-      aiResponse =
-        "Todos os clusters em nuvem da FZ Build estão saudáveis (Uptime consolidado de 99.98%). Latência com Firestore estabilizada em tempo real.";
-    } else if (
-      q.includes("lead") ||
-      q.includes("proposta") ||
-      q.includes("comercial")
-    ) {
-      aiResponse =
-        "O pipeline comercial possui propostas em fase de qualificação e negociação. Recomendo follow-up ativo com leads qualificados para conversão em projeto.";
-    } else {
-      aiResponse = `Recebi sua solicitação: "${query}". Contexto operacional consultado com sucesso.`;
-    }
-
-    setMessages((prev) => [
-      ...prev,
-      userMsg,
-      { role: "ai" as const, text: aiResponse },
-    ]);
+    setMessages((prev) => [...prev, userMsg]);
     setInput("");
+    setIsLoading(true);
+
+    try {
+      const res = await fetch("/api/shell/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: query }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      const reply =
+        data.text ||
+        "Não foi possível obter resposta no momento. Verifique a configuração do servidor.";
+
+      setMessages((prev) => [...prev, { role: "ai" as const, text: reply }]);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "ai" as const,
+          text: "Falha de conexão com a FZ AI. Verifique se o servidor está ativo.",
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -127,6 +118,17 @@ export function AiDrawer({
                 </div>
               ))}
 
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="p-3 rounded-2xl bg-os-surface-2 text-os-fg rounded-bl-none border border-os-border flex items-center gap-2 text-xs">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-os-primary" />
+                    <span className="text-os-muted">
+                      Consultando dados reais do sistema...
+                    </span>
+                  </div>
+                </div>
+              )}
+
               {/* Suggestions */}
               <div className="pt-2">
                 <p className="text-[10px] font-bold text-os-muted uppercase tracking-wider mb-2">
@@ -142,7 +144,8 @@ export function AiDrawer({
                     <button
                       key={q}
                       onClick={() => handleSend(q)}
-                      className="w-full text-left text-xs p-2.5 rounded-xl border border-os-border hover:border-os-accent/40 hover:bg-os-surface-2 text-os-muted hover:text-os-fg transition-all truncate"
+                      disabled={isLoading}
+                      className="w-full text-left text-xs p-2.5 rounded-xl border border-os-border hover:border-os-accent/40 hover:bg-os-surface-2 text-os-muted hover:text-os-fg transition-all truncate disabled:opacity-50"
                     >
                       💡 {q}
                     </button>
@@ -164,14 +167,20 @@ export function AiDrawer({
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
+                  disabled={isLoading}
                   placeholder="Pergunte sobre projetos, financeiro, leads..."
-                  className="flex-1 p-2.5 rounded-xl border border-os-border bg-os-surface text-xs text-os-fg focus:outline-none focus:ring-2 focus:ring-os-ring"
+                  className="flex-1 p-2.5 rounded-xl border border-os-border bg-os-surface text-xs text-os-fg focus:outline-none focus:ring-2 focus:ring-os-ring disabled:opacity-60"
                 />
                 <button
                   type="submit"
-                  className="p-2.5 rounded-xl bg-os-primary text-os-primary-fg hover:bg-os-primary-hover transition-colors flex-shrink-0"
+                  disabled={isLoading}
+                  className="p-2.5 rounded-xl bg-os-primary text-os-primary-fg hover:bg-os-primary-hover transition-colors flex-shrink-0 disabled:opacity-50"
                 >
-                  <Send className="h-3.5 w-3.5" />
+                  {isLoading ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Send className="h-3.5 w-3.5" />
+                  )}
                 </button>
               </form>
             </div>

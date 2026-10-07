@@ -33,119 +33,13 @@ export interface ProspectResult {
   searchSummary: string;
 }
 
-/**
- * Intelligent Fallback Catalog tailored for Brazilian Construction, Facilities and Engineering
- */
-const FALLBACK_LEAD_TEMPLATES: Record<string, DiscoveredLead[]> = {
-  default: [
-    {
-      id: "prospect-1",
-      companyName: "LogSul Centros Logísticos Ltda",
-      tradeName: "LogSul Empreendimentos",
-      segment: "Galpões Logísticos & Retrofit Industrial",
-      cityState: "Campinas - SP",
-      website: "https://logsul.exemplo.com.br",
-      contactPhone: "(19) 3788-4200",
-      contactEmail: "projetos@logsul.exemplo.com.br",
-      estimatedBudget: 350000,
-      projectOpportunity:
-        "Ampliação de módulo de armazenagem e modernização de piso industrial",
-      detectedPain:
-        "Descolamento de cronograma com empreiteira anterior e necessidade de certificação de carga de piso.",
-      recommendedPitch:
-        "Apresentar portfólio de engenharia de precisão FZ Build, garantindo cumprimento de prazos com gestão em tempo real.",
-      fitScore: 94,
-      triggers: [
-        "Expansão de pátio",
-        "Nova contratação de engenharia",
-        "Aporte de capital recente",
-      ],
-      sourceUrl: "https://noticias.engenharia.com.br/expansao-logsul",
-    },
-    {
-      id: "prospect-2",
-      companyName: "Vértice Incorporações Imobiliárias S/A",
-      tradeName: "Vértice Residencial",
-      segment: "Construção Civil & Alto Padrão",
-      cityState: "São Paulo - SP",
-      website: "https://verticeincorp.exemplo.com.br",
-      contactPhone: "(11) 3214-9900",
-      contactEmail: "suprimentos@verticeincorp.exemplo.com.br",
-      estimatedBudget: 580000,
-      projectOpportunity:
-        "Gerenciamento e execução de acabamentos finos em torre residencial",
-      detectedPain:
-        "Altas taxas de retrabalho em acabamentos de gesso, fachada e infraestrutura predial.",
-      recommendedPitch:
-        "Destacar rigor de controle de qualidade FZ Build, orçamentação técnica transparente e acompanhamento via FZ OS.",
-      fitScore: 91,
-      triggers: [
-        "Lançamento em fase estrutural",
-        "Cotação aberta de empreiteiros",
-      ],
-      sourceUrl: "https://imoveis.com.br/lancamentos/vertice",
-    },
-    {
-      id: "prospect-3",
-      companyName: "Rede Saúde Vida Própria Hospitalar",
-      tradeName: "Hospital Vida Própria",
-      segment: "Engenharia Hospitalar & Facilities",
-      cityState: "Belo Horizonte - MG",
-      website: "https://vidapropria.exemplo.com.br",
-      contactPhone: "(31) 3145-8800",
-      contactEmail: "infraestrutura@vidapropria.exemplo.com.br",
-      estimatedBudget: 420000,
-      projectOpportunity:
-        "Adequação de salas limpas, climatização hospitalar e reforma de leitos",
-      detectedPain:
-        "Exigência de normas sanitárias rígidas (Anvisa RDC 50) e necessidade de execução sem paralisação da ala médica.",
-      recommendedPitch:
-        "Ressaltar experiência técnica FZ Build em obras em ambiente controlado, protocolos de biossegurança e limpeza técnica.",
-      fitScore: 96,
-      triggers: [
-        "Ampliação de ala de pronto atendimento",
-        "Licenciamento sanitário",
-      ],
-      sourceUrl: "https://saudeenegocios.com.br/hospitais/ampliacao-bh",
-    },
-    {
-      id: "prospect-4",
-      companyName: "InovaTech Workplace Solutions",
-      tradeName: "InovaTech Hub",
-      segment: "Reforma Corporativa & Turnkey",
-      cityState: "Curitiba - PR",
-      website: "https://inovatechhub.exemplo.com.br",
-      contactPhone: "(41) 3099-1234",
-      contactEmail: "facilities@inovatechhub.exemplo.com.br",
-      estimatedBudget: 210000,
-      projectOpportunity:
-        "Readequação de layout de 800m², cabeamento estruturado e isolamento acústico",
-      detectedPain:
-        "Modelo híbrido de trabalho exigindo redistribuição de estações de coworking e cabines telefônicas acústicas.",
-      recommendedPitch:
-        "Proposta Turnkey FZ Build com entrega rápida em 45 dias, arquitetura corporativa integrada e garantia pós-obra.",
-      fitScore: 88,
-      triggers: ["Locação de novo andar corporativo", "Troca de sede"],
-      sourceUrl: "https://comercialpr.com.br/empresas/inovatech",
-    },
-  ],
-};
-
-function generateRealisticFallback(params: ProspectParams): DiscoveredLead[] {
-  const baseList = FALLBACK_LEAD_TEMPLATES.default;
-  const count = params.count || 4;
-
-  return baseList.slice(0, count).map((item, idx) => ({
-    ...item,
-    id: `radar-lead-${Date.now()}-${idx + 1}`,
-    segment: params.niche || item.segment,
-    cityState: params.location ? `${params.location}` : item.cityState,
-    triggers: [
-      params.trigger || item.triggers[0],
-      item.triggers[1] || "Abertura de cotação de serviços",
-      "Alta pontuação no Radar IA FZ Build",
-    ],
-  }));
+export interface ProspectResult {
+  leads: DiscoveredLead[];
+  isLiveAi: boolean;
+  provider: string;
+  model: string;
+  searchSummary: string;
+  error?: string;
 }
 
 /**
@@ -158,12 +52,14 @@ export async function discoverLeadsWithGemini(
 
   if (!apiKey) {
     return {
-      leads: generateRealisticFallback(params),
+      leads: [],
       isLiveAi: false,
-      provider: "FZ Radar Engine (Modo Demonstração)",
-      model:
-        "Fallback Inteligente (Configure GEMINI_API_KEY para IA em tempo real)",
-      searchSummary: `Varredura simulada para o nicho "${params.niche}" em "${params.location}". Chave GEMINI_API_KEY não configurada no ambiente.`,
+      provider: "Google Gemini AI",
+      model: "N/A",
+      searchSummary:
+        "Varredura cancelada: Chave de API GEMINI_API_KEY ausente no servidor.",
+      error:
+        "Chave GEMINI_API_KEY não configurada no servidor. Configure a variável no ambiente (.env.local ou Firebase App Hosting) para habilitar o Radar de Leads com inteligência artificial em tempo real. Nenhum dado simulado ou fictício é retornado.",
     };
   }
 
@@ -268,16 +164,18 @@ Estrutura de cada objeto no array JSON:
 
     throw new Error("Formato de resposta inesperado do modelo Gemini.");
   } catch (error) {
-    console.warn(
-      "[GeminiProspector] Erro ao consultar Gemini, usando fallback inteligente:",
-      error,
-    );
+    const errorMsg =
+      error instanceof Error
+        ? error.message
+        : "Erro desconhecido ao consultar a API do Gemini.";
+    console.error("[GeminiProspector] Erro na chamada com o Gemini:", error);
     return {
-      leads: generateRealisticFallback(params),
+      leads: [],
       isLiveAi: false,
-      provider: "FZ Radar Engine (Fallback Inteligente)",
-      model: "Modo de contingência resiliente",
-      searchSummary: `Varredura inteligente concluída com modelo de contingência para "${params.niche}" em "${params.location}".`,
+      provider: "Google Gemini AI",
+      model: "gemini-2.5-flash",
+      searchSummary: `Falha na consulta ao Gemini: ${errorMsg}`,
+      error: `Não foi possível carregar oportunidades reais no momento (${errorMsg}). Nenhum dado simulado ou fake é exibido.`,
     };
   }
 }

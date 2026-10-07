@@ -13,6 +13,7 @@ interface EmailListProps {
   filter: "all" | "unread";
   onFilterChange: (f: "all" | "unread") => void;
   isLoading: boolean;
+  isConnected?: boolean;
 }
 
 export function EmailList({
@@ -24,6 +25,7 @@ export function EmailList({
   filter,
   onFilterChange,
   isLoading,
+  isConnected = false,
 }: EmailListProps) {
   const filteredMessages = messages.filter((msg) => {
     if (filter === "unread" && !msg.isUnread) return false;
@@ -99,9 +101,22 @@ export function EmailList({
               </div>
             ))}
           </div>
+        ) : !isConnected ? (
+          <div className="p-8 text-center text-xs text-os-muted space-y-2.5">
+            <div className="h-10 w-10 mx-auto rounded-xl bg-os-surface-2 flex items-center justify-center text-os-muted border border-os-border">
+              <Mail className="h-5 w-5 opacity-50" />
+            </div>
+            <p className="font-semibold text-os-fg">Gmail Não Conectado</p>
+            <p className="text-[11px] leading-relaxed max-w-[240px] mx-auto">
+              Nenhuma conta do Google Workspace conectada. Vincule sua conta
+              corporativa no botão acima para carregar e gerenciar e-mails
+              reais.
+            </p>
+          </div>
         ) : filteredMessages.length === 0 ? (
           <div className="p-8 text-center text-xs text-os-muted space-y-2">
             <Mail className="h-8 w-8 mx-auto text-os-muted opacity-40" />
+            <p className="font-semibold text-os-fg">Caixa de Entrada Vazia</p>
             <p>Nenhum e-mail encontrado para o filtro atual.</p>
           </div>
         ) : (

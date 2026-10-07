@@ -20,49 +20,13 @@ export async function POST(req: Request) {
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 
     if (!apiKey) {
-      // Intelligent fallback proposal template
-      const formattedBudget = estimatedBudget
-        ? new Intl.NumberFormat("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          }).format(estimatedBudget)
-        : "sob medida";
-
-      const subject = `Parceria Técnica & Engenharia: Oportunidade para a ${company}`;
-      const bodyHtml = `
-<p>Prezada equipe da <strong>${company}</strong>,</p>
-
-<p>Acompanhamos o crescimento e a relevância da sua empresa no segmento de <strong>${segment || "suas operações"}</strong> em <strong>${cityState || "sua região"}</strong>.</p>
-
-<p>Identificamos que no cenário atual de expansão, projetos como <em>"${projectOpportunity || "modernização e infraestrutura"}"</em> frequentemente enfrentam desafios relacionados a <strong>${detectedPain || "garantia de prazo e conformidade técnica"}</strong>.</p>
-
-<p>Na <strong>FZ Build Solutions</strong>, somos especializados em engenharia de alta performance, reformas corporativas e retrofits industriais, combinando gestão orçamentária rigorosa com relatórios em tempo real via nossa plataforma proprietária <strong>FZ OS</strong>.</p>
-
-<p><strong>Nossos diferenciais para o seu projeto:</strong></p>
-<ul>
-  <li>Cumprimento rigoroso de cronogramas físico-financeiros;</li>
-  <li>Engenharia técnica com transparência orçamentária (${formattedBudget});</li>
-  <li>Equipe própria e conformidade com normas técnicas e de segurança.</li>
-</ul>
-
-<p>Gostaríamos de propor um alinhamento técnico rápido de 15 minutos nesta semana para apresentar uma proposta preliminar sem compromisso.</p>
-
-<br/>
-<p>Cordialmente,</p>
-<p><strong>Ezequiel Ferreira</strong><br/>
-Diretoria Comercial & Engenharia<br/>
-<strong>FZ Build Solutions</strong><br/>
-<a href="https://fzbuild.com.br">fzbuild.com.br</a> · comercial@fzbuild.com.br</p>
-      `.trim();
-
-      const bodyText = bodyHtml.replace(/<[^>]*>?/gm, "");
-
-      return NextResponse.json({
-        subject,
-        bodyHtml,
-        bodyText,
-        isAiLive: false,
-      });
+      return NextResponse.json(
+        {
+          error:
+            "Chave GEMINI_API_KEY não configurada no servidor. É necessário configurar a chave no ambiente (.env.local ou Firebase App Hosting) para redigir propostas dinâmicas em tempo real com IA.",
+        },
+        { status: 400 },
+      );
     }
 
     const ai = new GoogleGenAI({ apiKey });

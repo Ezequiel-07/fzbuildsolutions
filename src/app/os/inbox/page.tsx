@@ -12,16 +12,22 @@ import {
   ComposeEmailModal,
   type ComposeInitialData,
 } from "@/features/inbox/components/compose-email-modal";
-import { useGmailMessages } from "@/features/inbox/api/use-gmail";
+import {
+  useGmailMessages,
+  useGmailStatus,
+} from "@/features/inbox/api/use-gmail";
 import type { GmailMessageDetail } from "@/features/inbox/services/gmail-service";
 
 export default function InboxPage() {
-  const [selectedId, setSelectedId] = useState<string | null>("demo-msg-1");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "unread">("all");
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [composeInitialData, setComposeInitialData] =
     useState<ComposeInitialData | null>(null);
+
+  const { data: status } = useGmailStatus();
+  const isConnected = Boolean(status?.connected);
 
   const {
     data: messagesData,
@@ -110,6 +116,7 @@ export default function InboxPage() {
             filter={filter}
             onFilterChange={setFilter}
             isLoading={isLoading}
+            isConnected={isConnected}
           />
         </div>
 

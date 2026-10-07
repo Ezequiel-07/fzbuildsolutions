@@ -47,7 +47,7 @@ export function GmailConnectBanner() {
               dot
               size="sm"
             >
-              {isConnected ? "Sincronizado" : "Modo Demonstração"}
+              {isConnected ? "Sincronizado" : "Desconectado"}
             </StatusBadge>
           </div>
           <p className="text-xs text-os-muted mt-0.5">

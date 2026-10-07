@@ -16,91 +16,82 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const MOCK_LEADS = [
-  {
-    id: 1,
-    name: "Acme Corp",
-    contact: "John Doe",
-    email: "john@acme.com",
-    status: "NEW",
-    value: 15000,
-  },
-  {
-    id: 2,
-    name: "Globex",
-    contact: "Jane Smith",
-    email: "jane@globex.com",
-    status: "QUALIFIED",
-    value: 45000,
-  },
-  {
-    id: 3,
-    name: "Soylent",
-    contact: "Bob Johnson",
-    email: "bob@soylent.com",
-    status: "PROPOSAL",
-    value: 120000,
-  },
-];
+import { useLeads } from "../api/use-leads";
 
 export function LeadsTable() {
+  const { data: leads = [], isLoading } = useLeads();
+
   return (
     <div className="rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Company</TableHead>
-            <TableHead>Contact</TableHead>
-            <TableHead>Email</TableHead>
+            <TableHead>Empresa</TableHead>
+            <TableHead>Projeto / Oportunidade</TableHead>
+            <TableHead>Contato</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Est. Value</TableHead>
+            <TableHead>Valor Est.</TableHead>
             <TableHead className="w-[80px]"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {MOCK_LEADS.map((lead) => (
-            <TableRow key={lead.id}>
-              <TableCell className="font-medium">{lead.name}</TableCell>
-              <TableCell>{lead.contact}</TableCell>
-              <TableCell>{lead.email}</TableCell>
-              <TableCell>
-                <Badge
-                  variant={lead.status === "NEW" ? "secondary" : "default"}
-                >
-                  {lead.status}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                {new Intl.NumberFormat("en-US", {
-                  style: "currency",
-                  currency: "USD",
-                }).format(lead.value)}
-              </TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    render={<Button variant="ghost" className="h-8 w-8 p-0" />}
-                  >
-                    <span className="sr-only">Open menu</span>
-                    <MoreHorizontal className="h-4 w-4" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem>View details</DropdownMenuItem>
-                    <DropdownMenuItem>Update status</DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-destructive">
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+          {isLoading ? (
+            <TableRow>
+              <TableCell
+                colSpan={6}
+                className="text-center py-6 text-muted-foreground text-xs"
+              >
+                Carregando leads reais...
               </TableCell>
             </TableRow>
-          ))}
+          ) : leads.length === 0 ? (
+            <TableRow>
+              <TableCell
+                colSpan={6}
+                className="text-center py-6 text-muted-foreground text-xs"
+              >
+                Nenhum lead cadastrado no funil comercial.
+              </TableCell>
+            </TableRow>
+          ) : (
+            leads.map((lead) => (
+              <TableRow key={lead.id}>
+                <TableCell className="font-medium">{lead.clientName}</TableCell>
+                <TableCell>{lead.projectName}</TableCell>
+                <TableCell>
+                  {lead.contact?.email || lead.contact?.phone || "-"}
+                </TableCell>
+                <TableCell>
+                  <Badge variant="secondary">{lead.stage}</Badge>
+                </TableCell>
+                <TableCell>
+                  {new Intl.NumberFormat("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  }).format(lead.value || 0)}
+                </TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      render={
+                        <Button variant="ghost" className="h-8 w-8 p-0" />
+                      }
+                    >
+                      <span className="sr-only">Ações</span>
+                      <MoreHorizontal className="h-4 w-4" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                      <DropdownMenuItem>Ver detalhes</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
     </div>

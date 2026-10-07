@@ -47,88 +47,6 @@ export interface GmailStatusResult {
 
 const SETTINGS_DOC_ID = "integrations_gmail";
 
-// High-fidelity fallback inbox for demonstration / dev mode
-const DEMO_INBOX_MESSAGES: GmailMessageDetail[] = [
-  {
-    id: "demo-msg-1",
-    threadId: "demo-thread-1",
-    sender: "Eduardo Fonseca · Diretor de Obras",
-    fromEmail: "compras@multilog.com.br",
-    toEmail: "comercial@fzbuild.com.br",
-    subject:
-      "Solicitação de Proposta: Retrofit de Galpão Logístico em Campinas (4.500m²)",
-    snippet:
-      "Olá equipe FZ Build, recebemos a apresentação de vocês e gostaríamos de agendar uma vistoria técnica no nosso centro de distribuição...",
-    date: new Date(Date.now() - 1000 * 60 * 42).toISOString(), // 42 min ago
-    isUnread: true,
-    labels: ["INBOX", "UNREAD", "IMPORTANTE"],
-    bodyHtml: `
-      <div style="font-family: sans-serif; line-height: 1.6; color: #1e293b;">
-        <p>Prezada equipe da <strong>FZ Build Solutions</strong>,</p>
-        <p>Avaliamos o portfólio de vocês enviado sobre obras industriais e sistemas prediais. Temos uma demanda imediata para <strong>readequação e reforço de piso de alta capacidade</strong> no nosso centro de distribuição em Campinas (área aproximada de 4.500m²), além da modernização do sistema de combate a incêndio (AVCB).</p>
-        <p>Gostaríamos de saber a disponibilidade para uma visita técnica nesta quinta ou sexta-feira para alinhamento dos projetos executivos.</p>
-        <br/>
-        <p>Atenciosamente,</p>
-        <p><strong>Eduardo Fonseca</strong><br/>Diretor de Engenharia & Operações · MultiLog Brasil<br/>Tel: (19) 3998-1200</p>
-      </div>
-    `,
-    bodyText:
-      "Prezada equipe FZ Build, temos interesse em agendar vistoria para o galpão em Campinas...",
-  },
-  {
-    id: "demo-msg-2",
-    threadId: "demo-thread-2",
-    sender: "Dra. Camila Vasconcelos",
-    fromEmail: "infra@hospitalunivida.com.br",
-    toEmail: "comercial@fzbuild.com.br",
-    subject: "Reunião de Alinhamento: Adequação de Ala Cirúrgica (RDC 50)",
-    snippet:
-      "Boa tarde! Analisamos a prévia orçamentária para a climatização com pressão positiva da ala médica. Precisamos ajustar o cronograma...",
-    date: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(), // 4h ago
-    isUnread: false,
-    labels: ["INBOX"],
-    bodyHtml: `
-      <div style="font-family: sans-serif; line-height: 1.6; color: #1e293b;">
-        <p>Boa tarde, time FZ Build,</p>
-        <p>A diretoria clínica do Hospital UniVida aprovou a proposta conceitual para as reformas das salas cirúrgicas com conformidade RDC 50 da Anvisa.</p>
-        <p>Podem nos enviar o memorial descritivo atualizado com a especificação dos filtros HEPA e os prazos de liberação dos leitos?</p>
-        <br/>
-        <p>Cordialmente,</p>
-        <p><strong>Camila Vasconcelos</strong><br/>Coordenação de Facilities Hospitalares<br/>Hospital UniVida</p>
-      </div>
-    `,
-    bodyText:
-      "Boa tarde, diretoria aprovou a proposta para reformas de salas cirúrgicas...",
-  },
-  {
-    id: "demo-msg-3",
-    threadId: "demo-thread-3",
-    sender: "Rodrigo Almeida · Vértice Residencial",
-    fromEmail: "suprimentos@verticeincorp.com.br",
-    toEmail: "comercial@fzbuild.com.br",
-    subject: "Abertura de Cotação: Empreitada de Acabamentos Torre Horizonte",
-    snippet:
-      "Segue em anexo o caderno de encargos da fase de alvenaria e acabamentos da Torre Horizonte para elaboração de proposta...",
-    date: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
-    isUnread: false,
-    labels: ["INBOX"],
-    bodyHtml: `
-      <div style="font-family: sans-serif; line-height: 1.6; color: #1e293b;">
-        <p>Olá Ezequiel e equipe,</p>
-        <p>Estamos abrindo o pacote de contratação para a fase de acabamentos finos da Torre Horizonte na zona sul de São Paulo.</p>
-        <p>O prazo para envio da proposta comercial com a planilha BDI é até o próximo dia 15.</p>
-        <br/>
-        <p>Abraços,</p>
-        <p><strong>Rodrigo Almeida</strong><br/>Gerente de Suprimentos · Vértice Incorporadora</p>
-      </div>
-    `,
-    bodyText:
-      "Estamos abrindo pacote de acabamentos finos para a Torre Horizonte...",
-  },
-];
-
-let inMemoryDemoMessages = [...DEMO_INBOX_MESSAGES];
-
 export function getOAuthClient() {
   if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
     return null;
@@ -210,8 +128,8 @@ export async function getGmailStatus(): Promise<GmailStatusResult> {
 
   return {
     connected: false,
-    email: "modo.demonstracao@fzbuild.com.br",
-    isDemoMode: true,
+    email: undefined,
+    isDemoMode: false,
   };
 }
 
@@ -248,18 +166,7 @@ export async function listInboxMessages(params: {
   const gmail = await getAuthenticatedGmailClient();
 
   if (!gmail) {
-    // Return filtered demo messages
-    let list = inMemoryDemoMessages;
-    if (params.query) {
-      const q = params.query.toLowerCase();
-      list = list.filter(
-        (m) =>
-          m.subject.toLowerCase().includes(q) ||
-          m.sender.toLowerCase().includes(q) ||
-          m.snippet.toLowerCase().includes(q),
-      );
-    }
-    return { messages: list, isDemoMode: true };
+    return { messages: [], isDemoMode: false };
   }
 
   try {
@@ -304,7 +211,7 @@ export async function listInboxMessages(params: {
     return { messages: detailedMessages, isDemoMode: false };
   } catch (error) {
     console.error("[GmailService] Erro ao listar mensagens:", error);
-    return { messages: inMemoryDemoMessages, isDemoMode: true };
+    return { messages: [], isDemoMode: false };
   }
 }
 
@@ -314,8 +221,7 @@ export async function getMessageDetail(
   const gmail = await getAuthenticatedGmailClient();
 
   if (!gmail) {
-    const demo = inMemoryDemoMessages.find((m) => m.id === id);
-    return demo || inMemoryDemoMessages[0] || null;
+    return null;
   }
 
   try {
@@ -351,8 +257,7 @@ export async function getMessageDetail(
       "[GmailService] Erro ao carregar detalhe da mensagem:",
       error,
     );
-    const fallback = inMemoryDemoMessages.find((m) => m.id === id);
-    return fallback || null;
+    return null;
   }
 }
 
@@ -360,8 +265,7 @@ export async function trashMessage(id: string): Promise<{ success: boolean }> {
   const gmail = await getAuthenticatedGmailClient();
 
   if (!gmail) {
-    inMemoryDemoMessages = inMemoryDemoMessages.filter((m) => m.id !== id);
-    return { success: true };
+    throw new Error("Gmail não está conectado.");
   }
 
   try {
@@ -385,24 +289,9 @@ export async function sendGmailMessage(params: {
   const gmail = await getAuthenticatedGmailClient();
 
   if (!gmail) {
-    // In demo mode, register into in-memory store so it feels completely alive
-    const newDemoMsg: GmailMessageDetail = {
-      id: `sent-${Date.now()}`,
-      threadId: `thread-${Date.now()}`,
-      sender: "Você (FZ Build Solutions)",
-      fromEmail: "comercial@fzbuild.com.br",
-      toEmail: params.to,
-      subject: params.subject,
-      snippet: params.bodyHtml.replace(/<[^>]*>?/gm, "").slice(0, 120),
-      date: new Date().toISOString(),
-      isUnread: false,
-      labels: ["SENT"],
-      bodyHtml: params.bodyHtml,
-      bodyText: params.bodyHtml.replace(/<[^>]*>?/gm, ""),
-    };
-    inMemoryDemoMessages.unshift(newDemoMsg);
-
-    return { id: newDemoMsg.id, success: true, isDemo: true };
+    throw new Error(
+      "Gmail não está conectado. Conecte sua conta do Google Workspace para disparar e-mails reais.",
+    );
   }
 
   try {
