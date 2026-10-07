@@ -24,14 +24,17 @@ export function NavBar() {
     >
       <div className="flex justify-between items-center px-5 md:px-20 py-4 max-w-[1400px] mx-auto">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 group">
-          <Image
-            src="/fzbuildsemfundo.png"
-            alt="FZ Build Solutions"
-            width={36}
-            height={36}
-            className="h-9 w-auto brightness-0 invert transition-all group-hover:opacity-80"
-          />
+        <Link href="/" className="flex items-center gap-2 group flex-shrink-0">
+          <div className="relative h-9 w-9 flex-shrink-0 flex items-center justify-center">
+            <Image
+              src="/fzbuildsemfundo.png"
+              alt="FZ Build Solutions"
+              width={36}
+              height={36}
+              className="h-9 w-9 object-contain brightness-0 invert transition-all group-hover:opacity-80 flex-shrink-0"
+              priority
+            />
+          </div>
         </Link>
 
         {/* Desktop Nav */}

@@ -155,23 +155,25 @@ export function Sidebar({
         <Link
           href="/os"
           onClick={() => setMobileOpen(false)}
-          className="flex items-center gap-2.5 min-w-0 flex-1"
+          className="flex items-center gap-2.5 min-w-0 flex-1 overflow-hidden"
         >
-          <Image
-            src="/fzbuildsemfundo.png"
-            alt="FZ Build"
-            width={32}
-            height={32}
-            className="h-7 w-auto flex-shrink-0"
-            style={{ width: "auto", height: "auto" }}
-          />
+          <div className="relative h-8 w-8 min-w-[32px] flex-shrink-0 flex items-center justify-center">
+            <Image
+              src="/fzbuildsemfundo.png"
+              alt="FZ Build"
+              width={32}
+              height={32}
+              className="h-8 w-8 object-contain flex-shrink-0"
+              priority
+            />
+          </div>
           <div
             className={`flex flex-col min-w-0 ${collapsed ? "lg:hidden" : ""}`}
           >
-            <span className="font-extrabold text-xs tracking-tight text-os-fg uppercase leading-none">
+            <span className="font-extrabold text-xs tracking-tight text-os-fg uppercase leading-none truncate">
               FZ BUILD
             </span>
-            <span className="font-bold text-[8px] tracking-widest text-os-primary dark:text-os-accent uppercase mt-0.5 leading-none">
+            <span className="font-bold text-[8px] tracking-widest text-os-primary dark:text-os-accent uppercase mt-0.5 leading-none truncate">
               SOLUTIONS
             </span>
           </div>
