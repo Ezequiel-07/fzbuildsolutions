@@ -57,8 +57,9 @@ export default function OSLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main Layout Area */}
       <div
-        className="relative z-10 flex-1 flex flex-col min-h-screen transition-all duration-200"
-        style={{ marginLeft: collapsed ? 72 : 240 }}
+        className={`relative z-10 flex-1 flex flex-col min-h-screen transition-all duration-200 min-w-0 w-full ml-0 ${
+          collapsed ? "lg:ml-[72px]" : "lg:ml-[240px]"
+        }`}
       >
         {/* Modular Topbar */}
         <Topbar
@@ -69,7 +70,7 @@ export default function OSLayout({ children }: { children: React.ReactNode }) {
         />
 
         {/* Page Main Content */}
-        <main className="flex-1 p-4 md:p-6 lg:p-8 max-w-[1600px] w-full mx-auto">
+        <main className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 max-w-[1600px] w-full mx-auto min-w-0">
           {children}
         </main>
       </div>

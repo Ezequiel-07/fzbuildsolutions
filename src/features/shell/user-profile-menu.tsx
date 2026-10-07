@@ -38,7 +38,7 @@ export function UserProfileMenu({ collapsed }: { collapsed: boolean }) {
       <Link
         href="/os/admin/settings"
         className={`flex items-center gap-3 p-2 rounded-xl bg-os-surface border border-os-border hover:border-os-accent/40 transition-all group ${
-          collapsed ? "justify-center" : ""
+          collapsed ? "lg:justify-center" : ""
         }`}
       >
         <div className="relative w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-gradient-to-br from-[#003D9B] to-[#00E3FD] p-[1.5px]">
@@ -46,21 +46,21 @@ export function UserProfileMenu({ collapsed }: { collapsed: boolean }) {
             {userInitials}
           </div>
         </div>
-        {!collapsed && (
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-os-fg truncate">
-              {displayName}
-            </p>
-            <p className="text-[10px] text-os-muted truncate">
-              {user?.email || "Administrador"}
-            </p>
-          </div>
-        )}
+        <div className={`flex-1 min-w-0 ${collapsed ? "lg:hidden" : ""}`}>
+          <p className="text-xs font-semibold text-os-fg truncate">
+            {displayName}
+          </p>
+          <p className="text-[10px] text-os-muted truncate">
+            {user?.email || "Administrador"}
+          </p>
+        </div>
       </Link>
 
       {/* Quick Actions (Theme & Logout) */}
       <div
-        className={`flex items-center ${collapsed ? "flex-col" : "justify-between"} gap-1 pt-1`}
+        className={`flex items-center ${
+          collapsed ? "lg:flex-col justify-between" : "justify-between"
+        } gap-1 pt-1`}
       >
         <button
           onClick={() => setTheme(theme === "light" ? "dark" : "light")}
@@ -74,12 +74,14 @@ export function UserProfileMenu({ collapsed }: { collapsed: boolean }) {
           </div>
         </button>
 
-        {!collapsed && (
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-os-success/10 text-os-success border border-os-success/20 text-[10px] font-mono font-medium">
-            <div className="w-1.5 h-1.5 rounded-full bg-os-success animate-pulse" />
-            <span>ONLINE</span>
-          </div>
-        )}
+        <div
+          className={`flex items-center gap-1.5 px-2 py-1 rounded-full bg-os-success/10 text-os-success border border-os-success/20 text-[10px] font-mono font-medium ${
+            collapsed ? "lg:hidden" : ""
+          }`}
+        >
+          <div className="w-1.5 h-1.5 rounded-full bg-os-success animate-pulse" />
+          <span>ONLINE</span>
+        </div>
 
         <button
           onClick={handleLogout}
