@@ -60,7 +60,7 @@ export function NavBar() {
             Entrar
           </Link>
           <Link
-            href="mailto:contato@fzbuild.solutions"
+            href="mailto:fzbuild.solutions@gmail.com"
             className="relative inline-flex items-center gap-2 bg-[#0066ff] text-white text-xs font-bold tracking-wider uppercase px-5 py-2.5 rounded-full overflow-hidden group transition-all hover:shadow-[0_0_20px_rgba(0,102,255,0.5)]"
           >
             <span className="relative z-10">Falar com a FZ</span>
@@ -100,7 +100,7 @@ export function NavBar() {
             </Link>
           ))}
           <Link
-            href="mailto:contato@fzbuild.solutions"
+            href="mailto:fzbuild.solutions@gmail.com"
             className="mt-2 bg-[#0066ff] text-white text-sm font-bold tracking-wider uppercase px-5 py-3 rounded-full text-center hover:shadow-[0_0_20px_rgba(0,102,255,0.5)] transition-all"
           >
             Falar com a FZ

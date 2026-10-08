@@ -79,7 +79,7 @@ export function CTASection() {
           className="flex flex-wrap gap-4 justify-center"
         >
           <Link
-            href="mailto:contato@fzbuild.solutions"
+            href="mailto:fzbuild.solutions@gmail.com"
             id="cta-final-primary"
             className="relative inline-flex items-center gap-3 bg-[#0066ff] text-white font-bold text-base px-10 py-5 rounded-full group overflow-hidden hover:shadow-[0_0_60px_rgba(0,102,255,0.6)] transition-all duration-300"
           >

@@ -103,7 +103,7 @@ export async function saveGoogleOAuthTokens(
   // Retrieve user email
   const oauth2 = google.oauth2({ version: "v2", auth: oauth2Client });
   const userInfo = await oauth2.userinfo.get();
-  const email = userInfo.data.email || "contato@fzbuild.solutions";
+  const email = userInfo.data.email || "fzbuild.solutions@gmail.com";
 
   const docRef = doc(db, "settings", SETTINGS_DOC_ID);
   await setDoc(

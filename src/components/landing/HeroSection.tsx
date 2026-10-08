@@ -139,7 +139,7 @@ export function HeroSection() {
           {/* CTAs */}
           <motion.div variants={fadeUp} className="flex flex-wrap gap-4 mt-2">
             <Link
-              href="mailto:contato@fzbuild.solutions"
+              href="mailto:fzbuild.solutions@gmail.com"
               id="hero-cta-primary"
               className="relative inline-flex items-center gap-2 bg-[#0066ff] text-white font-bold text-sm tracking-wide px-8 py-4 rounded-full group overflow-hidden hover:shadow-[0_0_40px_rgba(0,102,255,0.5)] transition-all duration-300"
             >
