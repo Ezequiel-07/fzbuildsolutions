@@ -77,7 +77,7 @@ export function GmailConnectBanner() {
             Desconectar
           </Button>
         ) : (
-          <a href="/api/auth/google/connect">
+          <a href="/api/auth/google/connect?returnUrl=/os/inbox">
             <Button
               variant="primary"
               size="sm"

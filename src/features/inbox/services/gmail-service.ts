@@ -49,35 +49,50 @@ export interface GmailStatusResult {
 
 export const SETTINGS_DOC_ID = "integrations_gmail";
 
-export function getOAuthClient() {
+export function getOAuthClient(customRedirectUri?: string) {
   if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
     return null;
   }
+  const redirectUri = customRedirectUri || GOOGLE_REDIRECT_URI;
+
   return new google.auth.OAuth2(
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
-    GOOGLE_REDIRECT_URI,
+    redirectUri,
   );
 }
 
-export function generateGoogleAuthUrl(returnUrl?: string): string {
-  const oauth2Client = getOAuthClient();
+export function generateGoogleAuthUrl(
+  returnUrl?: string,
+  customRedirectUri?: string,
+): string {
+  const oauth2Client = getOAuthClient(customRedirectUri);
   if (!oauth2Client) {
     throw new Error(
       "Credenciais GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET não configuradas no .env.local.",
     );
   }
 
+  // Preserve both the return destination and the exact callback URI in state
+  const statePayload = JSON.stringify({
+    returnUrl: returnUrl || "/os/inbox",
+    redirectUri: customRedirectUri,
+  });
+  const encodedState = Buffer.from(statePayload, "utf-8").toString("base64url");
+
   return oauth2Client.generateAuthUrl({
     access_type: "offline",
     prompt: "consent",
     scope: SCOPES,
-    state: returnUrl || "/os/inbox",
+    state: encodedState,
   });
 }
 
-export async function saveGoogleOAuthTokens(code: string): Promise<string> {
-  const oauth2Client = getOAuthClient();
+export async function saveGoogleOAuthTokens(
+  code: string,
+  customRedirectUri?: string,
+): Promise<string> {
+  const oauth2Client = getOAuthClient(customRedirectUri);
   if (!oauth2Client) {
     throw new Error("Cliente OAuth2 não configurado.");
   }

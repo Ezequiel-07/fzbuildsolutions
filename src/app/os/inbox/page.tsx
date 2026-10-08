@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 import { PageHeader } from "@/components/os/page-header";
 import { Button } from "@/components/os/button";
 import { Panel } from "@/components/os/panel";
@@ -26,14 +27,37 @@ export default function InboxPage() {
   const [composeInitialData, setComposeInitialData] =
     useState<ComposeInitialData | null>(null);
 
-  const { data: status } = useGmailStatus();
+  const { data: status, refetch: refetchStatus } = useGmailStatus();
   const isConnected = Boolean(status?.connected);
 
   const {
     data: messagesData,
     isLoading,
-    refetch,
+    refetch: refetchMessages,
   } = useGmailMessages(searchQuery);
+
+  const refetch = () => {
+    refetchStatus();
+    refetchMessages();
+  };
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("connected") === "true") {
+        toast.success("Conta Google Workspace conectada com sucesso!");
+        refetchStatus();
+        refetchMessages();
+        window.history.replaceState({}, "", window.location.pathname);
+      } else if (params.get("auth_error")) {
+        const errType = params.get("auth_error");
+        toast.error(
+          `Falha ao autenticar com o Google (${errType}). Verifique as permissões.`,
+        );
+        window.history.replaceState({}, "", window.location.pathname);
+      }
+    }
+  }, [refetchStatus, refetchMessages]);
 
   const messages = messagesData?.messages || [];
 
