@@ -58,8 +58,10 @@ export function LeadsTable() {
               </TableCell>
             </TableRow>
           ) : (
-            leads.map((lead) => (
-              <TableRow key={lead.id}>
+            leads.map((lead, idx) => (
+              <TableRow
+                key={lead.id ? `tbl-lead-${lead.id}` : `tbl-lead-idx-${idx}`}
+              >
                 <TableCell className="font-medium">{lead.clientName}</TableCell>
                 <TableCell>{lead.projectName}</TableCell>
                 <TableCell>

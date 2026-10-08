@@ -141,9 +141,13 @@ export function ComposeEmailModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[220] flex items-center justify-center p-4">
+        <div
+          key="compose-email-modal-overlay"
+          className="fixed inset-0 z-[220] flex items-center justify-center p-4"
+        >
           {/* Backdrop */}
           <motion.div
+            key="compose-email-backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -153,6 +157,7 @@ export function ComposeEmailModal({
 
           {/* Modal Container */}
           <motion.div
+            key="compose-email-container"
             initial={{ opacity: 0, scale: 0.95, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 15 }}
@@ -203,6 +208,7 @@ export function ComposeEmailModal({
             <AnimatePresence>
               {showAiAssistant && (
                 <motion.div
+                  key="compose-ai-proposal-drawer"
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}

@@ -294,9 +294,13 @@ export function AIProspectorDrawer({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[200] flex justify-end">
+        <div
+          key="ai-prospector-drawer-container"
+          className="fixed inset-0 z-[200] flex justify-end"
+        >
           {/* Backdrop */}
           <motion.div
+            key="ai-prospector-backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -306,6 +310,7 @@ export function AIProspectorDrawer({
 
           {/* Drawer Window */}
           <motion.div
+            key="ai-prospector-window"
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}

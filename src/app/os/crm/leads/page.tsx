@@ -415,7 +415,9 @@ export default function LeadsPage() {
 
                     return (
                       <motion.tr
-                        key={lead.id}
+                        key={
+                          lead.id ? `lead-row-${lead.id}` : `lead-row-idx-${i}`
+                        }
                         custom={i}
                         variants={fadeUp}
                         initial="hidden"

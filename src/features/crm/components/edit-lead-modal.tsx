@@ -58,8 +58,12 @@ export function EditLeadModal({ isOpen, onClose, lead }: EditLeadModalProps) {
   return (
     <AnimatePresence>
       {isOpen && lead && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+        <div
+          key="edit-lead-modal-container"
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+        >
           <motion.div
+            key="edit-lead-backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -67,6 +71,7 @@ export function EditLeadModal({ isOpen, onClose, lead }: EditLeadModalProps) {
             onClick={onClose}
           />
           <motion.div
+            key="edit-lead-dialog"
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}

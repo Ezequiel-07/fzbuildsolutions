@@ -221,13 +221,13 @@ export default function CRMPage() {
         </Panel>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredLeads.map((deal) => {
+          {filteredLeads.map((deal, idx) => {
             const canonical = normalizeLeadStage(deal.stage);
             const meta = LEAD_STAGE_META[canonical];
 
             return (
               <motion.div
-                key={deal.id}
+                key={deal.id ? `deal-${deal.id}` : `deal-idx-${idx}`}
                 whileHover={{ y: -2 }}
                 onClick={() => router.push(`/os/crm/${deal.id}`)}
                 className="bg-os-surface p-5 rounded-2xl border border-os-border shadow-sm hover:border-os-accent/40 cursor-pointer transition-all space-y-4 group flex flex-col justify-between"

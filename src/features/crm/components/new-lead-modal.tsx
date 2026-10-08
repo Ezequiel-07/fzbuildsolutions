@@ -47,8 +47,12 @@ export function NewLeadModal({ isOpen, onClose }: NewLeadModalProps) {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+        <div
+          key="new-lead-modal-container"
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+        >
           <motion.div
+            key="new-lead-backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -56,6 +60,7 @@ export function NewLeadModal({ isOpen, onClose }: NewLeadModalProps) {
             onClick={onClose}
           />
           <motion.div
+            key="new-lead-dialog"
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
