@@ -8,7 +8,7 @@ import { FullPageScroll } from "@/components/landing/FullPageScroll";
 import { ParticleCanvas } from "@/components/landing/ParticleCanvas";
 import { BuildTerminal } from "@/components/landing/BuildTerminal";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
-import { Menu, X, Sun, Moon } from "lucide-react";
+import { Menu, X, Sun, Moon, ShieldCheck, FileText } from "lucide-react";
 
 /* ──────────────────────────────────────────────
    THEME TOGGLE BUTTON
@@ -99,6 +99,14 @@ function NavBar() {
               </span>
             ),
           )}
+          <Link
+            href="/privacidade"
+            className="text-xs font-semibold fz-nav-link opacity-80 hover:opacity-100 transition-opacity flex items-center gap-1"
+            title="Política de Privacidade & LGPD"
+          >
+            <ShieldCheck className="h-3.5 w-3.5 text-[#0066FF]" />
+            <span>LGPD</span>
+          </Link>
         </nav>
 
         {/* Desktop Right actions */}
@@ -179,21 +187,23 @@ function NavBar() {
                 <span className="relative z-10">Falar com a FZ</span>
               </Link>
 
-              <div className="flex items-center gap-3 text-xs text-white/50 pt-4 mt-auto">
+              <div className="flex items-center gap-3 text-xs fz-body pt-4 mt-auto">
                 <Link
                   href="/privacidade"
                   onClick={closeMenu}
-                  className="hover:text-white transition-colors"
+                  className="hover:text-[#1e6bff] transition-colors underline underline-offset-4 flex items-center gap-1 font-semibold"
                 >
-                  Privacidade
+                  <ShieldCheck className="h-3.5 w-3.5 text-[#0066FF]" />
+                  <span>Privacidade & LGPD</span>
                 </Link>
                 <span>·</span>
                 <Link
                   href="/termos"
                   onClick={closeMenu}
-                  className="hover:text-white transition-colors"
+                  className="hover:text-[#1e6bff] transition-colors underline underline-offset-4 flex items-center gap-1 font-semibold"
                 >
-                  Termos de Uso
+                  <FileText className="h-3.5 w-3.5 text-[#0066FF]" />
+                  <span>Termos de Uso</span>
                 </Link>
               </div>
             </div>
@@ -1253,7 +1263,7 @@ function CTASection() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-2xl border-t border-white/5 pt-6 mt-4 text-left text-xs"
+          className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-2xl border-t border-slate-200 dark:border-white/10 pt-6 mt-4 text-left text-xs"
         >
           <div className="flex flex-col gap-2.5">
             <div>
@@ -1269,7 +1279,7 @@ function CTASection() {
               <span className="font-semibold fz-h2 block mb-0.5">E-mail</span>
               <Link
                 href="mailto:fzbuild.solutions@gmail.com"
-                className="hover:text-[#1e6bff] fz-body underline transition-colors block"
+                className="hover:text-[#1e6bff] fz-body underline transition-colors block font-medium"
               >
                 fzbuild.solutions@gmail.com
               </Link>
@@ -1278,12 +1288,14 @@ function CTASection() {
 
           <div className="flex flex-col gap-2.5">
             <div>
-              <span className="font-semibold text-white block mb-0.5">
+              <span className="font-semibold fz-h2 block mb-0.5">
                 Dados Corporativos
               </span>
-              <span className="opacity-80 block">FZ Build Solutions LTDA</span>
-              <span className="opacity-80 block">CNPJ: 67.700.723/0001-74</span>
-              <span className="opacity-80 block">Fundada em 2026</span>
+              <span className="fz-body block">FZ Build Solutions LTDA</span>
+              <span className="fz-body block font-mono text-[11px]">
+                CNPJ: 67.700.723/0001-74
+              </span>
+              <span className="fz-body block">Fundada em 2026</span>
             </div>
           </div>
         </motion.div>
@@ -1293,37 +1305,37 @@ function CTASection() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7 }}
-          className="w-full flex flex-col md:flex-row justify-between items-center border-t border-white/10 pt-4 mt-3 fz-body text-[11px] text-white/50 gap-3"
+          className="w-full flex flex-col md:flex-row justify-between items-center border-t border-slate-200 dark:border-white/10 pt-4 mt-4 fz-body text-xs gap-3"
         >
           <div className="flex items-center gap-2">
             <Image
               src="/fzbuildsemfundo.png"
               alt="FZ Build Solutions"
-              width={20}
-              height={20}
-              className="h-5 w-auto fz-logo-img brightness-0 invert opacity-75"
+              width={22}
+              height={22}
+              className="h-5 w-auto fz-logo-img dark:brightness-0 dark:invert opacity-80"
             />
-            <span>
+            <span className="fz-body text-xs">
               © 2026 FZ Build Solutions LTDA. Todos os direitos reservados.
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-4 text-[11px]">
+          <div className="flex flex-wrap items-center justify-center gap-2.5 text-xs">
             <Link
               href="/privacidade"
-              className="text-white/60 hover:text-white transition-colors underline decoration-white/20 underline-offset-4"
+              className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-800 dark:text-slate-100 hover:text-[#0066FF] transition-all font-semibold border border-slate-300 dark:border-white/15 flex items-center gap-1.5 shadow-sm"
             >
-              Privacidade de Dados
+              <ShieldCheck className="h-3.5 w-3.5 text-[#0066FF]" />
+              <span>Privacidade & LGPD</span>
             </Link>
-            <span className="opacity-30">·</span>
             <Link
               href="/termos"
-              className="text-white/60 hover:text-white transition-colors underline decoration-white/20 underline-offset-4"
+              className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-800 dark:text-slate-100 hover:text-[#0066FF] transition-all font-semibold border border-slate-300 dark:border-white/15 flex items-center gap-1.5 shadow-sm"
             >
-              Termos de Uso
+              <FileText className="h-3.5 w-3.5 text-[#0066FF]" />
+              <span>Termos de Uso</span>
             </Link>
-            <span className="opacity-30">·</span>
-            <span className="font-mono text-white/40">
+            <span className="font-mono text-slate-500 dark:text-slate-400 text-[11px] px-1">
               CNPJ: 67.700.723/0001-74
             </span>
           </div>

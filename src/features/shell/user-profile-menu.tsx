@@ -92,6 +92,25 @@ export function UserProfileMenu({ collapsed }: { collapsed: boolean }) {
           <LogOut className="h-4 w-4" />
         </button>
       </div>
+
+      {/* Legal & Compliance Links */}
+      {!collapsed && (
+        <div className="flex items-center justify-between px-1 pt-1 text-[10px] text-os-muted border-t border-os-border/50">
+          <Link
+            href="/privacidade"
+            className="hover:text-os-primary transition-colors"
+          >
+            Privacidade & LGPD
+          </Link>
+          <span>•</span>
+          <Link
+            href="/termos"
+            className="hover:text-os-primary transition-colors"
+          >
+            Termos de Uso
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
