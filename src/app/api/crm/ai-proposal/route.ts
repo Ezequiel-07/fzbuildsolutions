@@ -31,27 +31,27 @@ export async function POST(req: Request) {
 
     const ai = new GoogleGenAI({ apiKey });
     const prompt = `
-Você é o Diretor Comercial e Especialista em Redação de E-mails B2B da "FZ Build Solutions", empresa de referência em engenharia civil, reformas corporativas, facilities e obras de alta precisão no Brasil.
+Você é o Diretor Comercial e Especialista em Redação de E-mails B2B da "FZ Build Solutions", Casa de Software (Software House) de ponta especializada no desenvolvimento sob medida de softwares em nuvem, aplicativos mobile (iOS e Android), sistemas web corporativos, sites modernos e automações inteligentes no Brasil.
 
 Gere uma proposta de abordagem comercial por e-mail altamente profissional, consultiva e elegante para:
 - Empresa: ${company} (Razão Social: ${companyName})
 - E-mail do Contato: ${contactEmail || "decisor"}
-- Segmento: ${segment || "Construção / Facilities"}
+- Segmento: ${segment || "Tecnologia / Operações"}
 - Localidade: ${cityState || "Brasil"}
-- Dor Identificada: ${detectedPain || "Garantia de cronograma e qualidade técnica"}
-- Oportunidade Mapeada: ${projectOpportunity || "Reforma e modernização predial"}
+- Dor Identificada: ${detectedPain || "Processos manuais ou necessidade de sistema/app sob medida"}
+- Oportunidade Mapeada: ${projectOpportunity || "Desenvolvimento de software sob medida em nuvem ou aplicativo mobile"}
 - Orçamento Estimado: R$ ${estimatedBudget || "Sob consulta"}
-- Pitch de Vendas Recomendado: ${recommendedPitch || "Apresentação institucional"}
+- Pitch de Vendas Recomendado: ${recommendedPitch || "Apresentação consultiva de desenvolvimento de software FZ Build Solutions"}
 
 REQUISITOS:
 1. Retorne EXCLUSIVAMENTE um objeto JSON no seguinte formato:
 {
   "subject": "Assunto magnético, profissional e direto",
-  "bodyHtml": "Corpo do e-mail em HTML limpo, usando <p>, <ul>, <li>, <strong>, elegante e pronto para envio",
+  "bodyHtml": "Corpo do e-mail em HTML limpo, usando <p>, <ul>, <li>, <strong>, elegante e pronto para envio destacando a FZ Build como casa de software",
   "bodyText": "Versão em texto puro"
 }
-2. Assinatura formal da FZ Build Solutions com "Ezequiel Ferreira · FZ Build Solutions".
-3. Tom consultivo, objetivo e persuasivo (sem parecer spam genérico).
+2. Assinatura formal da FZ Build Solutions com "Ezequiel Ferreira · FZ Build Solutions (Casa de Software)".
+3. Tom consultivo, objetivo e persuasivo (sem parecer spam genérico). Enfatize retorno sobre investimento, modernização de processos e escala através de tecnologia sob medida.
 `;
 
     const response = await ai.models.generateContent({
@@ -69,7 +69,8 @@ REQUISITOS:
     const parsed = JSON.parse(jsonStr.trim());
 
     return NextResponse.json({
-      subject: parsed.subject || `Parceria em Engenharia & Obras: ${company}`,
+      subject:
+        parsed.subject || `Parceria em Soluções de Software & Apps: ${company}`,
       bodyHtml: parsed.bodyHtml || "",
       bodyText: parsed.bodyText || "",
       isAiLive: true,

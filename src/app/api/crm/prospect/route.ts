@@ -8,11 +8,11 @@ export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
     const params: ProspectParams = {
-      niche: body.niche || "Construção Civil & Obras Comerciais",
+      niche: body.niche || "Startups & Empresas em Expansão Digital",
       location: body.location || "São Paulo - SP",
       trigger:
         body.trigger ||
-        "Empresas em expansão, novos lançamentos e reformas corporativas",
+        "Demanda por software sob medida em nuvem, aplicativo mobile ou portal digital",
       count: Number(body.count) || 5,
     };
 

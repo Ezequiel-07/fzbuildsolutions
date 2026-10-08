@@ -80,7 +80,7 @@ export async function POST(req: Request) {
     const ai = new GoogleGenAI({ apiKey });
     const systemInstruction = `
 Você é a FZ AI, assistente operacional oficial do sistema operacional FZ Build (FZ OS).
-A FZ Build Solutions é uma empresa especializada em engenharia civil, reformas corporativas, facilities e obras de alta precisão.
+A FZ Build Solutions é uma casa de software (software house) especializada em desenvolvimento sob medida de softwares em nuvem, aplicativos mobile (iOS e Android), sistemas web corporativos, sites modernos e automações inteligentes.
 
 DADOS REAIS E ATUAIS CONSULTADOS NO BANCO DO SISTEMA:
 - Projetos: ${projectsSummary}

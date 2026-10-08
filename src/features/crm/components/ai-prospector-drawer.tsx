@@ -40,18 +40,18 @@ interface AIProspectorDrawerProps {
 }
 
 const SUGGESTED_NICHES = [
-  "Construção Civil & Obras Comerciais",
-  "Engenharia Hospitalar & Clínicas",
-  "Galpões Logísticos & Centros de Distribuição",
-  "Reforma Corporativa & Escritórios",
-  "Shopping Centers & Redes Varejistas",
-  "Farmacêuticas & Laboratórios",
-  "Data Centers & Infraestrutura Crítica",
-  "Hotéis, Resorts & Hospitalidade",
-  "Escolas & Universidades Privadas",
-  "Instalações Elétricas & Hidráulicas de Alto Padrão",
-  "Indústrias & Retrofit Fabril",
-  "Facilities & Manutenção Predial",
+  "Startups & Scale-ups em Crescimento",
+  "Logística, Frotas & Transporte (Apps & Rastreamento)",
+  "Varejo, E-commerce & Redes de Lojas (Apps & Portais)",
+  "Saúde, Clínicas & Hospitais (Sistemas & Agendamentos)",
+  "Serviços Financeiros & Fintechs (Plataformas Web)",
+  "Distribuidoras & Atacado (Sistemas de Força de Vendas)",
+  "Imobiliárias & Construtoras (Portais & CRMs)",
+  "Indústrias & Manufatura (Automações & Dashboards)",
+  "Franquias & Redes de Alimentação (Apps de Fidelidade)",
+  "Educação & Cursos (Plataformas EAD / LMS)",
+  "Empresas de Serviços B2B & Consultorias",
+  "Empresas com Processos Manuais em Planilhas",
 ];
 
 const SUGGESTED_LOCATIONS = [
@@ -60,6 +60,7 @@ const SUGGESTED_LOCATIONS = [
   "Rio de Janeiro - RJ",
   "Belo Horizonte - MG",
   "Curitiba - PR",
+  "Florianópolis - SC",
   "Porto Alegre - RS",
   "Goiânia - GO",
   "Brasília - DF",
@@ -69,11 +70,12 @@ const SUGGESTED_LOCATIONS = [
 ];
 
 const SUGGESTED_TRIGGERS = [
-  "Empresas em expansão ou abrindo novas filiais",
-  "Modernização predial, retrofit e eficiência",
-  "Adequação de normas regulatórias (AVCB, vigilância sanitária)",
-  "Reformas corporativas e modernização de layout",
-  "Obras industriais e ampliação de galpões logísticos",
+  "Processos manuais ou em planilhas demandando sistema em nuvem",
+  "Necessidade de aplicativo mobile sob medida (iOS e Android)",
+  "Criação de portal de clientes ou plataforma de atendimento",
+  "Modernização de sistemas legados e migração para a nuvem",
+  "Automação de fluxos operacionais e integrações de APIs",
+  "Expansão acelerada demandando software e plataforma escalável",
 ];
 
 export function AIProspectorDrawer({
@@ -220,12 +222,12 @@ export function AIProspectorDrawer({
       );
 
       // Open with clean personalized template if AI is temporarily unavailable
-      const fallbackSubject = `Parceria em Engenharia & Soluções Técnicas: ${lead.tradeName || lead.companyName}`;
+      const fallbackSubject = `Soluções em Software & Aplicativos sob Medida: ${lead.tradeName || lead.companyName}`;
       const fallbackHtml = `<p>Olá equipe da <strong>${lead.tradeName || lead.companyName}</strong>,</p>
-<p>Identificamos oportunidade de suporte técnico em <em>${lead.projectOpportunity}</em> em ${lead.cityState}.</p>
-<p>A FZ Build Solutions é especialista em engenharia civil, reformas corporativas e soluções de alto padrão.</p>
-<p>Gostaríamos de agendar uma breve conversa técnica para apresentar nosso portfólio.</p>
-<p>Atenciosamente,<br/><strong>Ezequiel Ferreira</strong><br/>FZ Build Solutions</p>`;
+<p>Mapeamos uma excelente oportunidade de desenvolvimento tecnológico para <em>${lead.projectOpportunity}</em> em ${lead.cityState}.</p>
+<p>A FZ Build Solutions é uma casa de software especializada no desenvolvimento sob medida de <strong>sistemas em nuvem, aplicativos mobile (iOS e Android), websites de alta performance e automações</strong>.</p>
+<p>Gostaríamos de apresentar como nossa engenharia de software pode acelerar a escala e eficiência da sua operação.</p>
+<p>Atenciosamente,<br/><strong>Ezequiel Ferreira</strong><br/>FZ Build Solutions · Casa de Software</p>`;
 
       setProposalModalData({
         to: lead.contactEmail || "",
@@ -391,7 +393,7 @@ export function AIProspectorDrawer({
                       type="text"
                       value={niche}
                       onChange={(e) => setNiche(e.target.value)}
-                      placeholder="Ex: Hospitais Privados, Redes de Farmácias, Data Centers..."
+                      placeholder="Ex: Startups, Logística, Clínicas, Franquias, E-commerce..."
                       className="w-full px-3.5 py-2 text-xs rounded-xl bg-os-surface border border-os-border text-os-fg placeholder:text-os-muted/70 focus:outline-none focus:ring-1 focus:ring-os-primary transition-all"
                     />
                     <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pt-1 pr-1">
@@ -463,7 +465,7 @@ export function AIProspectorDrawer({
                       type="text"
                       value={trigger}
                       onChange={(e) => setTrigger(e.target.value)}
-                      placeholder="Ex: Expansão de filiais, Obras de galpões, AVCB..."
+                      placeholder="Ex: Desenvolvimento de aplicativo mobile, Sistema em nuvem, Automação de processos..."
                       className="w-full px-3.5 py-2 text-xs rounded-xl bg-os-surface border border-os-border text-os-fg placeholder:text-os-muted/70 focus:outline-none focus:ring-1 focus:ring-os-primary transition-all"
                     />
                     <div className="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto pt-1 pr-1">
@@ -588,12 +590,14 @@ export function AIProspectorDrawer({
 
                       {/* Candidate Lead Cards */}
                       <div className="space-y-3.5">
-                        {result.leads.map((lead) => {
+                        {result.leads.map((lead, idx) => {
                           const isImported = importedIds.has(lead.id);
 
                           return (
                             <div
-                              key={lead.id}
+                              key={
+                                lead.id ? `lead-${lead.id}` : `lead-idx-${idx}`
+                              }
                               className="p-5 rounded-2xl bg-os-surface border border-os-border shadow-sm hover:border-os-primary/40 transition-all space-y-3.5"
                             >
                               {/* Card Top */}
@@ -673,7 +677,7 @@ export function AIProspectorDrawer({
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                   {lead.triggers.map((trig, i) => (
                                     <span
-                                      key={i}
+                                      key={`trig-${lead.id || "lead"}-${i}-${trig}`}
                                       className="px-2 py-0.5 rounded-md text-[10px] bg-os-surface-2 text-os-muted border border-os-border"
                                     >
                                       {trig}

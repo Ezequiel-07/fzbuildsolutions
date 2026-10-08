@@ -20,10 +20,11 @@ async function handleCronExecution(req: Request) {
     }
 
     const result = await discoverLeadsWithGemini({
-      niche: "Engenharia Civil, Instalações Prediais & Reformas Corporativas",
-      location: "Principais capitais do Brasil (SP, RJ, MG, PR)",
+      niche:
+        "Empresas em Crescimento com Demanda de Software em Nuvem e Apps Mobile",
+      location: "Principais capitais do Brasil (SP, RJ, MG, PR, SC, RS)",
       trigger:
-        "Empresas com expansão recente, novas filiais ou necessidade de manutenção predial",
+        "Digitalização de operações, demanda por sistemas web em nuvem, aplicativos mobile e automações",
       count: 4,
     });
 

@@ -68,16 +68,22 @@ export async function discoverLeadsWithGemini(
     const modelName = "gemini-3.8-flash"; // Current balanced model for high speed and grounding
 
     const prompt = `
-Você é o Agente Especialista Autônomo de Inteligência Comercial e Prospecção B2B da "FZ Build Solutions", empresa especializada em engenharia civil, reformas corporativas, instalações de alto padrão e soluções tecnológicas para construção e facilities.
+Você é o Agente Especialista Autônomo de Inteligência Comercial e Prospecção B2B da "FZ Build Solutions".
+A FZ Build Solutions é uma Casa de Software (Software House) de alta performance, especializada em:
+- Desenvolvimento sob medida de softwares em nuvem e plataformas SaaS corporativas
+- Aplicativos mobile de alta performance (iOS e Android)
+- Sistemas web empresariais, dashboards gerenciais e portais de clientes/parceiros em nuvem
+- Websites institucionais e páginas modernas de alta conversão
+- Automação de processos operacionais, integrações de APIs e soluções de inteligência artificial aplicada
 
 SUA MISSÃO:
-Pesquise e identifique de 4 a 6 oportunidades reais e quentes de empresas brasileiras com alta probabilidade de contratação no seguinte contexto:
-- Nicho / Setor: ${params.niche || "Construção Civil, Obras Corporativas e Facilities"}
-- Região / Cidade: ${params.location || "São Paulo e principais capitais do Brasil"}
-- Gatilho Comercial: ${params.trigger || "Empresas em expansão, abertura de filiais, reformas ou reformas de galpões"}
+Pesquise e identifique de 4 a 6 oportunidades reais e quentes de empresas brasileiras com alta probabilidade de contratação de soluções de software e tecnologia no seguinte contexto:
+- Nicho / Setor: ${params.niche || "Empresas com processos manuais, expansão operacional ou necessidade de novos softwares e apps"}
+- Região / Cidade: ${params.location || "São Paulo e principais capitais e polos do Brasil"}
+- Gatilho Comercial: ${params.trigger || "Empresas em expansão, digitalização de processos operacionais, lançamento de novos serviços ou necessidade de aplicativo mobile e sistema em nuvem"}
 
 INSTRUÇÕES OBRIGATÓRIAS:
-1. Identifique empresas corporativas (construtoras, incorporadoras, hospitais, redes varejistas, operadoras logísticas, indústrias, centros comerciais).
+1. Identifique empresas corporativas reais (varejo, e-commerce, logística, saúde, franquias, distribuidores, imobiliárias, serviços B2B, indústrias, startups) com potencial demanda por tecnologia e desenvolvimento de software.
 2. Formate sua resposta EXCLUSIVAMENTE em um bloco de código JSON contendo um array com objetos no formato exato especificado abaixo. Não inclua texto explicativo fora do array JSON.
 
 Estrutura de cada objeto no array JSON:
@@ -90,10 +96,10 @@ Estrutura de cada objeto no array JSON:
   "website": "URL do website institucional",
   "contactPhone": "Telefone provável de contato corporativo",
   "contactEmail": "E-mail corporativo ou de contato geral",
-  "estimatedBudget": 250000, // número inteiro em BRL estimado para a demanda
-  "projectOpportunity": "Descrição concisa da necessidade ou projeto provável",
-  "detectedPain": "Principal dor ou desafio da empresa que a FZ Build pode resolver",
-  "recommendedPitch": "Argumento de vendas certeiro para a equipe de vendas da FZ Build utilizar",
+  "estimatedBudget": 60000, // número inteiro em BRL estimado para o projeto de software/app (ex: 25000 a 150000)
+  "projectOpportunity": "Descrição concisa do software, aplicativo mobile ou sistema em nuvem demandado",
+  "detectedPain": "Principal gargalo operacional, processo manual ou limitação digital que a FZ Build Solutions resolve com software",
+  "recommendedPitch": "Argumento de vendas consultivo focado em eficiência, escala e retorno sobre investimento (ROI) com software sob medida da FZ Build Solutions",
   "fitScore": 92, // nota de 75 a 99
   "triggers": ["Gatilho 1", "Gatilho 2"],
   "sourceUrl": "URL de referência ou matéria pública da empresa"
@@ -150,13 +156,16 @@ Estrutura de cada objeto no array JSON:
         website: item.website || "",
         contactPhone: item.contactPhone || "",
         contactEmail: item.contactEmail || "",
-        estimatedBudget: Number(item.estimatedBudget) || 150000,
+        estimatedBudget: Number(item.estimatedBudget) || 60000,
         projectOpportunity:
-          item.projectOpportunity || "Oportunidade mapeada pela IA",
+          item.projectOpportunity ||
+          "Desenvolvimento de software sob medida em nuvem ou app mobile",
         detectedPain:
-          item.detectedPain || "Necessidade de suporte em engenharia e obras",
+          item.detectedPain ||
+          "Necessidade de modernização digital, sistema em nuvem ou aplicativo próprio",
         recommendedPitch:
-          item.recommendedPitch || "Apresentação institucional FZ Build",
+          item.recommendedPitch ||
+          "Apresentação consultiva de desenvolvimento de software sob medida FZ Build Solutions",
         fitScore: Number(item.fitScore) || 85,
         triggers: Array.isArray(item.triggers)
           ? item.triggers

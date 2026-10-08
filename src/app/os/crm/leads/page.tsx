@@ -110,8 +110,8 @@ export default function LeadsPage() {
       toast.info("Abrindo editor de proposta para envio direto.");
       setEmailModalData({
         to: lead.contact?.email || "",
-        subject: `Parceria em Engenharia & Obras: ${lead.clientName}`,
-        bodyHtml: `<p>Olá equipe da <strong>${lead.clientName}</strong>,</p><p>Gostaríamos de apresentar nossas soluções técnicas para o projeto <em>${lead.projectName}</em>.</p><p>Atenciosamente,<br/><strong>Ezequiel Ferreira</strong><br/>FZ Build Solutions</p>`,
+        subject: `Parceria em Soluções de Software & Apps: ${lead.clientName}`,
+        bodyHtml: `<p>Olá equipe da <strong>${lead.clientName}</strong>,</p><p>Gostaríamos de apresentar nossa proposta para o desenvolvimento da solução em software <em>${lead.projectName}</em>.</p><p>A FZ Build Solutions é uma casa de software especializada no desenvolvimento sob medida de sistemas em nuvem, aplicativos mobile e plataformas corporativas.</p><p>Atenciosamente,<br/><strong>Ezequiel Ferreira</strong><br/>FZ Build Solutions · Casa de Software</p>`,
         leadContext: {
           companyName: lead.clientName,
           contactEmail: lead.contact?.email,
