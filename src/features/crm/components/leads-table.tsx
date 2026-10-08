@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { useLeads } from "../api/use-leads";
+import Link from "next/link";
 
 export function LeadsTable() {
   const { data: leads = [], isLoading } = useLeads();
@@ -85,7 +86,11 @@ export function LeadsTable() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                      <DropdownMenuItem>Ver detalhes</DropdownMenuItem>
+                      <Link href={`/os/crm/${lead.id}`}>
+                        <DropdownMenuItem className="cursor-pointer">
+                          Ver detalhes 360
+                        </DropdownMenuItem>
+                      </Link>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>

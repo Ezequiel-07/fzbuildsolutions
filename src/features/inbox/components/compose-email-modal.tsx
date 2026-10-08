@@ -112,11 +112,21 @@ export function ComposeEmailModal({
       return;
     }
 
+    const sanitizedHtml =
+      bodyHtml.includes("<p>") ||
+      bodyHtml.includes("<div>") ||
+      bodyHtml.includes("<br")
+        ? bodyHtml
+        : bodyHtml
+            .split("\n\n")
+            .map((par) => `<p>${par.replace(/\n/g, "<br/>")}</p>`)
+            .join("");
+
     try {
       await sendEmail.mutateAsync({
         to,
         subject,
-        bodyHtml,
+        bodyHtml: sanitizedHtml,
         inReplyTo: initialData?.inReplyTo,
       });
 

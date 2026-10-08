@@ -19,7 +19,6 @@ import {
   Flame,
   ArrowRight,
   Plus,
-  Send,
 } from "lucide-react";
 import { Button } from "@/components/os/button";
 import { StatusBadge } from "@/components/os/status-badge";
@@ -32,6 +31,7 @@ import {
   ComposeEmailModal,
   type ComposeInitialData,
 } from "@/features/inbox/components/compose-email-modal";
+import { useGenerateAiProposal } from "@/features/inbox/api/use-gmail";
 import { toast } from "sonner";
 
 interface AIProspectorDrawerProps {
@@ -39,44 +39,62 @@ interface AIProspectorDrawerProps {
   onClose: () => void;
 }
 
-const PRESET_NICHES = [
+const SUGGESTED_NICHES = [
   "Construção Civil & Obras Comerciais",
   "Engenharia Hospitalar & Clínicas",
-  "Galpões Logísticos & Retrofit Industrial",
+  "Galpões Logísticos & Centros de Distribuição",
   "Reforma Corporativa & Escritórios",
+  "Shopping Centers & Redes Varejistas",
+  "Farmacêuticas & Laboratórios",
+  "Data Centers & Infraestrutura Crítica",
+  "Hotéis, Resorts & Hospitalidade",
+  "Escolas & Universidades Privadas",
   "Instalações Elétricas & Hidráulicas de Alto Padrão",
+  "Indústrias & Retrofit Fabril",
+  "Facilities & Manutenção Predial",
 ];
 
-const PRESET_LOCATIONS = [
+const SUGGESTED_LOCATIONS = [
   "São Paulo - SP",
   "Campinas & Região - SP",
   "Rio de Janeiro - RJ",
   "Belo Horizonte - MG",
   "Curitiba - PR",
+  "Porto Alegre - RS",
+  "Goiânia - GO",
+  "Brasília - DF",
+  "Salvador - BA",
+  "Recife - PE",
+  "Fortaleza - CE",
 ];
 
-const PRESET_TRIGGERS = [
-  "Empresas em fase de expansão ou abertura de filiais",
-  "Necessidade de modernização predial e retrofit",
-  "Reformas corporativas e adaptação de layout",
-  "Obras industriais e adequação de normas técnicas",
+const SUGGESTED_TRIGGERS = [
+  "Empresas em expansão ou abrindo novas filiais",
+  "Modernização predial, retrofit e eficiência",
+  "Adequação de normas regulatórias (AVCB, vigilância sanitária)",
+  "Reformas corporativas e modernização de layout",
+  "Obras industriais e ampliação de galpões logísticos",
 ];
 
 export function AIProspectorDrawer({
   isOpen,
   onClose,
 }: AIProspectorDrawerProps) {
-  const [niche, setNiche] = useState(PRESET_NICHES[0]);
-  const [location, setLocation] = useState(PRESET_LOCATIONS[0]);
-  const [trigger, setTrigger] = useState(PRESET_TRIGGERS[0]);
+  const [niche, setNiche] = useState(SUGGESTED_NICHES[0]);
+  const [location, setLocation] = useState(SUGGESTED_LOCATIONS[0]);
+  const [trigger, setTrigger] = useState(SUGGESTED_TRIGGERS[0]);
   const [isScanning, setIsScanning] = useState(false);
   const [result, setResult] = useState<ProspectResult | null>(null);
   const [importedIds, setImportedIds] = useState<Set<string>>(new Set());
   const [isImportingAll, setIsImportingAll] = useState(false);
+  const [generatingProposalLeadId, setGeneratingProposalLeadId] = useState<
+    string | null
+  >(null);
   const [proposalModalData, setProposalModalData] =
     useState<ComposeInitialData | null>(null);
 
   const createLead = useCreateLead();
+  const generateProposal = useGenerateAiProposal();
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -87,6 +105,11 @@ export function AIProspectorDrawer({
   };
 
   const handleScan = async () => {
+    if (!niche.trim() || !location.trim()) {
+      toast.error("Informe o segmento e a localidade para a varredura.");
+      return;
+    }
+
     setIsScanning(true);
     try {
       const res = await fetch("/api/crm/prospect", {
@@ -101,7 +124,18 @@ export function AIProspectorDrawer({
 
       const data: ProspectResult = await res.json();
       setResult(data);
-      toast.success(`${data.leads.length} oportunidades mapeadas com sucesso!`);
+
+      if (data.error) {
+        toast.error(data.error);
+      } else if (data.leads.length > 0) {
+        toast.success(
+          `${data.leads.length} oportunidades reais mapeadas com Gemini!`,
+        );
+      } else {
+        toast.info(
+          "Nenhuma oportunidade encontrada para esses parâmetros específicos.",
+        );
+      }
     } catch (err) {
       console.error(err);
       toast.error("Erro ao executar varredura de prospecção com IA.");
@@ -140,12 +174,14 @@ export function AIProspectorDrawer({
     }
   };
 
-  const handleDraftProposal = (lead: DiscoveredLead) => {
-    setProposalModalData({
-      to: lead.contactEmail || "",
-      subject: `Parceria & Engenharia FZ Build: Oportunidade para ${lead.tradeName || lead.companyName}`,
-      bodyHtml: `<p>Olá equipe da <strong>${lead.tradeName || lead.companyName}</strong>,</p><p>Mapeamos uma grande oportunidade em <em>"${lead.projectOpportunity}"</em>...</p>`,
-      leadContext: {
+  const handleDraftProposal = async (lead: DiscoveredLead) => {
+    setGeneratingProposalLeadId(lead.id);
+    const toastId = toast.loading(
+      `Gerando proposta personalizada com Gemini para ${lead.tradeName || lead.companyName}...`,
+    );
+
+    try {
+      const proposal = await generateProposal.mutateAsync({
         companyName: lead.companyName,
         tradeName: lead.tradeName,
         contactEmail: lead.contactEmail,
@@ -155,8 +191,61 @@ export function AIProspectorDrawer({
         projectOpportunity: lead.projectOpportunity,
         estimatedBudget: lead.estimatedBudget,
         recommendedPitch: lead.recommendedPitch,
-      },
-    });
+      });
+
+      toast.dismiss(toastId);
+      toast.success("Proposta comercial pronta para envio!");
+
+      setProposalModalData({
+        to: lead.contactEmail || "",
+        subject: proposal.subject,
+        bodyHtml: proposal.bodyHtml || proposal.bodyText,
+        leadContext: {
+          companyName: lead.companyName,
+          tradeName: lead.tradeName,
+          contactEmail: lead.contactEmail,
+          segment: lead.segment,
+          cityState: lead.cityState,
+          detectedPain: lead.detectedPain,
+          projectOpportunity: lead.projectOpportunity,
+          estimatedBudget: lead.estimatedBudget,
+          recommendedPitch: lead.recommendedPitch,
+        },
+      });
+    } catch (error) {
+      console.warn("[AIProposal] Falha na geração automática via IA:", error);
+      toast.dismiss(toastId);
+      toast.info(
+        "Não foi possível redigir automaticamente via IA (verifique créditos da API). Abrindo formulário para edição.",
+      );
+
+      // Open with clean personalized template if AI is temporarily unavailable
+      const fallbackSubject = `Parceria em Engenharia & Soluções Técnicas: ${lead.tradeName || lead.companyName}`;
+      const fallbackHtml = `<p>Olá equipe da <strong>${lead.tradeName || lead.companyName}</strong>,</p>
+<p>Identificamos oportunidade de suporte técnico em <em>${lead.projectOpportunity}</em> em ${lead.cityState}.</p>
+<p>A FZ Build Solutions é especialista em engenharia civil, reformas corporativas e soluções de alto padrão.</p>
+<p>Gostaríamos de agendar uma breve conversa técnica para apresentar nosso portfólio.</p>
+<p>Atenciosamente,<br/><strong>Ezequiel Ferreira</strong><br/>FZ Build Solutions</p>`;
+
+      setProposalModalData({
+        to: lead.contactEmail || "",
+        subject: fallbackSubject,
+        bodyHtml: fallbackHtml,
+        leadContext: {
+          companyName: lead.companyName,
+          tradeName: lead.tradeName,
+          contactEmail: lead.contactEmail,
+          segment: lead.segment,
+          cityState: lead.cityState,
+          detectedPain: lead.detectedPain,
+          projectOpportunity: lead.projectOpportunity,
+          estimatedBudget: lead.estimatedBudget,
+          recommendedPitch: lead.recommendedPitch,
+        },
+      });
+    } finally {
+      setGeneratingProposalLeadId(null);
+    }
   };
 
   const handleImportAll = async () => {
@@ -267,71 +356,133 @@ export function AIProspectorDrawer({
                   </h3>
                   {result && (
                     <StatusBadge
-                      tone={result.isLiveAi ? "success" : "neutral"}
+                      tone={
+                        result.isLiveAi
+                          ? "success"
+                          : result.error
+                            ? "danger"
+                            : "neutral"
+                      }
                       dot
                       size="sm"
                     >
                       {result.isLiveAi
-                        ? "Grounding Ativo"
-                        : "Simulação Inteligente"}
+                        ? "Gemini 3.8 Flash (Live Grounding)"
+                        : result.error
+                          ? "API Indisponível"
+                          : "Consulta Concluída"}
                     </StatusBadge>
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                  {/* Niche */}
+                <div className="space-y-4">
+                  {/* Custom Niche/Category Input */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-os-fg">
-                      Segmento / Nicho
-                    </label>
-                    <select
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold text-os-fg flex items-center gap-1.5">
+                        <Building2 className="h-3.5 w-3.5 text-os-primary" />
+                        Segmento / Categoria de Prospecção
+                      </label>
+                      <span className="text-[10px] text-os-muted">
+                        Digite livremente ou clique abaixo
+                      </span>
+                    </div>
+                    <input
+                      type="text"
                       value={niche}
                       onChange={(e) => setNiche(e.target.value)}
-                      className="w-full px-3 py-2 text-xs rounded-xl bg-os-surface border border-os-border text-os-fg focus:outline-none focus:ring-1 focus:ring-os-primary"
-                    >
-                      {PRESET_NICHES.map((n) => (
-                        <option key={n} value={n}>
-                          {n}
-                        </option>
+                      placeholder="Ex: Hospitais Privados, Redes de Farmácias, Data Centers..."
+                      className="w-full px-3.5 py-2 text-xs rounded-xl bg-os-surface border border-os-border text-os-fg placeholder:text-os-muted/70 focus:outline-none focus:ring-1 focus:ring-os-primary transition-all"
+                    />
+                    <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pt-1 pr-1">
+                      {SUGGESTED_NICHES.map((item) => (
+                        <button
+                          key={item}
+                          type="button"
+                          onClick={() => setNiche(item)}
+                          className={`px-2 py-0.5 rounded-lg text-[10px] transition-all text-left ${
+                            niche === item
+                              ? "bg-os-primary text-white font-semibold shadow-xs"
+                              : "bg-os-surface text-os-muted hover:text-os-fg hover:bg-os-surface-2 border border-os-border/70"
+                          }`}
+                        >
+                          {item}
+                        </button>
                       ))}
-                    </select>
+                    </div>
                   </div>
 
-                  {/* Location */}
+                  {/* Custom Location Input */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-os-fg">
-                      Cidade / Região
-                    </label>
-                    <select
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold text-os-fg flex items-center gap-1.5">
+                        <MapPin className="h-3.5 w-3.5 text-os-primary" />
+                        Cidade / Estado / Região
+                      </label>
+                      <span className="text-[10px] text-os-muted">
+                        Digite a região ou selecione
+                      </span>
+                    </div>
+                    <input
+                      type="text"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
-                      className="w-full px-3 py-2 text-xs rounded-xl bg-os-surface border border-os-border text-os-fg focus:outline-none focus:ring-1 focus:ring-os-primary"
-                    >
-                      {PRESET_LOCATIONS.map((loc) => (
-                        <option key={loc} value={loc}>
-                          {loc}
-                        </option>
+                      placeholder="Ex: Joinville - SC, Interior de SP, Região Metropolitana..."
+                      className="w-full px-3.5 py-2 text-xs rounded-xl bg-os-surface border border-os-border text-os-fg placeholder:text-os-muted/70 focus:outline-none focus:ring-1 focus:ring-os-primary transition-all"
+                    />
+                    <div className="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto pt-1 pr-1">
+                      {SUGGESTED_LOCATIONS.map((item) => (
+                        <button
+                          key={item}
+                          type="button"
+                          onClick={() => setLocation(item)}
+                          className={`px-2 py-0.5 rounded-lg text-[10px] transition-all text-left ${
+                            location === item
+                              ? "bg-os-primary text-white font-semibold shadow-xs"
+                              : "bg-os-surface text-os-muted hover:text-os-fg hover:bg-os-surface-2 border border-os-border/70"
+                          }`}
+                        >
+                          {item}
+                        </button>
                       ))}
-                    </select>
+                    </div>
                   </div>
-                </div>
 
-                {/* Trigger */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-os-fg">
-                    Gatilho Comercial
-                  </label>
-                  <select
-                    value={trigger}
-                    onChange={(e) => setTrigger(e.target.value)}
-                    className="w-full px-3 py-2 text-xs rounded-xl bg-os-surface border border-os-border text-os-fg focus:outline-none focus:ring-1 focus:ring-os-primary"
-                  >
-                    {PRESET_TRIGGERS.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
+                  {/* Custom Commercial Trigger Input */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold text-os-fg flex items-center gap-1.5">
+                        <Lightbulb className="h-3.5 w-3.5 text-os-primary" />
+                        Gatilho Comercial
+                      </label>
+                      <span className="text-[10px] text-os-muted">
+                        Contexto da abordagem
+                      </span>
+                    </div>
+                    <input
+                      type="text"
+                      value={trigger}
+                      onChange={(e) => setTrigger(e.target.value)}
+                      placeholder="Ex: Expansão de filiais, Obras de galpões, AVCB..."
+                      className="w-full px-3.5 py-2 text-xs rounded-xl bg-os-surface border border-os-border text-os-fg placeholder:text-os-muted/70 focus:outline-none focus:ring-1 focus:ring-os-primary transition-all"
+                    />
+                    <div className="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto pt-1 pr-1">
+                      {SUGGESTED_TRIGGERS.map((item) => (
+                        <button
+                          key={item}
+                          type="button"
+                          onClick={() => setTrigger(item)}
+                          className={`px-2 py-0.5 rounded-lg text-[10px] transition-all text-left ${
+                            trigger === item
+                              ? "bg-os-primary text-white font-semibold shadow-xs"
+                              : "bg-os-surface text-os-muted hover:text-os-fg hover:bg-os-surface-2 border border-os-border/70"
+                          }`}
+                        >
+                          {item}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Scan Button */}
@@ -349,7 +500,9 @@ export function AIProspectorDrawer({
                       )
                     }
                   >
-                    {isScanning ? "Varrendo Mercado..." : "Executar Radar IA"}
+                    {isScanning
+                      ? "Varrendo Mercado com IA..."
+                      : "Executar Radar IA"}
                   </Button>
                 </div>
               </div>
@@ -562,12 +715,21 @@ export function AIProspectorDrawer({
                                     variant="secondary"
                                     size="sm"
                                     onClick={() => handleDraftProposal(lead)}
-                                    className="border-os-primary/30 text-os-primary hover:bg-os-primary/10"
+                                    disabled={
+                                      generatingProposalLeadId === lead.id
+                                    }
+                                    className="border-os-primary/30 text-os-primary hover:bg-os-primary/10 shadow-xs"
                                     leadingIcon={
-                                      <Send className="h-3.5 w-3.5 text-os-primary" />
+                                      generatingProposalLeadId === lead.id ? (
+                                        <Loader2 className="h-3.5 w-3.5 animate-spin text-os-primary" />
+                                      ) : (
+                                        <Sparkles className="h-3.5 w-3.5 text-os-primary" />
+                                      )
                                     }
                                   >
-                                    Proposta IA
+                                    {generatingProposalLeadId === lead.id
+                                      ? "Redigindo..."
+                                      : "Proposta IA"}
                                   </Button>
                                   <Button
                                     variant={

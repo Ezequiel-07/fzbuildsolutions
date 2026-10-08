@@ -17,11 +17,17 @@ import {
   X,
   ExternalLink,
   Sparkles,
+  Loader2,
 } from "lucide-react";
 import { useLeads, useDeleteLead, Lead } from "@/features/crm/api/use-leads";
 import { NewLeadModal } from "@/features/crm/components/new-lead-modal";
 import { EditLeadModal } from "@/features/crm/components/edit-lead-modal";
 import { AIProspectorDrawer } from "@/features/crm/components/ai-prospector-drawer";
+import {
+  ComposeEmailModal,
+  type ComposeInitialData,
+} from "@/features/inbox/components/compose-email-modal";
+import { useGenerateAiProposal } from "@/features/inbox/api/use-gmail";
 import { PageHeader } from "@/components/os/page-header";
 import { Button } from "@/components/os/button";
 import { Panel } from "@/components/os/panel";
@@ -34,6 +40,7 @@ import {
   type LeadStage,
 } from "@/domain/lead";
 import Link from "next/link";
+import { toast } from "sonner";
 
 type SortKey = "clientName" | "projectName" | "stage" | "value" | "createdAt";
 type SortDir = "asc" | "desc";
@@ -52,6 +59,9 @@ export default function LeadsPage() {
   const [isRadarOpen, setIsRadarOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
+  const [emailModalData, setEmailModalData] =
+    useState<ComposeInitialData | null>(null);
+  const [generatingLeadId, setGeneratingLeadId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filterStage, setFilterStage] = useState<string>("all");
   const [sortKey, setSortKey] = useState<SortKey>("createdAt");
@@ -60,6 +70,59 @@ export default function LeadsPage() {
 
   const { data: leads = [], isLoading } = useLeads();
   const deleteLead = useDeleteLead();
+  const generateProposal = useGenerateAiProposal();
+
+  const handleDraftProposalForLead = async (lead: Lead) => {
+    setGeneratingLeadId(lead.id);
+    const toastId = toast.loading(
+      `Redigindo proposta comercial com Gemini 3.8 Flash para ${lead.clientName}...`,
+    );
+    try {
+      const res = await generateProposal.mutateAsync({
+        companyName: lead.clientName,
+        contactEmail: lead.contact?.email,
+        projectOpportunity: lead.projectName,
+        estimatedBudget: lead.value,
+        detectedPain: lead.detectedPain,
+        recommendedPitch: lead.aiPitch,
+        segment: lead.segment,
+        cityState: lead.cityState,
+      });
+      toast.dismiss(toastId);
+      toast.success("Proposta personalizada gerada com sucesso pela IA!");
+      setEmailModalData({
+        to: lead.contact?.email || "",
+        subject: res.subject,
+        bodyHtml: res.bodyHtml || res.bodyText,
+        leadContext: {
+          companyName: lead.clientName,
+          contactEmail: lead.contact?.email,
+          projectOpportunity: lead.projectName,
+          estimatedBudget: lead.value,
+          detectedPain: lead.detectedPain,
+          recommendedPitch: lead.aiPitch,
+          segment: lead.segment,
+          cityState: lead.cityState,
+        },
+      });
+    } catch {
+      toast.dismiss(toastId);
+      toast.info("Abrindo editor de proposta para envio direto.");
+      setEmailModalData({
+        to: lead.contact?.email || "",
+        subject: `Parceria em Engenharia & Obras: ${lead.clientName}`,
+        bodyHtml: `<p>Olá equipe da <strong>${lead.clientName}</strong>,</p><p>Gostaríamos de apresentar nossas soluções técnicas para o projeto <em>${lead.projectName}</em>.</p><p>Atenciosamente,<br/><strong>Ezequiel Ferreira</strong><br/>FZ Build Solutions</p>`,
+        leadContext: {
+          companyName: lead.clientName,
+          contactEmail: lead.contact?.email,
+          projectOpportunity: lead.projectName,
+          estimatedBudget: lead.value,
+        },
+      });
+    } finally {
+      setGeneratingLeadId(null);
+    }
+  };
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -413,18 +476,35 @@ export default function LeadsPage() {
                               </a>
                             )}
                             {lead.contact?.email && (
-                              <a
-                                href={`mailto:${lead.contact.email}`}
+                              <button
+                                onClick={() => handleDraftProposalForLead(lead)}
+                                disabled={generatingLeadId === lead.id}
                                 className="p-1.5 rounded-lg text-os-muted hover:bg-blue-500/10 hover:text-blue-600 transition-colors"
-                                title={lead.contact.email}
+                                title="Redigir Proposta IA e Enviar via Gmail"
                               >
-                                <Mail className="h-3.5 w-3.5" />
-                              </a>
+                                {generatingLeadId === lead.id ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin text-os-primary" />
+                                ) : (
+                                  <Mail className="h-3.5 w-3.5" />
+                                )}
+                              </button>
                             )}
                           </div>
                         </td>
                         <td className="px-4 py-3.5 text-right pr-5">
                           <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => handleDraftProposalForLead(lead)}
+                              disabled={generatingLeadId === lead.id}
+                              className="p-1.5 rounded-lg text-os-muted hover:bg-os-primary/10 hover:text-os-primary transition-colors"
+                              title="Gerar Proposta IA (Gemini 3.8 Flash)"
+                            >
+                              {generatingLeadId === lead.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin text-os-primary" />
+                              ) : (
+                                <Sparkles className="h-3.5 w-3.5 text-os-primary" />
+                              )}
+                            </button>
                             <Link
                               href={`/os/crm/${lead.id}`}
                               className="p-1.5 rounded-lg text-os-muted hover:bg-os-bg hover:text-os-primary transition-colors"
@@ -496,6 +576,12 @@ export default function LeadsPage() {
         confirmLabel="Excluir Lead"
         tone="danger"
         isLoading={deleteLead.isPending}
+      />
+
+      <ComposeEmailModal
+        isOpen={!!emailModalData}
+        onClose={() => setEmailModalData(null)}
+        initialData={emailModalData}
       />
     </div>
   );

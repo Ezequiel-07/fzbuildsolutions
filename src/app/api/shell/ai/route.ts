@@ -94,7 +94,7 @@ DIRETRIZES FUNDAMENTAIS:
 `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.8-flash",
       contents: message,
       config: {
         systemInstruction,
@@ -110,10 +110,19 @@ DIRETRIZES FUNDAMENTAIS:
     });
   } catch (error) {
     console.error("[ShellAI_Error]", error);
-    const msg = error instanceof Error ? error.message : "Erro desconhecido";
+    const rawMsg = error instanceof Error ? error.message : "Erro desconhecido";
+    let friendly = `Não foi possível processar a resposta no momento (${rawMsg}).`;
+    if (
+      rawMsg.includes("402") ||
+      rawMsg.includes("prepayment") ||
+      rawMsg.includes("RESOURCE_EXHAUSTED")
+    ) {
+      friendly =
+        "Os créditos da API do Gemini estão esgotados no Google AI Studio (Erro 402). Verifique seu faturamento em https://ai.studio/projects ou configure uma nova GEMINI_API_KEY no .env.local.";
+    }
     return NextResponse.json(
       {
-        text: `Não foi possível processar a resposta no momento (${msg}). Configure ou verifique a chave GEMINI_API_KEY.`,
+        text: friendly,
         isLive: false,
       },
       { status: 500 },

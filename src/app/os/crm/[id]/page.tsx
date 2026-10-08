@@ -34,6 +34,11 @@ import { Button } from "@/components/os/button";
 import { Panel, PanelHeader } from "@/components/os/panel";
 import { StatusBadge } from "@/components/os/status-badge";
 import { ConfirmDialog } from "@/components/os/confirm-dialog";
+import {
+  ComposeEmailModal,
+  type ComposeInitialData,
+} from "@/features/inbox/components/compose-email-modal";
+import { useGenerateAiProposal } from "@/features/inbox/api/use-gmail";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -64,6 +69,7 @@ export default function LeadDetailsPage() {
   const updateLead = useUpdateLead();
   const createProject = useCreateProject();
   const createClient = useCreateClient();
+  const generateProposal = useGenerateAiProposal();
 
   const [activeTab, setActiveTab] = useState<
     "overview" | "timeline" | "proposal"
@@ -71,6 +77,9 @@ export default function LeadDetailsPage() {
   const [newNote, setNewNote] = useState("");
   const [convertModalOpen, setConvertModalOpen] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
+  const [proposalModalData, setProposalModalData] =
+    useState<ComposeInitialData | null>(null);
+  const [isDraftingProposal, setIsDraftingProposal] = useState(false);
 
   const [activities, setActivities] = useState<ActivityLog[]>([
     {
@@ -576,10 +585,84 @@ export default function LeadDetailsPage() {
                   Proposta Comercial FZ-{new Date().getFullYear()}-01
                 </h3>
                 <p className="text-xs text-os-muted mt-0.5">
-                  Versão 1.2 · Proposta estruturada para contratação
+                  Proposta personalizada com inteligência artificial Gemini 3.8
+                  Flash
                 </p>
               </div>
-              <StatusBadge label="Em Análise pelo Cliente" tone="warning" />
+              <div className="flex items-center gap-2">
+                <StatusBadge label="Pronta para Envio" tone="success" />
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={async () => {
+                    if (!lead) return;
+                    setIsDraftingProposal(true);
+                    const toastId = toast.loading(
+                      "Redigindo proposta comercial personalizada com Gemini 3.8 Flash...",
+                    );
+                    try {
+                      const res = await generateProposal.mutateAsync({
+                        companyName: lead.clientName,
+                        contactEmail: lead.contact?.email,
+                        projectOpportunity: lead.projectName,
+                        estimatedBudget: lead.value,
+                        detectedPain: lead.detectedPain,
+                        recommendedPitch: lead.aiPitch,
+                        segment: lead.segment,
+                        cityState: lead.cityState,
+                      });
+                      toast.dismiss(toastId);
+                      toast.success("Proposta comercial pronta para envio!");
+                      setProposalModalData({
+                        to: lead.contact?.email || "",
+                        subject: res.subject,
+                        bodyHtml: res.bodyHtml || res.bodyText,
+                        leadContext: {
+                          companyName: lead.clientName,
+                          contactEmail: lead.contact?.email,
+                          projectOpportunity: lead.projectName,
+                          estimatedBudget: lead.value,
+                          detectedPain: lead.detectedPain,
+                          recommendedPitch: lead.aiPitch,
+                          segment: lead.segment,
+                          cityState: lead.cityState,
+                        },
+                      });
+                    } catch (err) {
+                      console.warn(err);
+                      toast.dismiss(toastId);
+                      toast.info(
+                        "Abrindo proposta para edição manual e envio.",
+                      );
+                      setProposalModalData({
+                        to: lead.contact?.email || "",
+                        subject: `Parceria em Engenharia & Obras: ${lead.clientName}`,
+                        bodyHtml: `<p>Olá equipe da <strong>${lead.clientName}</strong>,</p><p>Gostaríamos de apresentar nossa proposta para o projeto <em>${lead.projectName}</em>.</p><p>Atenciosamente,<br/><strong>Ezequiel Ferreira</strong><br/>FZ Build Solutions</p>`,
+                        leadContext: {
+                          companyName: lead.clientName,
+                          contactEmail: lead.contact?.email,
+                          projectOpportunity: lead.projectName,
+                          estimatedBudget: lead.value,
+                        },
+                      });
+                    } finally {
+                      setIsDraftingProposal(false);
+                    }
+                  }}
+                  disabled={isDraftingProposal}
+                  leadingIcon={
+                    isDraftingProposal ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-4 w-4" />
+                    )
+                  }
+                >
+                  {isDraftingProposal
+                    ? "Redigindo..."
+                    : "Redigir Proposta IA & Enviar via Gmail"}
+                </Button>
+              </div>
             </div>
 
             <div className="p-5 rounded-xl bg-os-bg border border-os-border grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -593,18 +676,18 @@ export default function LeadDetailsPage() {
               </div>
               <div>
                 <p className="text-xs text-os-muted font-medium">
-                  Condição de Pagamento
+                  Destinatário Comercial
                 </p>
-                <p className="text-sm font-semibold text-os-text mt-0.5">
-                  30% Entrada + 3x Mensais
+                <p className="text-sm font-semibold text-os-text mt-0.5 truncate">
+                  {lead.contact?.email || "Sem e-mail cadastrado"}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-os-muted font-medium">
-                  Prazo Estimado
+                  Escopo Previsto
                 </p>
-                <p className="text-sm font-semibold text-os-text mt-0.5">
-                  90 dias úteis
+                <p className="text-sm font-semibold text-os-text mt-0.5 truncate">
+                  {lead.projectName || "Desenvolvimento e Engenharia"}
                 </p>
               </div>
             </div>
@@ -622,6 +705,13 @@ export default function LeadDetailsPage() {
         confirmLabel="Confirmar e Iniciar Projeto"
         cancelLabel="Cancelar"
         isLoading={isConverting}
+      />
+
+      {/* COMPOSE & PROPOSAL MODAL */}
+      <ComposeEmailModal
+        isOpen={!!proposalModalData}
+        onClose={() => setProposalModalData(null)}
+        initialData={proposalModalData}
       />
     </div>
   );

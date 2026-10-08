@@ -55,7 +55,7 @@ REQUISITOS:
 `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.8-flash",
       contents: prompt,
     });
 
@@ -69,15 +69,27 @@ REQUISITOS:
     const parsed = JSON.parse(jsonStr.trim());
 
     return NextResponse.json({
-      subject: parsed.subject,
-      bodyHtml: parsed.bodyHtml,
-      bodyText: parsed.bodyText,
+      subject: parsed.subject || `Parceria em Engenharia & Obras: ${company}`,
+      bodyHtml: parsed.bodyHtml || "",
+      bodyText: parsed.bodyText || "",
       isAiLive: true,
     });
   } catch (error) {
+    const rawMsg = error instanceof Error ? error.message : "Erro desconhecido";
     console.error("[CRM_AI_PROPOSAL_ERROR]", error);
+
+    let friendlyError = "Falha ao gerar proposta comercial com IA.";
+    if (
+      rawMsg.includes("402") ||
+      rawMsg.includes("prepayment") ||
+      rawMsg.includes("RESOURCE_EXHAUSTED")
+    ) {
+      friendlyError =
+        "Créditos do Gemini esgotados no Google AI Studio (Erro 402). Verifique faturamento em https://ai.studio/projects.";
+    }
+
     return NextResponse.json(
-      { error: "Erro ao gerar proposta com IA." },
+      { error: friendlyError, rawError: rawMsg },
       { status: 500 },
     );
   }

@@ -65,7 +65,7 @@ export async function discoverLeadsWithGemini(
 
   try {
     const ai = new GoogleGenAI({ apiKey });
-    const modelName = "gemini-2.5-flash"; // Fast, multimodal and search-grounded model
+    const modelName = "gemini-3.8-flash"; // Current balanced model for high speed and grounding
 
     const prompt = `
 Você é o Agente Especialista Autônomo de Inteligência Comercial e Prospecção B2B da "FZ Build Solutions", empresa especializada em engenharia civil, reformas corporativas, instalações de alto padrão e soluções tecnológicas para construção e facilities.
@@ -111,8 +111,19 @@ Estrutura de cada objeto no array JSON:
         },
       });
       responseText = response.text || "";
-    } catch {
-      // Fallback to call without search tool if search tool is not supported in the region or quota
+    } catch (searchErr) {
+      // If error is quota or billing related, don't retry, rethrow immediately
+      const errMsg =
+        searchErr instanceof Error ? searchErr.message : String(searchErr);
+      if (
+        errMsg.includes("402") ||
+        errMsg.includes("RESOURCE_EXHAUSTED") ||
+        errMsg.includes("prepayment")
+      ) {
+        throw searchErr;
+      }
+
+      // Fallback to call without search tool if search tool is not supported in the region or context
       const basicResponse = await ai.models.generateContent({
         model: modelName,
         contents: prompt,
@@ -156,26 +167,46 @@ Estrutura de cada objeto no array JSON:
       return {
         leads,
         isLiveAi: true,
-        provider: "Google Gemini AI (Grounding)",
+        provider: "Google Gemini 3.8 Flash (Grounding)",
         model: modelName,
         searchSummary: `Varredura concluída com sucesso via Gemini Live Grounding para "${params.niche}" em "${params.location}".`,
       };
     }
 
-    throw new Error("Formato de resposta inesperado do modelo Gemini.");
+    return {
+      leads: [],
+      isLiveAi: true,
+      provider: "Google Gemini 3.8 Flash",
+      model: modelName,
+      searchSummary: `Nenhuma oportunidade correspondente encontrada para os critérios especificados.`,
+    };
   } catch (error) {
-    const errorMsg =
+    const rawMsg =
       error instanceof Error
         ? error.message
         : "Erro desconhecido ao consultar a API do Gemini.";
     console.error("[GeminiProspector] Erro na chamada com o Gemini:", error);
+
+    let friendlyError = rawMsg;
+    if (
+      rawMsg.includes("402") ||
+      rawMsg.includes("prepayment") ||
+      rawMsg.includes("RESOURCE_EXHAUSTED")
+    ) {
+      friendlyError =
+        "Os créditos da API do Gemini estão esgotados no Google AI Studio (Erro 402 / Prepayment). Para habilitar a busca de leads reais em tempo real, gerencie os créditos em https://ai.studio/projects ou configure uma nova GEMINI_API_KEY no .env.local. Nenhum dado simulado ou fake é gerado.";
+    } else if (rawMsg.includes("404") || rawMsg.includes("NOT_FOUND")) {
+      friendlyError =
+        "Modelo de IA não encontrado ou indisponível. O sistema foi atualizado para gemini-3.8-flash. Verifique sua chave de API.";
+    }
+
     return {
       leads: [],
       isLiveAi: false,
       provider: "Google Gemini AI",
-      model: "gemini-2.5-flash",
-      searchSummary: `Falha na consulta ao Gemini: ${errorMsg}`,
-      error: `Não foi possível carregar oportunidades reais no momento (${errorMsg}). Nenhum dado simulado ou fake é exibido.`,
+      model: "gemini-3.8-flash",
+      searchSummary: `Varredura não retornou dados reais: ${friendlyError}`,
+      error: friendlyError,
     };
   }
 }

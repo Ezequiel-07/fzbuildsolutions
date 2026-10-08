@@ -14,7 +14,7 @@ export class AIService {
       throw new Error("Chave GEMINI_API_KEY não configurada no servidor.");
     }
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.8-flash",
       contents: promptText || `Execute a ação do workflow: ${actionId}`,
     });
     return { status: "success", generatedText: response.text || "" };
@@ -26,7 +26,7 @@ export class AIService {
       return { insights: [] };
     }
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.8-flash",
       contents: `Gere 3 insights operacionais concisos e objetivos para o sistema FZ Build com base nos dados reais a seguir: ${contextData || "Operações regulares em andamento."}`,
     });
     const text = response.text || "";
