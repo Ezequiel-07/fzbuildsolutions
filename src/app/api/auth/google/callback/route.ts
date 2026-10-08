@@ -34,12 +34,22 @@ export async function GET(req: Request) {
 
   // Compute detected fallback redirect URI from current request
   const host = req.headers.get("x-forwarded-host") || url.host;
-  const proto =
-    req.headers.get("x-forwarded-proto") ||
-    (host.includes("localhost") || host.includes("127.0.0.1")
-      ? "http"
-      : "https");
-  const detectedRedirectUri = `${proto}://${host}/api/auth/google/callback`;
+  const isLocal = host.includes("localhost") || host.includes("127.0.0.1");
+  const proto = isLocal ? "http" : "https";
+  let detectedRedirectUri = `${proto}://${host}/api/auth/google/callback`;
+  if (!isLocal && !detectedRedirectUri.startsWith("https://")) {
+    detectedRedirectUri = `https://${host}/api/auth/google/callback`;
+  }
+
+  // Ensure stateRedirectUri also strictly enforces https if public domain
+  if (
+    stateRedirectUri &&
+    !stateRedirectUri.includes("localhost") &&
+    !stateRedirectUri.includes("127.0.0.1") &&
+    stateRedirectUri.startsWith("http://")
+  ) {
+    stateRedirectUri = stateRedirectUri.replace(/^http:\/\//, "https://");
+  }
 
   const finalRedirectUri = stateRedirectUri || detectedRedirectUri;
 

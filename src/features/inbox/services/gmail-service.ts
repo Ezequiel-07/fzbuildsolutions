@@ -53,7 +53,14 @@ export function getOAuthClient(customRedirectUri?: string) {
   if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
     return null;
   }
-  const redirectUri = customRedirectUri || GOOGLE_REDIRECT_URI;
+  let redirectUri = customRedirectUri || GOOGLE_REDIRECT_URI;
+  if (
+    !redirectUri.includes("localhost") &&
+    !redirectUri.includes("127.0.0.1") &&
+    redirectUri.startsWith("http://")
+  ) {
+    redirectUri = redirectUri.replace(/^http:\/\//, "https://");
+  }
 
   return new google.auth.OAuth2(
     GOOGLE_CLIENT_ID,

@@ -11,23 +11,15 @@ export async function GET(req: Request) {
         : "/os/finance/transactions");
 
     // Dynamic redirect URI:
-    // If accessing on localhost or 127.0.0.1, always redirect to local callback
-    // If accessing on production domain, use proper https and host
+    // If accessing on localhost or 127.0.0.1, use http
+    // For all public production domains (e.g. fzbuild.solutions), MUST always use https
     const host = req.headers.get("x-forwarded-host") || reqUrl.host;
-    const proto =
-      req.headers.get("x-forwarded-proto") ||
-      (host.includes("localhost") || host.includes("127.0.0.1")
-        ? "http"
-        : "https");
+    const isLocal = host.includes("localhost") || host.includes("127.0.0.1");
+    const proto = isLocal ? "http" : "https";
 
     let dynamicRedirectUri = `${proto}://${host}/api/auth/google/callback`;
-    if (
-      !host.includes("localhost") &&
-      !host.includes("127.0.0.1") &&
-      process.env.GOOGLE_REDIRECT_URI &&
-      process.env.GOOGLE_REDIRECT_URI.startsWith("http")
-    ) {
-      dynamicRedirectUri = process.env.GOOGLE_REDIRECT_URI;
+    if (!isLocal && !dynamicRedirectUri.startsWith("https://")) {
+      dynamicRedirectUri = `https://${host}/api/auth/google/callback`;
     }
 
     const url = generateGoogleAuthUrl(returnUrl, dynamicRedirectUri);
