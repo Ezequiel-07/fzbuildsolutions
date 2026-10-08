@@ -178,6 +178,24 @@ function NavBar() {
               >
                 <span className="relative z-10">Falar com a FZ</span>
               </Link>
+
+              <div className="flex items-center gap-3 text-xs text-white/50 pt-4 mt-auto">
+                <Link
+                  href="/privacidade"
+                  onClick={closeMenu}
+                  className="hover:text-white transition-colors"
+                >
+                  Privacidade
+                </Link>
+                <span>·</span>
+                <Link
+                  href="/termos"
+                  onClick={closeMenu}
+                  className="hover:text-white transition-colors"
+                >
+                  Termos de Uso
+                </Link>
+              </div>
             </div>
           </motion.div>
         )}
@@ -1275,26 +1293,39 @@ function CTASection() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7 }}
-          className="w-full flex flex-col sm:flex-row justify-between items-center border-t border-white/5 pt-4 mt-2 fz-body text-[10px] opacity-40 gap-2"
+          className="w-full flex flex-col md:flex-row justify-between items-center border-t border-white/10 pt-4 mt-3 fz-body text-[11px] text-white/50 gap-3"
         >
-          <span className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <Image
               src="/fzbuildsemfundo.png"
-              alt=""
+              alt="FZ Build Solutions"
               width={20}
               height={20}
-              className="h-5 w-auto fz-logo-img"
+              className="h-5 w-auto fz-logo-img brightness-0 invert opacity-75"
             />
             <span>
               © 2026 FZ Build Solutions LTDA. Todos os direitos reservados.
             </span>
-          </span>
-          <div className="flex items-center gap-3">
-            <span>Tubarão/SC</span>
-            <span>·</span>
-            <span>São Paulo/SP</span>
-            <span>·</span>
-            <span className="font-mono">CNPJ: 67.700.723/0001-74</span>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-4 text-[11px]">
+            <Link
+              href="/privacidade"
+              className="text-white/60 hover:text-white transition-colors underline decoration-white/20 underline-offset-4"
+            >
+              Privacidade de Dados
+            </Link>
+            <span className="opacity-30">·</span>
+            <Link
+              href="/termos"
+              className="text-white/60 hover:text-white transition-colors underline decoration-white/20 underline-offset-4"
+            >
+              Termos de Uso
+            </Link>
+            <span className="opacity-30">·</span>
+            <span className="font-mono text-white/40">
+              CNPJ: 67.700.723/0001-74
+            </span>
           </div>
         </motion.div>
       </div>

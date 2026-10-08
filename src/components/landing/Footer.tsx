@@ -11,8 +11,9 @@ const NAV_LINKS = [
 ];
 
 const INSTITUTIONAL = [
-  { href: "mailto:contato@fzbuild.solutions", label: "Contato" },
-  { href: "#", label: "Privacidade" },
+  { href: "mailto:fzbuild.solutions@gmail.com", label: "Contato" },
+  { href: "/privacidade", label: "Privacidade de Dados" },
+  { href: "/termos", label: "Termos de Uso" },
 ];
 
 const SOCIAL = [
@@ -110,11 +111,22 @@ export function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-white/25 text-xs">
-          <span>
-            © {year} FZ Build Solutions. Todos os direitos reservados.
-          </span>
-          <div className="flex items-center gap-4 font-mono">
+        <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-white/40 text-xs">
+          <div className="flex flex-wrap items-center gap-3">
+            <span>© {year} FZ Build Solutions LTDA.</span>
+            <span className="hidden sm:inline text-white/20">|</span>
+            <Link
+              href="/privacidade"
+              className="hover:text-white transition-colors"
+            >
+              Privacidade de Dados
+            </Link>
+            <span className="text-white/20">·</span>
+            <Link href="/termos" className="hover:text-white transition-colors">
+              Termos de Uso
+            </Link>
+          </div>
+          <div className="flex items-center gap-4 font-mono text-white/30 text-[11px]">
             <span>Brasil</span>
             <span className="w-1 h-1 rounded-full bg-white/20" />
             <span>Intelligent Ecosystems</span>
