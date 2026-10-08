@@ -20,7 +20,7 @@ import {
   CheckSquare,
   Square,
   X,
-  FileSpreadsheet,
+  Landmark,
 } from "lucide-react";
 import {
   useTransactions,
@@ -245,12 +245,10 @@ export default function TransactionsPage() {
             <Button
               variant="secondary"
               size="sm"
-              leadingIcon={
-                <FileSpreadsheet className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              }
+              leadingIcon={<Landmark className="h-4 w-4 text-[#0066ff]" />}
               onClick={() => setIsImportModalOpen(true)}
             >
-              Importar Planilha
+              Conciliar Extrato / Planilha
             </Button>
             <Button
               variant="secondary"

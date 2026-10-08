@@ -24,6 +24,9 @@ export interface Transaction {
   type: "in" | "out";
   projectId?: string;
   createdAt?: { seconds: number; nanoseconds: number };
+  fitid?: string;
+  bank?: string;
+  origin?: "manual" | "google_sheets" | "ofx";
 }
 
 export function useTransactions() {

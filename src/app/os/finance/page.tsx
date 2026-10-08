@@ -10,7 +10,7 @@ import {
   BarChart3,
   FileText,
   Calendar,
-  FileSpreadsheet,
+  Landmark,
 } from "lucide-react";
 import { useTransactions } from "@/features/finance/api/use-transactions";
 import { ImportSpreadsheetModal } from "@/features/finance/components/import-spreadsheet-modal";
@@ -149,12 +149,10 @@ export default function FinancePage() {
             <Button
               variant="secondary"
               size="sm"
-              leadingIcon={
-                <FileSpreadsheet className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              }
+              leadingIcon={<Landmark className="h-4 w-4 text-[#0066ff]" />}
               onClick={() => setIsImportModalOpen(true)}
             >
-              Importar Planilha
+              Conciliar Extrato / Planilha
             </Button>
             <Link href="/os/finance/transactions">
               <Button

@@ -15,15 +15,25 @@ import {
   ArrowLeft,
   Layers,
   Sparkles,
+  Landmark,
+  ShieldCheck,
+  CheckSquare,
+  Square,
 } from "lucide-react";
 import {
   useGoogleSpreadsheets,
   useReadSheetMutation,
 } from "../api/use-google-sheets";
 import {
+  useTransactions,
   useBatchCreateTransactions,
   CreateTransactionInput,
 } from "../api/use-transactions";
+import {
+  parseOfxString,
+  OfxParseResult,
+  OfxTransaction,
+} from "../services/ofx-parser-service";
 import { Button } from "@/components/os/button";
 import { StatusBadge } from "@/components/os/status-badge";
 import { toast } from "sonner";
@@ -33,7 +43,7 @@ interface ImportSpreadsheetModalProps {
   onClose: () => void;
 }
 
-type ImportSource = "drive" | "url" | "file";
+type ImportSource = "ofx" | "drive" | "url" | "file";
 type Step = "source" | "mapping" | "preview";
 
 const DEFAULT_CATEGORIES = [
@@ -56,14 +66,15 @@ export function ImportSpreadsheetModal({
 }: ImportSpreadsheetModalProps) {
   // Step state
   const [step, setStep] = useState<Step>("source");
-  const [sourceType, setSourceType] = useState<ImportSource>("drive");
+  const [sourceType, setSourceType] = useState<ImportSource>("ofx");
 
   // Source inputs
   const [urlInput, setUrlInput] = useState("");
   const [driveSearch, setDriveSearch] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedOfxFile, setSelectedOfxFile] = useState<File | null>(null);
 
-  // Loaded sheet data
+  // Loaded sheet data (CSV / Google Sheets)
   const [sheetData, setSheetData] = useState<{
     title: string;
     activeSheet: string;
@@ -72,7 +83,11 @@ export function ImportSpreadsheetModal({
     spreadsheetId?: string;
   } | null>(null);
 
-  // Mapping state
+  // Loaded OFX data
+  const [ofxData, setOfxData] = useState<OfxParseResult | null>(null);
+  const [ofxItems, setOfxItems] = useState<OfxTransaction[]>([]);
+
+  // Mapping state (para planilhas)
   const [hasHeader, setHasHeader] = useState(true);
   const [colDescription, setColDescription] = useState<number>(-1);
   const [colAmount, setColAmount] = useState<number>(-1);
@@ -85,6 +100,7 @@ export function ImportSpreadsheetModal({
   const [colDate, setColDate] = useState<number>(-1);
 
   // Hooks
+  const { data: existingTransactions = [] } = useTransactions();
   const {
     data: driveStatus,
     isLoading: isDriveLoading,
@@ -93,19 +109,25 @@ export function ImportSpreadsheetModal({
   const readSheet = useReadSheetMutation();
   const batchCreate = useBatchCreateTransactions();
 
+  // Conjunto de FITIDs já cadastrados no banco para evitar duplicidade na conciliação
+  const existingFitids = useMemo(() => {
+    return new Set(existingTransactions.map((t) => t.fitid).filter(Boolean));
+  }, [existingTransactions]);
+
   // Reset when opened
   useEffect(() => {
     if (isOpen) {
       setStep("source");
-      if (driveStatus?.connected) {
-        setSourceType("drive");
-      } else {
-        setSourceType("url");
-      }
+      setSourceType("ofx");
+      setSheetData(null);
+      setOfxData(null);
+      setOfxItems([]);
+      setSelectedOfxFile(null);
+      setSelectedFile(null);
     }
-  }, [isOpen, driveStatus?.connected]);
+  }, [isOpen]);
 
-  // Headers list based on first row
+  // Headers list based on first row (para planilhas)
   const headers = useMemo(() => {
     if (!sheetData || sheetData.rows.length === 0) return [];
     return sheetData.rows[0].map((cell, idx) => ({
@@ -114,7 +136,7 @@ export function ImportSpreadsheetModal({
     }));
   }, [sheetData]);
 
-  // Intelligent auto-detection of column mapping
+  // Intelligent auto-detection of column mapping para planilhas
   useEffect(() => {
     if (!sheetData || sheetData.rows.length === 0) return;
     const headerRow = sheetData.rows[0].map((c) =>
@@ -185,7 +207,7 @@ export function ImportSpreadsheetModal({
     if (dateIdx !== -1) setColDate(dateIdx);
   }, [sheetData]);
 
-  // Parse helper functions
+  // Parse helper functions para planilhas
   const parseCurrency = (
     val: string,
   ): { amount: number; isNegative: boolean } => {
@@ -196,14 +218,11 @@ export function ImportSpreadsheetModal({
       clean.endsWith("-") ||
       (clean.startsWith("(") && clean.endsWith(")"));
 
-    // Remove moedas e caracteres não numéricos exceto separadores
     let numStr = clean.replace(/[R$\s()]/g, "").replace("-", "");
 
-    // Se tiver vírgula e ponto (ex: 1.500,50), remove ponto de milhar e troca vírgula por ponto
     if (numStr.includes(",") && numStr.includes(".")) {
       numStr = numStr.replace(/\./g, "").replace(",", ".");
     } else if (numStr.includes(",")) {
-      // Formato brasileiro só com vírgula: 1500,50
       numStr = numStr.replace(",", ".");
     }
 
@@ -218,7 +237,6 @@ export function ImportSpreadsheetModal({
     if (!val) return undefined;
     const clean = val.trim();
 
-    // Formato DD/MM/YYYY
     const dmy = clean.match(/^(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})$/);
     if (dmy) {
       const day = dmy[1].padStart(2, "0");
@@ -228,7 +246,6 @@ export function ImportSpreadsheetModal({
       return `${year}-${month}-${day}T12:00:00.000Z`;
     }
 
-    // Formato YYYY-MM-DD
     const ymd = clean.match(/^(\d{4})[\/\.-](\d{1,2})[\/\.-](\d{1,2})$/);
     if (ymd) {
       const year = ymd[1];
@@ -240,8 +257,8 @@ export function ImportSpreadsheetModal({
     return undefined;
   };
 
-  // Process rows into parsed transactions
-  const parsedTransactions = useMemo(() => {
+  // Process rows into parsed transactions (para planilhas normais)
+  const parsedSheetTransactions = useMemo(() => {
     if (!sheetData || sheetData.rows.length === 0) return [];
     const dataRows = hasHeader ? sheetData.rows.slice(1) : sheetData.rows;
 
@@ -250,7 +267,6 @@ export function ImportSpreadsheetModal({
     > = [];
 
     dataRows.forEach((row, idx) => {
-      // Ignorar linhas completamente vazias
       if (!row || row.every((c) => !c || c.trim() === "")) return;
 
       const desc =
@@ -262,7 +278,6 @@ export function ImportSpreadsheetModal({
         colAmount >= 0 && row[colAmount] ? row[colAmount].trim() : "0";
       const { amount, isNegative } = parseCurrency(rawAmount);
 
-      // Determinar Tipo
       let type: "in" | "out" = "out";
       if (typeMode === "in") {
         type = "in";
@@ -284,17 +299,14 @@ export function ImportSpreadsheetModal({
           type = "out";
         }
       } else {
-        // Auto: negativo é out, positivo é in
         type = isNegative ? "out" : "in";
       }
 
-      // Determinar Categoria
       let category = defaultCategory;
       if (colCategory >= 0 && row[colCategory] && row[colCategory].trim()) {
         category = row[colCategory].trim();
       }
 
-      // Determinar Data
       const rawDate = colDate >= 0 ? row[colDate] : undefined;
       const customDate = parseDateString(rawDate);
 
@@ -306,6 +318,7 @@ export function ImportSpreadsheetModal({
         customDate,
         rawRowIndex: idx + 1,
         isValid: amount > 0 && desc.length > 0,
+        origin: "google_sheets",
       });
     });
 
@@ -324,23 +337,91 @@ export function ImportSpreadsheetModal({
 
   // Totals in preview
   const totals = useMemo(() => {
-    const validOnes = parsedTransactions.filter((t) => t.isValid);
+    if (ofxData) {
+      const selectedOnes = ofxItems.filter((t) => t.selected);
+      const totalIn = selectedOnes
+        .filter((t) => t.type === "in")
+        .reduce((acc, t) => acc + t.amount, 0);
+      const totalOut = selectedOnes
+        .filter((t) => t.type === "out")
+        .reduce((acc, t) => acc + t.amount, 0);
+      const alreadyCount = ofxItems.filter((t) => t.alreadyImported).length;
+
+      return {
+        count: selectedOnes.length,
+        totalCount: ofxItems.length,
+        invalidCount: 0,
+        alreadyImportedCount: alreadyCount,
+        totalIn,
+        totalOut,
+        balance: totalIn - totalOut,
+      };
+    }
+
+    const validOnes = parsedSheetTransactions.filter((t) => t.isValid);
     const totalIn = validOnes
       .filter((t) => t.type === "in")
       .reduce((acc, t) => acc + t.amount, 0);
     const totalOut = validOnes
       .filter((t) => t.type === "out")
       .reduce((acc, t) => acc + t.amount, 0);
+
     return {
       count: validOnes.length,
-      invalidCount: parsedTransactions.length - validOnes.length,
+      totalCount: parsedSheetTransactions.length,
+      invalidCount: parsedSheetTransactions.length - validOnes.length,
+      alreadyImportedCount: 0,
       totalIn,
       totalOut,
       balance: totalIn - totalOut,
     };
-  }, [parsedTransactions]);
+  }, [ofxData, ofxItems, parsedSheetTransactions]);
 
-  // Actions
+  // Processamento de OFX (C6 Bank e outros)
+  const handleProcessOfx = async (file: File) => {
+    try {
+      const text = await file.text();
+      const parsed = parseOfxString(text);
+
+      if (parsed.transactions.length === 0) {
+        toast.error("Nenhuma transação financeira encontrada no arquivo OFX.");
+        return;
+      }
+
+      // Identificar transações que já foram importadas antes
+      const itemsWithMatch = parsed.transactions.map((t) => {
+        const isDuplicated = existingFitids.has(t.fitid);
+        return {
+          ...t,
+          alreadyImported: isDuplicated,
+          selected: !isDuplicated, // desmarcado por padrão se já conciliado
+        };
+      });
+
+      setOfxData(parsed);
+      setOfxItems(itemsWithMatch);
+      setSheetData(null); // limpa modo planilha
+      setStep("preview"); // OFX pula o mapeamento de colunas pois já vem padronizado!
+
+      const dupCount = itemsWithMatch.filter((t) => t.alreadyImported).length;
+      if (dupCount > 0) {
+        toast.info(
+          `Extrato do ${parsed.bankName} lido com sucesso! ${dupCount} transação(ões) já conciliada(s) foram desmarcadas.`,
+        );
+      } else {
+        toast.success(
+          `Extrato do ${parsed.bankName} lido: ${itemsWithMatch.length} movimentações prontas para conciliação!`,
+        );
+      }
+    } catch (err: unknown) {
+      console.error("[OFX_PARSE_ERROR]", err);
+      const msg =
+        err instanceof Error ? err.message : "Erro ao processar arquivo OFX";
+      toast.error(msg);
+    }
+  };
+
+  // Actions de Planilhas
   const handleLoadFromDrive = async (fileId: string) => {
     try {
       const res = await readSheet.mutateAsync({ spreadsheetId: fileId });
@@ -348,6 +429,7 @@ export function ImportSpreadsheetModal({
         ...res.data,
         spreadsheetId: fileId,
       });
+      setOfxData(null);
       setStep("mapping");
       toast.success(`Planilha "${res.data.title}" carregada com sucesso!`);
     } catch (err: unknown) {
@@ -367,6 +449,7 @@ export function ImportSpreadsheetModal({
       setSheetData({
         ...res.data,
       });
+      setOfxData(null);
       setStep("mapping");
       toast.success(`Planilha "${res.data.title}" carregada com sucesso!`);
     } catch (err: unknown) {
@@ -388,6 +471,7 @@ export function ImportSpreadsheetModal({
         ...res.data,
         title: selectedFile.name,
       });
+      setOfxData(null);
       setStep("mapping");
       toast.success(`Arquivo "${selectedFile.name}" carregado!`);
     } catch (err: unknown) {
@@ -415,8 +499,68 @@ export function ImportSpreadsheetModal({
     }
   };
 
+  // Toggle seleção individual no OFX
+  const handleToggleOfxSelect = (index: number) => {
+    setOfxItems((prev) =>
+      prev.map((item, idx) =>
+        idx === index ? { ...item, selected: !item.selected } : item,
+      ),
+    );
+  };
+
+  // Toggle selecionar todos no OFX
+  const handleToggleAllOfx = () => {
+    const allSelected = ofxItems.every((item) => item.selected);
+    setOfxItems((prev) =>
+      prev.map((item) => ({ ...item, selected: !allSelected })),
+    );
+  };
+
+  // Troca de categoria de uma linha no OFX
+  const handleUpdateOfxCategory = (index: number, newCategory: string) => {
+    setOfxItems((prev) =>
+      prev.map((item, idx) =>
+        idx === index ? { ...item, category: newCategory } : item,
+      ),
+    );
+  };
+
+  // Confirmação final da importação
   const handleConfirmImport = async () => {
-    const validItems: CreateTransactionInput[] = parsedTransactions
+    // 1. Caso OFX
+    if (ofxData) {
+      const selectedItems = ofxItems.filter((t) => t.selected);
+      if (selectedItems.length === 0) {
+        toast.error("Selecione ao menos uma transação para importar.");
+        return;
+      }
+
+      const toCreate: CreateTransactionInput[] = selectedItems.map((t) => ({
+        description: t.memo,
+        amount: t.amount,
+        type: t.type,
+        category: t.category,
+        customDate: t.date,
+        fitid: t.fitid,
+        bank: ofxData.bankName,
+        origin: "ofx",
+      }));
+
+      try {
+        const res = await batchCreate.mutateAsync(toCreate);
+        toast.success(
+          `${res.totalCreated} lançamentos do ${ofxData.bankName} conciliados e importados!`,
+        );
+        onClose();
+      } catch (err: unknown) {
+        console.error("[OFX_IMPORT_ERROR]", err);
+        toast.error("Erro ao salvar lançamentos bancários.");
+      }
+      return;
+    }
+
+    // 2. Caso Planilha (CSV / Sheets)
+    const validItems: CreateTransactionInput[] = parsedSheetTransactions
       .filter((t) => t.isValid)
       .map((t) => ({
         description: t.description,
@@ -424,6 +568,7 @@ export function ImportSpreadsheetModal({
         type: t.type,
         category: t.category,
         customDate: t.customDate,
+        origin: "google_sheets",
       }));
 
     if (validItems.length === 0) {
@@ -474,18 +619,26 @@ export function ImportSpreadsheetModal({
           <div className="px-6 py-5 border-b border-slate-100 dark:border-white/10 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-white/[0.02]">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20">
-                <FileSpreadsheet className="w-5 h-5" />
+                {ofxData ? (
+                  <Landmark className="w-5 h-5 text-[#0066ff]" />
+                ) : (
+                  <FileSpreadsheet className="w-5 h-5" />
+                )}
               </div>
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <span>Importar Planilha Financeira</span>
-                  <StatusBadge size="sm" tone="info">
-                    Google Sheets & Drive
+                  <span>
+                    {ofxData
+                      ? `Conciliação Bancária · ${ofxData.bankName}`
+                      : "Importar Planilha & Extrato Financeiro"}
+                  </span>
+                  <StatusBadge size="sm" tone={ofxData ? "accent" : "info"}>
+                    {ofxData ? "Extrato OFX" : "Google Sheets & Drive"}
                   </StatusBadge>
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Importe receitas e despesas diretamente de planilhas na nuvem
-                  ou arquivos locais
+                  Conciliação automática via extrato bancário C6 / OFX ou
+                  planilhas do Google Drive
                 </p>
               </div>
             </div>
@@ -517,29 +670,34 @@ export function ImportSpreadsheetModal({
                     : ""
                 }
               >
-                Origem da Planilha
+                Origem do Arquivo
               </span>
               <span className="opacity-40">→</span>
 
-              <span
-                className={`font-semibold px-2 py-0.5 rounded-full ${
-                  step === "mapping"
-                    ? "bg-[#003d9b] text-white"
-                    : "bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-300"
-                }`}
-              >
-                2
-              </span>
-              <span
-                className={
-                  step === "mapping"
-                    ? "font-bold text-slate-900 dark:text-white"
-                    : ""
-                }
-              >
-                Mapeamento de Colunas
-              </span>
-              <span className="opacity-40">→</span>
+              {/* Se for OFX, pula passo 2 */}
+              {!ofxData && (
+                <>
+                  <span
+                    className={`font-semibold px-2 py-0.5 rounded-full ${
+                      step === "mapping"
+                        ? "bg-[#003d9b] text-white"
+                        : "bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-300"
+                    }`}
+                  >
+                    2
+                  </span>
+                  <span
+                    className={
+                      step === "mapping"
+                        ? "font-bold text-slate-900 dark:text-white"
+                        : ""
+                    }
+                  >
+                    Mapeamento
+                  </span>
+                  <span className="opacity-40">→</span>
+                </>
+              )}
 
               <span
                 className={`font-semibold px-2 py-0.5 rounded-full ${
@@ -548,7 +706,7 @@ export function ImportSpreadsheetModal({
                     : "bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-300"
                 }`}
               >
-                3
+                {ofxData ? 2 : 3}
               </span>
               <span
                 className={
@@ -557,15 +715,25 @@ export function ImportSpreadsheetModal({
                     : ""
                 }
               >
-                Prévia & Confirmação
+                {ofxData ? "Conciliação & Prévia" : "Prévia & Confirmação"}
               </span>
             </div>
 
-            {sheetData && (
+            {ofxData ? (
+              <span className="text-[11px] font-mono text-[#0066ff] flex items-center gap-1">
+                <Landmark className="w-3.5 h-3.5" />
+                <span>{ofxData.bankName}</span>
+                {ofxData.startDate && (
+                  <span>
+                    ({ofxData.startDate} a {ofxData.endDate})
+                  </span>
+                )}
+              </span>
+            ) : sheetData ? (
               <span className="text-[11px] font-mono text-[#0066ff] truncate max-w-[220px]">
                 {sheetData.title}
               </span>
-            )}
+            ) : null}
           </div>
 
           {/* Content Body */}
@@ -574,7 +742,18 @@ export function ImportSpreadsheetModal({
             {step === "source" && (
               <div className="space-y-6">
                 {/* Source Selection Tabs */}
-                <div className="grid grid-cols-3 gap-3 p-1 rounded-2xl bg-slate-100 dark:bg-white/5 border border-slate-200/60 dark:border-white/10">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-1 rounded-2xl bg-slate-100 dark:bg-white/5 border border-slate-200/60 dark:border-white/10">
+                  <button
+                    onClick={() => setSourceType("ofx")}
+                    className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all ${
+                      sourceType === "ofx"
+                        ? "bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm border border-slate-200 dark:border-white/10"
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                    }`}
+                  >
+                    <Landmark className="w-4 h-4 text-[#0066ff]" />
+                    <span>Extrato C6 / OFX</span>
+                  </button>
                   <button
                     onClick={() => setSourceType("drive")}
                     className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all ${
@@ -609,6 +788,85 @@ export function ImportSpreadsheetModal({
                     <span>Arquivo CSV</span>
                   </button>
                 </div>
+
+                {/* TAB: EXTRATO BANCÁRIO OFX (C6 BANK & BANCOS) */}
+                {sourceType === "ofx" && (
+                  <div className="space-y-4">
+                    <div className="p-4 rounded-2xl bg-gradient-to-r from-[#0066ff]/10 via-[#0066ff]/5 to-transparent border border-[#0066ff]/20 flex items-start gap-3.5">
+                      <div className="w-9 h-9 rounded-xl bg-[#0066ff]/10 text-[#0066ff] flex items-center justify-center shrink-0 mt-0.5">
+                        <Landmark className="w-5 h-5" />
+                      </div>
+                      <div className="text-xs space-y-1">
+                        <span className="font-bold text-slate-900 dark:text-white block">
+                          Conciliação Automática de Extrato Bancário (.OFX)
+                        </span>
+                        <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
+                          No Web Banking ou App do{" "}
+                          <strong>C6 Bank Empresas (PJ)</strong>, acesse{" "}
+                          <strong>
+                            Conta &gt; Extrato &gt; Exportar Extrato &gt;
+                            Formato OFX
+                          </strong>
+                          . O arquivo traz datas exatas, identificadores únicos
+                          (FITID) e valores de Pix, cartões e transferências.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="border-2 border-dashed border-slate-300 dark:border-white/15 rounded-2xl p-8 text-center space-y-3 hover:border-[#0066ff] transition-colors">
+                      <Landmark className="w-9 h-9 text-[#0066ff] mx-auto opacity-80" />
+                      <div>
+                        <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                          {selectedOfxFile
+                            ? selectedOfxFile.name
+                            : "Arraste ou selecione o arquivo .OFX do C6 Bank"}
+                        </p>
+                        <p className="text-[11px] text-slate-400 mt-1">
+                          Compatível com C6 Bank, Itaú, Nubank, Inter, Bradesco
+                          e Santander
+                        </p>
+                      </div>
+
+                      <input
+                        type="file"
+                        accept=".ofx,.qfx,text/plain"
+                        className="hidden"
+                        id="ofx-file-input"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            const file = e.target.files[0];
+                            setSelectedOfxFile(file);
+                            handleProcessOfx(file);
+                          }
+                        }}
+                      />
+
+                      <label
+                        htmlFor="ofx-file-input"
+                        className="inline-block px-5 py-2.5 rounded-xl bg-[#0066ff] hover:bg-[#0052cc] text-white text-xs font-bold cursor-pointer transition-colors shadow-sm"
+                      >
+                        {selectedOfxFile
+                          ? "Trocar Arquivo OFX"
+                          : "Selecionar Extrato .OFX"}
+                      </label>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-[11px] text-slate-500 dark:text-slate-400">
+                      <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                        <span>Prevenção de duplicidade (FITID)</span>
+                      </div>
+                      <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/5">
+                        <Sparkles className="w-3.5 h-3.5 text-[#0066ff] shrink-0" />
+                        <span>Sugestão inteligente de categorias</span>
+                      </div>
+                      <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/5">
+                        <ShieldCheck className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+                        <span>Processamento local seguro</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* TAB: GOOGLE DRIVE */}
                 {sourceType === "drive" && (
@@ -732,12 +990,6 @@ export function ImportSpreadsheetModal({
                             <span>Conectar Google Drive / Sheets</span>
                           </a>
                         </div>
-
-                        <p className="text-[11px] text-slate-400">
-                          Ou se preferir, use a aba{" "}
-                          <strong>&quot;Link do Sheets&quot;</strong> para colar
-                          o link diretamente sem precisar conectar.
-                        </p>
                       </div>
                     )}
                   </div>
@@ -799,7 +1051,7 @@ export function ImportSpreadsheetModal({
                         </p>
                         <p className="text-[11px] text-slate-400 mt-1">
                           Exportações do Google Sheets, Excel (.csv) e extratos
-                          bancários
+                          tabulados
                         </p>
                       </div>
                       <input
@@ -846,7 +1098,7 @@ export function ImportSpreadsheetModal({
               </div>
             )}
 
-            {/* ──────── STEP 2: MAPPING ──────── */}
+            {/* ──────── STEP 2: MAPPING (PLANILHAS) ──────── */}
             {step === "mapping" && sheetData && (
               <div className="space-y-6">
                 {/* Sheet Tabs selector if available */}
@@ -1076,21 +1328,59 @@ export function ImportSpreadsheetModal({
               </div>
             )}
 
-            {/* ──────── STEP 3: PREVIEW ──────── */}
+            {/* ──────── STEP 3: PREVIEW & CONCILIAÇÃO ──────── */}
             {step === "preview" && (
               <div className="space-y-6">
+                {/* Se for OFX, exibe banner do banco */}
+                {ofxData && (
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-[#0066ff]/10 text-[#0066ff] flex items-center justify-center shrink-0">
+                        <Landmark className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-sm text-slate-900 dark:text-white">
+                            {ofxData.bankName}
+                          </span>
+                          <StatusBadge size="sm" tone="accent">
+                            Extrato Conciliável
+                          </StatusBadge>
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                          Período: {ofxData.startDate || "Início"} até{" "}
+                          {ofxData.endDate || "Fim"}
+                          {ofxData.accountId &&
+                            ` · Conta: ${ofxData.accountId}`}
+                        </p>
+                      </div>
+                    </div>
+
+                    {ofxData.balance !== undefined && (
+                      <div className="text-right sm:border-l sm:border-slate-200 dark:sm:border-white/10 sm:pl-4">
+                        <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                          Saldo no Extrato
+                        </span>
+                        <span className="text-sm font-extrabold font-mono text-slate-900 dark:text-white">
+                          {formatCurrency(ofxData.balance)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Summary Metrics */}
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                   <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/10">
                     <span className="text-[11px] font-semibold text-slate-400 block uppercase">
-                      Lançamentos Válidos
+                      Lançamentos {ofxData ? "Selecionados" : "Válidos"}
                     </span>
                     <span className="text-xl font-extrabold text-slate-900 dark:text-white mt-1 block">
-                      {totals.count}
+                      {totals.count} / {totals.totalCount}
                     </span>
-                    {totals.invalidCount > 0 && (
-                      <span className="text-[10px] text-amber-500 font-medium">
-                        {totals.invalidCount} ignorado(s) por valor 0
+                    {totals.alreadyImportedCount > 0 && (
+                      <span className="text-[10px] text-amber-500 font-medium block mt-0.5">
+                        {totals.alreadyImportedCount} já conciliado(s)
                       </span>
                     )}
                   </div>
@@ -1115,7 +1405,7 @@ export function ImportSpreadsheetModal({
 
                   <div className="p-4 rounded-2xl bg-[#0066ff]/10 border border-[#0066ff]/20">
                     <span className="text-[11px] font-semibold text-[#60a5fa] block uppercase">
-                      Saldo do Lote
+                      Saldo Líquido do Lote
                     </span>
                     <span className="text-xl font-extrabold text-[#0066ff] dark:text-blue-400 mt-1 block">
                       {formatCurrency(totals.balance)}
@@ -1123,74 +1413,183 @@ export function ImportSpreadsheetModal({
                   </div>
                 </div>
 
-                {/* Sample Table */}
-                <div className="border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden">
-                  <div className="px-4 py-3 bg-slate-50 dark:bg-white/[0.03] border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-800 dark:text-white">
-                      Amostra dos Dados Mapeados (Primeiros{" "}
-                      {Math.min(10, totals.count)} itens)
-                    </span>
-                    <span className="text-[11px] text-slate-400">
-                      Revise antes de salvar
-                    </span>
-                  </div>
+                {/* ──────── TABELA DE TRANSAÇÕES OFX (CONCILIAÇÃO) ──────── */}
+                {ofxData ? (
+                  <div className="border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden">
+                    <div className="px-4 py-3 bg-slate-50 dark:bg-white/[0.03] border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={handleToggleAllOfx}
+                          className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                        >
+                          {ofxItems.every((i) => i.selected) ? (
+                            <CheckSquare className="w-4 h-4 text-[#0066ff]" />
+                          ) : (
+                            <Square className="w-4 h-4 text-slate-400" />
+                          )}
+                          <span>Selecionar Todas</span>
+                        </button>
+                      </div>
+                      <span className="text-[11px] text-slate-400">
+                        Itens já conciliados vêm desmarcados por segurança
+                      </span>
+                    </div>
 
-                  <div className="max-h-64 overflow-y-auto">
-                    <table className="w-full text-xs text-left">
-                      <thead className="bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px]">
-                        <tr>
-                          <th className="px-4 py-2">Tipo</th>
-                          <th className="px-4 py-2">Descrição</th>
-                          <th className="px-4 py-2">Categoria</th>
-                          <th className="px-4 py-2">Data</th>
-                          <th className="px-4 py-2 text-right">Valor</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-                        {parsedTransactions
-                          .filter((t) => t.isValid)
-                          .slice(0, 10)
-                          .map((t, i) => (
+                    <div className="max-h-72 overflow-y-auto">
+                      <table className="w-full text-xs text-left">
+                        <thead className="bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px]">
+                          <tr>
+                            <th className="px-4 py-2 w-8">Sel.</th>
+                            <th className="px-4 py-2">Status</th>
+                            <th className="px-4 py-2">Data</th>
+                            <th className="px-4 py-2">Descrição no Extrato</th>
+                            <th className="px-4 py-2">Categoria Sugerida</th>
+                            <th className="px-4 py-2 text-right">Valor</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                          {ofxItems.map((item, idx) => (
                             <tr
-                              key={i}
-                              className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02]"
+                              key={item.fitid}
+                              className={`transition-colors ${
+                                item.alreadyImported
+                                  ? "bg-slate-50/70 dark:bg-white/[0.01] opacity-60"
+                                  : "hover:bg-slate-50/50 dark:hover:bg-white/[0.02]"
+                              }`}
                             >
                               <td className="px-4 py-2.5">
-                                <StatusBadge
-                                  size="sm"
-                                  tone={t.type === "in" ? "success" : "danger"}
+                                <input
+                                  type="checkbox"
+                                  checked={!!item.selected}
+                                  onChange={() => handleToggleOfxSelect(idx)}
+                                  className="w-4 h-4 rounded text-[#003d9b] focus:ring-[#003d9b] cursor-pointer"
+                                />
+                              </td>
+                              <td className="px-4 py-2.5">
+                                {item.alreadyImported ? (
+                                  <StatusBadge size="sm" tone="neutral">
+                                    Já Conciliado
+                                  </StatusBadge>
+                                ) : (
+                                  <StatusBadge
+                                    size="sm"
+                                    tone={
+                                      item.type === "in" ? "success" : "danger"
+                                    }
+                                  >
+                                    {item.type === "in" ? "Receita" : "Despesa"}
+                                  </StatusBadge>
+                                )}
+                              </td>
+                              <td className="px-4 py-2.5 font-mono text-[11px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                                {item.displayDate}
+                              </td>
+                              <td className="px-4 py-2.5 font-medium text-slate-800 dark:text-white max-w-[240px] truncate">
+                                {item.memo}
+                              </td>
+                              <td className="px-4 py-2.5">
+                                <select
+                                  value={item.category}
+                                  onChange={(e) =>
+                                    handleUpdateOfxCategory(idx, e.target.value)
+                                  }
+                                  className="px-2 py-1 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 text-[11px] text-slate-700 dark:text-slate-300 focus:outline-none"
                                 >
-                                  {t.type === "in" ? "Receita" : "Despesa"}
-                                </StatusBadge>
-                              </td>
-                              <td className="px-4 py-2.5 font-medium text-slate-800 dark:text-white">
-                                {t.description}
-                              </td>
-                              <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400">
-                                {t.category}
-                              </td>
-                              <td className="px-4 py-2.5 text-slate-400 font-mono text-[11px]">
-                                {t.customDate
-                                  ? new Date(t.customDate).toLocaleDateString(
-                                      "pt-BR",
-                                    )
-                                  : "Hoje"}
+                                  {DEFAULT_CATEGORIES.map((cat) => (
+                                    <option key={cat} value={cat}>
+                                      {cat}
+                                    </option>
+                                  ))}
+                                </select>
                               </td>
                               <td
-                                className={`px-4 py-2.5 text-right font-bold ${
-                                  t.type === "in"
+                                className={`px-4 py-2.5 text-right font-bold whitespace-nowrap ${
+                                  item.type === "in"
                                     ? "text-emerald-600 dark:text-emerald-400"
                                     : "text-rose-600 dark:text-rose-400"
                                 }`}
                               >
-                                {formatCurrency(t.amount)}
+                                {formatCurrency(item.amount)}
                               </td>
                             </tr>
                           ))}
-                      </tbody>
-                    </table>
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  /* ──────── TABELA DE PLANILHA NORMAL ──────── */
+                  <div className="border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden">
+                    <div className="px-4 py-3 bg-slate-50 dark:bg-white/[0.03] border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-800 dark:text-white">
+                        Amostra dos Dados Mapeados (Primeiros{" "}
+                        {Math.min(10, totals.count)} itens)
+                      </span>
+                      <span className="text-[11px] text-slate-400">
+                        Revise antes de salvar
+                      </span>
+                    </div>
+
+                    <div className="max-h-64 overflow-y-auto">
+                      <table className="w-full text-xs text-left">
+                        <thead className="bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px]">
+                          <tr>
+                            <th className="px-4 py-2">Tipo</th>
+                            <th className="px-4 py-2">Descrição</th>
+                            <th className="px-4 py-2">Categoria</th>
+                            <th className="px-4 py-2">Data</th>
+                            <th className="px-4 py-2 text-right">Valor</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                          {parsedSheetTransactions
+                            .filter((t) => t.isValid)
+                            .slice(0, 10)
+                            .map((t, i) => (
+                              <tr
+                                key={i}
+                                className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02]"
+                              >
+                                <td className="px-4 py-2.5">
+                                  <StatusBadge
+                                    size="sm"
+                                    tone={
+                                      t.type === "in" ? "success" : "danger"
+                                    }
+                                  >
+                                    {t.type === "in" ? "Receita" : "Despesa"}
+                                  </StatusBadge>
+                                </td>
+                                <td className="px-4 py-2.5 font-medium text-slate-800 dark:text-white">
+                                  {t.description}
+                                </td>
+                                <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400">
+                                  {t.category}
+                                </td>
+                                <td className="px-4 py-2.5 text-slate-400 font-mono text-[11px]">
+                                  {t.customDate
+                                    ? new Date(t.customDate).toLocaleDateString(
+                                        "pt-BR",
+                                      )
+                                    : "Hoje"}
+                                </td>
+                                <td
+                                  className={`px-4 py-2.5 text-right font-bold ${
+                                    t.type === "in"
+                                      ? "text-emerald-600 dark:text-emerald-400"
+                                      : "text-rose-600 dark:text-rose-400"
+                                  }`}
+                                >
+                                  {formatCurrency(t.amount)}
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -1215,9 +1614,15 @@ export function ImportSpreadsheetModal({
                 variant="secondary"
                 size="md"
                 leadingIcon={<ArrowLeft className="w-4 h-4" />}
-                onClick={() => setStep("mapping")}
+                onClick={() => {
+                  if (ofxData) {
+                    setStep("source");
+                  } else {
+                    setStep("mapping");
+                  }
+                }}
               >
-                Ajustar Mapeamento
+                {ofxData ? "Trocar Extrato OFX" : "Ajustar Mapeamento"}
               </Button>
             )}
 
@@ -1254,8 +1659,10 @@ export function ImportSpreadsheetModal({
                 onClick={handleConfirmImport}
               >
                 {batchCreate.isPending
-                  ? "Importando Lote..."
-                  : `Confirmar Importação de ${totals.count} Transações`}
+                  ? "Conciliando Lançamentos..."
+                  : ofxData
+                    ? `Confirmar e Conciliar ${totals.count} Lançamento(s)`
+                    : `Confirmar Importação de ${totals.count} Transações`}
               </Button>
             )}
           </div>
