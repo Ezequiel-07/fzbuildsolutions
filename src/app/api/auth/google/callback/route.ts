@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { saveGoogleOAuthTokens } from "@/features/inbox/services/gmail-service";
+import {
+  saveGoogleOAuthTokens,
+  getPublicBaseOrigin,
+} from "@/features/inbox/services/gmail-service";
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
@@ -32,13 +35,13 @@ export async function GET(req: Request) {
     }
   }
 
-  // Compute detected fallback redirect URI from current request
-  const host = req.headers.get("x-forwarded-host") || url.host;
-  const isLocal = host.includes("localhost") || host.includes("127.0.0.1");
-  const proto = isLocal ? "http" : "https";
-  let detectedRedirectUri = `${proto}://${host}/api/auth/google/callback`;
-  if (!isLocal && !detectedRedirectUri.startsWith("https://")) {
-    detectedRedirectUri = `https://${host}/api/auth/google/callback`;
+  // Determine public base origin, discarding internal container IPs (0.0.0.0 / port 8080)
+  const baseOrigin = getPublicBaseOrigin(req);
+  const detectedRedirectUri = `${baseOrigin}/api/auth/google/callback`;
+
+  // Discard stateRedirectUri if it contains internal container IP
+  if (stateRedirectUri && stateRedirectUri.includes("0.0.0.0")) {
+    stateRedirectUri = undefined;
   }
 
   // Ensure stateRedirectUri also strictly enforces https if public domain
@@ -53,9 +56,9 @@ export async function GET(req: Request) {
 
   const finalRedirectUri = stateRedirectUri || detectedRedirectUri;
 
-  // Build target URL safely based on state parameter
+  // Build target URL strictly using the public base origin (never internal container host)
   const targetPath = returnUrl.startsWith("/") ? returnUrl : "/os/inbox";
-  const targetUrl = new URL(targetPath, req.url);
+  const targetUrl = new URL(targetPath, baseOrigin);
 
   if (error || !code) {
     console.warn("[GOOGLE_CALLBACK_DENIED]", { error, codeReceived: !!code });

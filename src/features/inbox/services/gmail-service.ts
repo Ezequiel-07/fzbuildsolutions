@@ -49,6 +49,50 @@ export interface GmailStatusResult {
 
 export const SETTINGS_DOC_ID = "integrations_gmail";
 
+/**
+ * Resolves the public base URL of the application, avoiding internal container
+ * bindings like 0.0.0.0 or internal ports from Cloud Run / App Hosting.
+ */
+export function getPublicBaseOrigin(req: Request): string {
+  const forwardedHost = req.headers.get("x-forwarded-host");
+  const hostHeader = req.headers.get("host");
+  let rawHost = "";
+
+  try {
+    const reqUrl = new URL(req.url);
+    rawHost = forwardedHost || hostHeader || reqUrl.host || "";
+  } catch {
+    rawHost = forwardedHost || hostHeader || "";
+  }
+
+  // Discard internal container bindings
+  if (rawHost.includes("0.0.0.0")) {
+    rawHost = "";
+  }
+
+  // Local development
+  if (rawHost.includes("localhost") || rawHost.includes("127.0.0.1")) {
+    const proto = req.headers.get("x-forwarded-proto") || "http";
+    return `${proto}://${rawHost}`;
+  }
+
+  // Valid public host from reverse proxy (e.g., fzbuild.solutions)
+  if (rawHost) {
+    return `https://${rawHost}`;
+  }
+
+  // Fallback to configured env URL
+  if (
+    process.env.NEXT_PUBLIC_APP_URL &&
+    !process.env.NEXT_PUBLIC_APP_URL.includes("0.0.0.0")
+  ) {
+    return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
+  }
+
+  // Production domain default
+  return "https://fzbuild.solutions";
+}
+
 export function getOAuthClient(customRedirectUri?: string) {
   if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
     return null;
