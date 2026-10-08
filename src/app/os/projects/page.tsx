@@ -13,6 +13,7 @@ import {
   FolderKanban,
   ExternalLink,
   ChevronRight,
+  FileSpreadsheet,
 } from "lucide-react";
 import {
   useProjects,
@@ -29,6 +30,7 @@ import {
 } from "@/domain/project";
 import { NewProjectModal } from "@/features/projects/components/new-project-modal";
 import { EditProjectModal } from "@/features/projects/components/edit-project-modal";
+import { EstimateFormModal } from "@/features/estimates/components/estimate-form-modal";
 import { PageHeader } from "@/components/os/page-header";
 import { Panel } from "@/components/os/panel";
 import { Button } from "@/components/os/button";
@@ -42,6 +44,7 @@ export default function ProjectsPage() {
   const router = useRouter();
   const [view, setView] = useState<"kanban" | "list">("kanban");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEstimateModalOpen, setIsEstimateModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [deletingProjectId, setDeletingProjectId] = useState<string | null>(
     null,
@@ -112,6 +115,13 @@ export default function ProjectsPage() {
                 <List className="w-4 h-4" />
               </button>
             </div>
+            <Button
+              variant="secondary"
+              onClick={() => setIsEstimateModalOpen(true)}
+            >
+              <FileSpreadsheet className="h-4 w-4 text-os-primary" />
+              <span>Novo Orçamento</span>
+            </Button>
             <Button variant="primary" onClick={() => setIsModalOpen(true)}>
               <Plus className="h-4 w-4" />
               <span>Novo Projeto</span>
@@ -357,6 +367,10 @@ export default function ProjectsPage() {
       <NewProjectModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+      />
+      <EstimateFormModal
+        isOpen={isEstimateModalOpen}
+        onClose={() => setIsEstimateModalOpen(false)}
       />
       <EditProjectModal
         isOpen={!!selectedProject}
