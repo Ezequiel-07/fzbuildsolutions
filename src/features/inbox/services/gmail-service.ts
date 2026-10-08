@@ -14,10 +14,12 @@ const GOOGLE_REDIRECT_URI =
   process.env.GOOGLE_REDIRECT_URI ||
   "http://localhost:3000/api/auth/google/callback";
 
-const SCOPES = [
+export const SCOPES = [
   "https://www.googleapis.com/auth/gmail.modify",
   "https://www.googleapis.com/auth/gmail.send",
   "https://www.googleapis.com/auth/userinfo.email",
+  "https://www.googleapis.com/auth/spreadsheets.readonly",
+  "https://www.googleapis.com/auth/drive.readonly",
 ];
 
 export interface GmailMessageSummary {
@@ -45,7 +47,7 @@ export interface GmailStatusResult {
   isDemoMode: boolean;
 }
 
-const SETTINGS_DOC_ID = "integrations_gmail";
+export const SETTINGS_DOC_ID = "integrations_gmail";
 
 export function getOAuthClient() {
   if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
@@ -58,7 +60,7 @@ export function getOAuthClient() {
   );
 }
 
-export function generateGoogleAuthUrl(): string {
+export function generateGoogleAuthUrl(returnUrl?: string): string {
   const oauth2Client = getOAuthClient();
   if (!oauth2Client) {
     throw new Error(
@@ -70,6 +72,7 @@ export function generateGoogleAuthUrl(): string {
     access_type: "offline",
     prompt: "consent",
     scope: SCOPES,
+    state: returnUrl || "/os/inbox",
   });
 }
 

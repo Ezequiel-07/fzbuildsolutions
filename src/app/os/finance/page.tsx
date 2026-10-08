@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   DollarSign,
@@ -10,8 +10,10 @@ import {
   BarChart3,
   FileText,
   Calendar,
+  FileSpreadsheet,
 } from "lucide-react";
 import { useTransactions } from "@/features/finance/api/use-transactions";
+import { ImportSpreadsheetModal } from "@/features/finance/components/import-spreadsheet-modal";
 import { PageHeader } from "@/components/os/page-header";
 import { Button } from "@/components/os/button";
 import { Panel, PanelHeader } from "@/components/os/panel";
@@ -62,6 +64,7 @@ const MONTHS = [
 ];
 
 export default function FinancePage() {
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const { data: transactions = [], isLoading } = useTransactions();
 
   const totalRevenue = transactions
@@ -142,7 +145,17 @@ export default function FinancePage() {
           { label: "Financeiro" },
         ]}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              variant="secondary"
+              size="sm"
+              leadingIcon={
+                <FileSpreadsheet className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              }
+              onClick={() => setIsImportModalOpen(true)}
+            >
+              Importar Planilha
+            </Button>
             <Link href="/os/finance/transactions">
               <Button
                 variant="secondary"
@@ -463,6 +476,11 @@ export default function FinancePage() {
           </div>
         </Panel>
       </motion.div>
+
+      <ImportSpreadsheetModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+      />
     </div>
   );
 }

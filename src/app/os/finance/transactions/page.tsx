@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Search,
@@ -20,6 +20,7 @@ import {
   CheckSquare,
   Square,
   X,
+  FileSpreadsheet,
 } from "lucide-react";
 import {
   useTransactions,
@@ -28,11 +29,13 @@ import {
 } from "@/features/finance/api/use-transactions";
 import { NewTransactionModal } from "@/features/finance/components/new-transaction-modal";
 import { EditTransactionModal } from "@/features/finance/components/edit-transaction-modal";
+import { ImportSpreadsheetModal } from "@/features/finance/components/import-spreadsheet-modal";
 import { PageHeader } from "@/components/os/page-header";
 import { Button } from "@/components/os/button";
 import { Panel } from "@/components/os/panel";
 import { StatusBadge } from "@/components/os/status-badge";
 import { ConfirmDialog } from "@/components/os/confirm-dialog";
+import { toast } from "sonner";
 
 type SortKey = "createdAt" | "description" | "category" | "amount" | "type";
 type SortDir = "asc" | "desc";
@@ -64,6 +67,7 @@ const fadeUp = {
 
 export default function TransactionsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
   const [txToDelete, setTxToDelete] = useState<Transaction | null>(null);
@@ -80,6 +84,20 @@ export default function TransactionsPage() {
 
   const { data: transactions = [], isLoading } = useTransactions();
   const deleteTransaction = useDeleteTransaction();
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("connected") === "true") {
+        toast.success("Conta do Google conectada com sucesso!");
+        setIsImportModalOpen(true);
+        window.history.replaceState({}, "", window.location.pathname);
+      } else if (params.get("auth_error")) {
+        toast.error("Erro na autenticação com o Google. Tente novamente.");
+        window.history.replaceState({}, "", window.location.pathname);
+      }
+    }
+  }, []);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -224,6 +242,16 @@ export default function TransactionsPage() {
         ]}
         actions={
           <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              variant="secondary"
+              size="sm"
+              leadingIcon={
+                <FileSpreadsheet className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              }
+              onClick={() => setIsImportModalOpen(true)}
+            >
+              Importar Planilha
+            </Button>
             <Button
               variant="secondary"
               size="sm"
@@ -609,6 +637,10 @@ export default function TransactionsPage() {
         isOpen={!!selectedTransaction}
         onClose={() => setSelectedTransaction(null)}
         transaction={selectedTransaction}
+      />
+      <ImportSpreadsheetModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
       />
 
       {/* CONFIRM DIALOG FOR SINGLE DELETE */}

@@ -9,6 +9,8 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
+  writeBatch,
+  Timestamp,
   serverTimestamp,
   query,
   orderBy,
@@ -87,6 +89,60 @@ export function useDeleteTransaction() {
       const docRef = doc(db, "transactions", id);
       await deleteDoc(docRef);
       return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+    },
+  });
+}
+
+export interface CreateTransactionInput extends Omit<
+  Transaction,
+  "id" | "createdAt"
+> {
+  customDate?: string;
+}
+
+export function useBatchCreateTransactions() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (items: CreateTransactionInput[]) => {
+      if (items.length === 0) return { totalCreated: 0 };
+
+      const transRef = collection(db, "transactions");
+      const batchSize = 400;
+      let totalCreated = 0;
+
+      for (let i = 0; i < items.length; i += batchSize) {
+        const chunk = items.slice(i, i + batchSize);
+        const batch = writeBatch(db);
+
+        for (const item of chunk) {
+          const newDocRef = doc(transRef);
+          const { customDate, ...data } = item;
+
+          let timestamp = serverTimestamp();
+          if (customDate) {
+            const parsed = new Date(customDate);
+            if (!isNaN(parsed.getTime())) {
+              timestamp = Timestamp.fromDate(parsed) as unknown as ReturnType<
+                typeof serverTimestamp
+              >;
+            }
+          }
+
+          batch.set(newDocRef, {
+            ...data,
+            createdAt: timestamp,
+          });
+          totalCreated++;
+        }
+
+        await batch.commit();
+      }
+
+      return { totalCreated };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
