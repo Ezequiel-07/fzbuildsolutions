@@ -230,6 +230,7 @@ async function getAuthenticatedGmailClient() {
 export async function listInboxMessages(params: {
   maxResults?: number;
   query?: string;
+  folder?: "inbox" | "sent" | "all";
   pageToken?: string;
 }): Promise<{ messages: GmailMessageSummary[]; isDemoMode: boolean }> {
   const gmail = await getAuthenticatedGmailClient();
@@ -239,10 +240,21 @@ export async function listInboxMessages(params: {
   }
 
   try {
+    const rawQuery = params.query?.trim() || "";
+    let q = "";
+
+    if (params.folder === "sent") {
+      q = rawQuery ? `${rawQuery} label:SENT` : "label:SENT";
+    } else if (params.folder === "all") {
+      q = rawQuery;
+    } else {
+      q = rawQuery ? `${rawQuery} label:INBOX` : "label:INBOX";
+    }
+
     const res = await gmail.users.messages.list({
       userId: "me",
       maxResults: params.maxResults || 20,
-      q: params.query || "label:INBOX",
+      q: q || undefined,
       pageToken: params.pageToken,
     });
 

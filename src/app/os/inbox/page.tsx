@@ -7,7 +7,11 @@ import { PageHeader } from "@/components/os/page-header";
 import { Button } from "@/components/os/button";
 import { Panel } from "@/components/os/panel";
 import { GmailConnectBanner } from "@/features/inbox/components/gmail-connect-banner";
-import { EmailList } from "@/features/inbox/components/email-list";
+import {
+  EmailList,
+  type InboxFolder,
+  type InboxFilter,
+} from "@/features/inbox/components/email-list";
 import { EmailViewer } from "@/features/inbox/components/email-viewer";
 import {
   ComposeEmailModal,
@@ -22,7 +26,8 @@ import type { GmailMessageDetail } from "@/features/inbox/services/gmail-service
 export default function InboxPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filter, setFilter] = useState<"all" | "unread">("all");
+  const [folder, setFolder] = useState<InboxFolder>("inbox");
+  const [filter, setFilter] = useState<InboxFilter>("all");
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [composeInitialData, setComposeInitialData] =
     useState<ComposeInitialData | null>(null);
@@ -34,7 +39,7 @@ export default function InboxPage() {
     data: messagesData,
     isLoading,
     refetch: refetchMessages,
-  } = useGmailMessages(searchQuery);
+  } = useGmailMessages(searchQuery, folder);
 
   const refetch = () => {
     refetchStatus();
@@ -137,6 +142,11 @@ export default function InboxPage() {
             onSelect={setSelectedId}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
+            folder={folder}
+            onFolderChange={(newFolder) => {
+              setFolder(newFolder);
+              setSelectedId(null);
+            }}
             filter={filter}
             onFilterChange={setFilter}
             isLoading={isLoading}

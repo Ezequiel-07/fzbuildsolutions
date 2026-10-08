@@ -1,8 +1,11 @@
 "use client";
 
-import { Search, Mail, Clock } from "lucide-react";
+import { Search, Mail, Clock, Send, Inbox } from "lucide-react";
 import type { GmailMessageSummary } from "../services/gmail-service";
 import { Skeleton } from "@/components/os/skeleton";
+
+export type InboxFolder = "inbox" | "sent";
+export type InboxFilter = "all" | "unread";
 
 interface EmailListProps {
   messages: GmailMessageSummary[];
@@ -10,8 +13,10 @@ interface EmailListProps {
   onSelect: (id: string) => void;
   searchQuery: string;
   onSearchChange: (q: string) => void;
-  filter: "all" | "unread";
-  onFilterChange: (f: "all" | "unread") => void;
+  folder: InboxFolder;
+  onFolderChange: (f: InboxFolder) => void;
+  filter: InboxFilter;
+  onFilterChange: (f: InboxFilter) => void;
   isLoading: boolean;
   isConnected?: boolean;
 }
@@ -22,6 +27,8 @@ export function EmailList({
   onSelect,
   searchQuery,
   onSearchChange,
+  folder,
+  onFolderChange,
   filter,
   onFilterChange,
   isLoading,
@@ -31,6 +38,8 @@ export function EmailList({
     if (filter === "unread" && !msg.isUnread) return false;
     return true;
   });
+
+  const unreadCount = messages.filter((m) => m.isUnread).length;
 
   const formatDate = (dateStr: string) => {
     try {
@@ -64,27 +73,64 @@ export function EmailList({
           />
         </div>
 
-        {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 text-xs">
+        {/* Folder & Filter Navigation Pills */}
+        <div className="flex items-center gap-1.5 text-xs overflow-x-auto pb-0.5">
+          {/* Caixa de Entrada (Todas) */}
           <button
-            onClick={() => onFilterChange("all")}
-            className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors ${
-              filter === "all"
+            type="button"
+            onClick={() => {
+              onFolderChange("inbox");
+              onFilterChange("all");
+            }}
+            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 shrink-0 ${
+              folder === "inbox" && filter === "all"
                 ? "bg-os-primary/15 text-os-primary border border-os-primary/30"
-                : "text-os-muted hover:bg-os-surface-2"
+                : "text-os-muted hover:bg-os-surface-2 border border-transparent"
             }`}
           >
-            Todas ({messages.length})
+            <Inbox className="h-3.5 w-3.5" />
+            <span>
+              Entrada {folder === "inbox" ? `(${messages.length})` : ""}
+            </span>
           </button>
+
+          {/* Não Lidas */}
           <button
-            onClick={() => onFilterChange("unread")}
-            className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors ${
-              filter === "unread"
+            type="button"
+            onClick={() => {
+              onFolderChange("inbox");
+              onFilterChange("unread");
+            }}
+            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 shrink-0 ${
+              folder === "inbox" && filter === "unread"
                 ? "bg-os-primary/15 text-os-primary border border-os-primary/30"
-                : "text-os-muted hover:bg-os-surface-2"
+                : "text-os-muted hover:bg-os-surface-2 border border-transparent"
             }`}
           >
-            Não Lidas ({messages.filter((m) => m.isUnread).length})
+            <Mail className="h-3.5 w-3.5" />
+            <span>
+              Não Lidas{" "}
+              {folder === "inbox" && unreadCount > 0 ? `(${unreadCount})` : ""}
+            </span>
+          </button>
+
+          {/* Enviados */}
+          <button
+            type="button"
+            onClick={() => {
+              onFolderChange("sent");
+              onFilterChange("all");
+            }}
+            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 shrink-0 ${
+              folder === "sent"
+                ? "bg-os-primary/15 text-os-primary border border-os-primary/30"
+                : "text-os-muted hover:bg-os-surface-2 border border-transparent"
+            }`}
+          >
+            <Send className="h-3.5 w-3.5" />
+            <span>
+              Enviados {folder === "sent" ? `(${messages.length})` : ""}
+            </span>
           </button>
         </div>
       </div>
@@ -115,9 +161,23 @@ export function EmailList({
           </div>
         ) : filteredMessages.length === 0 ? (
           <div className="p-8 text-center text-xs text-os-muted space-y-2">
-            <Mail className="h-8 w-8 mx-auto text-os-muted opacity-40" />
-            <p className="font-semibold text-os-fg">Caixa de Entrada Vazia</p>
-            <p>Nenhum e-mail encontrado para o filtro atual.</p>
+            {folder === "sent" ? (
+              <>
+                <Send className="h-8 w-8 mx-auto text-os-muted opacity-40" />
+                <p className="font-semibold text-os-fg">
+                  Nenhum E-mail Enviado
+                </p>
+                <p>Nenhuma mensagem enviada encontrada nesta conta.</p>
+              </>
+            ) : (
+              <>
+                <Mail className="h-8 w-8 mx-auto text-os-muted opacity-40" />
+                <p className="font-semibold text-os-fg">
+                  Caixa de Entrada Vazia
+                </p>
+                <p>Nenhum e-mail encontrado para o filtro atual.</p>
+              </>
+            )}
           </div>
         ) : (
           filteredMessages.map((msg) => {
@@ -133,9 +193,11 @@ export function EmailList({
                     : "hover:bg-os-surface-2/60"
                 }`}
               >
-                {/* Unread indicator */}
+                {/* Unread or Sent indicator */}
                 <div className="pt-1">
-                  {msg.isUnread ? (
+                  {folder === "sent" ? (
+                    <Send className="h-3 w-3 text-os-primary/80" />
+                  ) : msg.isUnread ? (
                     <span className="block h-2 w-2 rounded-full bg-os-primary ring-2 ring-os-primary/20" />
                   ) : (
                     <span className="block h-2 w-2 rounded-full bg-transparent" />
@@ -143,7 +205,7 @@ export function EmailList({
                 </div>
 
                 <div className="flex-1 min-w-0 space-y-1">
-                  {/* Sender & Date */}
+                  {/* Sender/Recipient & Date */}
                   <div className="flex items-center justify-between gap-1">
                     <span
                       className={`text-xs truncate ${
@@ -152,7 +214,9 @@ export function EmailList({
                           : "font-medium text-os-muted"
                       }`}
                     >
-                      {msg.sender.split("<")[0].replace(/"/g, "")}
+                      {folder === "sent"
+                        ? `Para: ${msg.toEmail || "Destinatário"}`
+                        : msg.sender.split("<")[0].replace(/"/g, "")}
                     </span>
                     <span className="text-[10px] text-os-muted shrink-0 flex items-center gap-0.5">
                       <Clock className="h-3 w-3" />

@@ -8,12 +8,19 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const query = searchParams.get("q") || undefined;
+    const folder =
+      (searchParams.get("folder") as "inbox" | "sent" | "all") || "inbox";
     const maxResults = searchParams.get("limit")
       ? parseInt(searchParams.get("limit")!, 10)
-      : 15;
+      : 20;
     const pageToken = searchParams.get("pageToken") || undefined;
 
-    const result = await listInboxMessages({ query, maxResults, pageToken });
+    const result = await listInboxMessages({
+      query,
+      folder,
+      maxResults,
+      pageToken,
+    });
     return NextResponse.json(result);
   } catch (error) {
     console.error("[GMAIL_LIST_ERROR]", error);

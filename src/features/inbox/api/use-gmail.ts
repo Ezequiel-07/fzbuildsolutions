@@ -37,13 +37,18 @@ export function useDisconnectGmail() {
   });
 }
 
-export function useGmailMessages(query?: string) {
+export function useGmailMessages(
+  query?: string,
+  folder: "inbox" | "sent" | "all" = "inbox",
+) {
   return useQuery<{ messages: GmailMessageSummary[]; isDemoMode: boolean }>({
-    queryKey: ["gmail", "messages", query || ""],
+    queryKey: ["gmail", "messages", folder, query || ""],
     queryFn: async () => {
-      const url = query
-        ? `/api/gmail/messages?q=${encodeURIComponent(query)}`
-        : "/api/gmail/messages";
+      const params = new URLSearchParams();
+      if (query) params.set("q", query);
+      if (folder) params.set("folder", folder);
+
+      const url = `/api/gmail/messages?${params.toString()}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error("Erro ao carregar e-mails");
       return res.json();
