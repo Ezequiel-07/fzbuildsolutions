@@ -13,6 +13,7 @@ import {
   Circle,
   Briefcase,
   Activity,
+  Sparkles,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -248,6 +249,49 @@ export default function DashboardOverviewPage() {
           </Button>
         }
       />
+
+      {/* Executive AI Briefing Banner */}
+      <div className="relative overflow-hidden rounded-2xl border border-os-primary/30 bg-gradient-to-r from-os-primary/10 via-os-surface to-os-surface-2 p-5 shadow-sm">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-start gap-3.5">
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-[#003D9B] to-[#00E3FD] text-white shadow-md shrink-0">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-os-fg">
+                  Briefing Operacional Inteligente · FZ OS Core
+                </h3>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-os-primary/20 text-os-primary border border-os-primary/30 uppercase tracking-wider">
+                  Tempo Real
+                </span>
+              </div>
+              <p className="text-xs text-os-muted leading-relaxed max-w-3xl">
+                Operação estável com{" "}
+                <strong>{activeProjects.length} projetos em andamento</strong> e{" "}
+                <strong>{openLeads.length} oportunidades no CRM</strong> somando{" "}
+                <strong>{formatCurrency(openPipelineValue)}</strong>.
+                Faturamento registrado no mês de{" "}
+                <strong>{formatCurrency(currentMonthRevenue)}</strong>.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Link
+              href="/os/projects"
+              className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-os-surface-2 hover:bg-os-primary hover:text-white border border-os-border transition-all"
+            >
+              Ver Entregas
+            </Link>
+            <Link
+              href="/os/inbox"
+              className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-os-surface-2 hover:bg-os-primary hover:text-white border border-os-border transition-all"
+            >
+              Abrir Caixa de Entrada
+            </Link>
+          </div>
+        </div>
+      </div>
 
       {/* KPI Cards Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

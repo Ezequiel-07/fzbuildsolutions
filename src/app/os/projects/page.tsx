@@ -14,6 +14,7 @@ import {
   ExternalLink,
   ChevronRight,
   FileSpreadsheet,
+  Clock,
 } from "lucide-react";
 import {
   useProjects,
@@ -42,7 +43,9 @@ import { toast } from "sonner";
 
 export default function ProjectsPage() {
   const router = useRouter();
-  const [view, setView] = useState<"kanban" | "list">("kanban");
+  const [view, setView] = useState<"kanban" | "list" | "timeline">("kanban");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEstimateModalOpen, setIsEstimateModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -53,6 +56,20 @@ export default function ProjectsPage() {
   const { data: projects = [], isLoading } = useProjects();
   const updateProject = useUpdateProject();
   const deleteProject = useDeleteProject();
+
+  const filteredProjects = projects.filter((p) => {
+    const q = searchQuery.toLowerCase().trim();
+    const matchesSearch =
+      !q ||
+      p.name?.toLowerCase().includes(q) ||
+      p.description?.toLowerCase().includes(q) ||
+      p.clientId?.toLowerCase().includes(q);
+
+    const canonical = normalizeProjectStatus(p.status);
+    const matchesStatus = statusFilter === "all" || canonical === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
 
   const handleStatusChange = async (
     projectId: string,
@@ -114,6 +131,17 @@ export default function ProjectsPage() {
               >
                 <List className="w-4 h-4" />
               </button>
+              <button
+                onClick={() => setView("timeline")}
+                className={`p-1.5 rounded-lg transition-all ${
+                  view === "timeline"
+                    ? "bg-os-surface shadow-sm text-os-primary"
+                    : "text-os-muted hover:text-os-fg"
+                }`}
+                title="Visualização Timeline / Gantt"
+              >
+                <Clock className="w-4 h-4" />
+              </button>
             </div>
             <Button
               variant="secondary"
@@ -130,6 +158,50 @@ export default function ProjectsPage() {
         }
       />
 
+      {/* Filter and Search Bar */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-os-surface p-3.5 rounded-2xl border border-os-border shadow-sm">
+        <div className="relative flex-1 max-w-md">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Buscar por nome do projeto, cliente ou descrição..."
+            className="w-full pl-3.5 pr-3 py-1.5 text-xs rounded-xl bg-os-surface-2 border border-os-border text-os-fg placeholder:text-os-muted focus:outline-none focus:ring-1 focus:ring-os-primary"
+          />
+        </div>
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 text-xs">
+          <button
+            onClick={() => setStatusFilter("all")}
+            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 ${
+              statusFilter === "all"
+                ? "bg-os-primary/15 text-os-primary border border-os-primary/30"
+                : "text-os-muted hover:bg-os-surface-2"
+            }`}
+          >
+            Todos ({projects.length})
+          </button>
+          {PROJECT_STATUSES.map((st) => {
+            const count = projects.filter(
+              (p) => normalizeProjectStatus(p.status) === st,
+            ).length;
+            const meta = PROJECT_STATUS_META[st];
+            return (
+              <button
+                key={st}
+                onClick={() => setStatusFilter(st)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 ${
+                  statusFilter === st
+                    ? "bg-os-primary/15 text-os-primary border border-os-primary/30"
+                    : "text-os-muted hover:bg-os-surface-2"
+                }`}
+              >
+                {meta.label} ({count})
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Kanban Board View */}
       {view === "kanban" && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -140,7 +212,7 @@ export default function ProjectsPage() {
           ) : (
             PROJECT_STATUSES.map((statusKey, idx) => {
               const meta = PROJECT_STATUS_META[statusKey];
-              const colProjects = projects.filter(
+              const colProjects = filteredProjects.filter(
                 (p) => normalizeProjectStatus(p.status) === statusKey,
               );
 
@@ -262,12 +334,12 @@ export default function ProjectsPage() {
             <div className="flex items-center justify-center min-h-[300px]">
               <Loader2 className="w-7 h-7 animate-spin text-os-primary" />
             </div>
-          ) : projects.length === 0 ? (
+          ) : filteredProjects.length === 0 ? (
             <div className="p-8">
               <EmptyState
                 icon={FolderKanban}
-                title="Nenhum projeto cadastrado"
-                description="Crie o primeiro projeto da fábrica de software para iniciar sprints e acompanhamento de tarefas."
+                title="Nenhum projeto encontrado"
+                description="Tente ajustar sua busca ou status, ou crie um novo projeto."
                 action={
                   <Button
                     variant="primary"
@@ -292,7 +364,7 @@ export default function ProjectsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-os-border">
-                  {projects.map((project) => {
+                  {filteredProjects.map((project) => {
                     const canonical = normalizeProjectStatus(project.status);
                     const meta = PROJECT_STATUS_META[canonical];
                     const progress = project.progress ?? 0;
@@ -358,6 +430,77 @@ export default function ProjectsPage() {
                   })}
                 </tbody>
               </table>
+            </div>
+          )}
+        </Panel>
+      )}
+
+      {/* Timeline / Gantt View */}
+      {view === "timeline" && (
+        <Panel className="p-6 space-y-6 overflow-hidden">
+          <div className="flex items-center justify-between pb-3 border-b border-os-border">
+            <div>
+              <h3 className="text-sm font-bold text-os-fg">
+                Cronograma Físico & Entregas
+              </h3>
+              <p className="text-xs text-os-muted">
+                Acompanhamento temporal de sprints, medições e marcos da
+                engenharia
+              </p>
+            </div>
+            <span className="text-xs font-mono text-os-muted bg-os-surface-2 px-2.5 py-1 rounded-lg border border-os-border">
+              {filteredProjects.length} Projetos Ativos
+            </span>
+          </div>
+
+          {filteredProjects.length === 0 ? (
+            <div className="p-8 text-center text-xs text-os-muted">
+              Nenhum projeto encontrado com os filtros selecionados.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredProjects.map((project) => {
+                const canonical = normalizeProjectStatus(project.status);
+                const meta = PROJECT_STATUS_META[canonical];
+                const progress = project.progress ?? 0;
+
+                return (
+                  <div
+                    key={`timeline-${project.id}`}
+                    onClick={() => router.push(`/os/projects/${project.id}`)}
+                    className="p-4 rounded-xl bg-os-surface-2/40 hover:bg-os-surface-2/80 border border-os-border cursor-pointer transition-all space-y-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <StatusBadge tone={meta.tone}>{meta.label}</StatusBadge>
+                        <h4 className="text-xs font-bold text-os-fg">
+                          {project.name}
+                        </h4>
+                        {project.clientId && (
+                          <span className="text-[11px] text-os-muted">
+                            · {project.clientId}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-xs font-mono font-bold text-os-primary">
+                        {progress}% Concluído
+                      </span>
+                    </div>
+
+                    <div className="relative h-2.5 w-full bg-os-surface-2 rounded-full overflow-hidden border border-os-border/50">
+                      <div
+                        className="h-full bg-gradient-to-r from-os-primary to-cyan-400 transition-all duration-500 rounded-full"
+                        style={{ width: `${Math.max(4, progress)}%` }}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between text-[11px] text-os-muted font-mono">
+                      <span>Início: Etapa Inicial</span>
+                      <span>Sprints & Entregas Ativas</span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </Panel>

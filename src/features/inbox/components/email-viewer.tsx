@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Reply, Forward, Trash2, Mail, ArrowLeft } from "lucide-react";
+import {
+  Reply,
+  Forward,
+  Trash2,
+  Mail,
+  ArrowLeft,
+  Sparkles,
+} from "lucide-react";
 import { Button } from "@/components/os/button";
 import { ConfirmDialog } from "@/components/os/confirm-dialog";
 import { useGmailMessage, useTrashMessage } from "../api/use-gmail";
@@ -183,6 +190,50 @@ export function EmailViewer({
           <div className="text-right text-[11px] text-os-muted shrink-0">
             {formatDate(message.date)}
           </div>
+        </div>
+
+        {/* Smart Reply Suggestions */}
+        <div className="flex items-center gap-2 pt-2 flex-wrap border-t border-os-border/40">
+          <span className="text-[10px] uppercase font-bold text-os-muted flex items-center gap-1 shrink-0">
+            <Sparkles className="h-3 w-3 text-os-primary" />
+            Sugestões Rápidas:
+          </span>
+          <button
+            type="button"
+            onClick={() =>
+              onReply({
+                ...message,
+                bodyHtml: `<p>Olá, confirmo o recebimento desta mensagem. Em breve retornaremos com o andamento.</p><br/>`,
+              })
+            }
+            className="text-[11px] px-2.5 py-0.5 rounded-full bg-os-surface-2 hover:bg-os-primary/15 hover:text-os-primary border border-os-border transition-colors cursor-pointer"
+          >
+            ✓ Confirmar Recebimento
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              onReply({
+                ...message,
+                bodyHtml: `<p>Olá, podemos agendar uma reunião de alinhamento técnico nesta semana?</p><br/>`,
+              })
+            }
+            className="text-[11px] px-2.5 py-0.5 rounded-full bg-os-surface-2 hover:bg-os-primary/15 hover:text-os-primary border border-os-border transition-colors cursor-pointer"
+          >
+            📅 Agendar Reunião
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              onReply({
+                ...message,
+                bodyHtml: `<p>Prezado, segue anexa a estimativa de custos e o cronograma para aprovação.</p><br/>`,
+              })
+            }
+            className="text-[11px] px-2.5 py-0.5 rounded-full bg-os-surface-2 hover:bg-os-primary/15 hover:text-os-primary border border-os-border transition-colors cursor-pointer"
+          >
+            📄 Enviar Estimativa
+          </button>
         </div>
       </div>
 

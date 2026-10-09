@@ -323,13 +323,61 @@ export function ComposeEmailModal({
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
                   <label className="text-xs font-semibold text-os-fg">
                     Mensagem
                   </label>
-                  <span className="text-[11px] text-os-muted">
-                    Suporta HTML e formatação rica
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-os-muted">Modelos:</span>
+                    <select
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === "apresentacao") {
+                          setSubject(
+                            "Apresentação FZ Build Solutions — Engenharia & Tecnologia de Alto Padrão",
+                          );
+                          setBodyHtml(
+                            "<p>Olá,</p><p>É um prazer entrar em contato. Somos a <strong>FZ Build Solutions</strong>, especialistas em engenharia civil integrada, infraestrutura corporativa e automação inteligente.</p><p>Desenvolvemos soluções completas desde o projeto básico, planejamento físico-financeiro até a entrega turnkey com rastreamento digital.</p><p>Gostaríamos de agendar uma breve conversa de 15 minutos para entender suas demandas atuais e apresentar nossos cases de sucesso.</p><p>Atenciosamente,<br/><strong>Equipe FZ Build Solutions</strong><br/>fzbuild.solutions@gmail.com</p>",
+                          );
+                        } else if (val === "proposta") {
+                          setSubject(
+                            "Proposta Comercial & Cronograma FZ Build",
+                          );
+                          setBodyHtml(
+                            "<p>Prezados,</p><p>Conforme alinhado, temos a satisfação de apresentar nossa <strong>Proposta Comercial & Cronograma Físico-Financeiro</strong> para o seu projeto.</p><p>Nossa estimativa contempla engenharia de custos otimizada, mitigação de riscos e padrão de excelência executiva.</p><p>Ficamos à disposição para esclarecer eventuais dúvidas técnicas e operacionais.</p><p>Cordialmente,<br/><strong>Diretoria Comercial · FZ Build Solutions</strong></p>",
+                          );
+                        } else if (val === "reuniao") {
+                          setSubject(
+                            "Confirmação de Reunião de Alinhamento Técnico — FZ Build",
+                          );
+                          setBodyHtml(
+                            "<p>Olá,</p><p>Confirmamos nossa reunião de alinhamento técnico para tratar dos avanços e diretrizes do projeto.</p><p>Pauta prevista:<br/>1. Validação de escopo e cronograma de entregas<br/>2. Alinhamento financeiro e suprimentos<br/>3. Próximos checkpoints e vistorias</p><p>Caso precise ajustar o horário, basta nos responder por este e-mail.</p><p>Abraços,<br/><strong>FZ Build Solutions</strong></p>",
+                          );
+                        } else if (val === "medicao") {
+                          setSubject(
+                            "Relatório de Medição & Checkpoint Executivo — FZ Build",
+                          );
+                          setBodyHtml(
+                            "<p>Prezados,</p><p>Informamos que o <strong>Checkpoint de Medição</strong> da etapa atual foi concluído com sucesso e validado pela nossa equipe de engenharia.</p><p>Os registros fotográficos e as atualizações do cronograma físico já estão disponíveis na linha do tempo do projeto no seu Portal do Cliente.</p><p>Permanecemos à disposição.</p><p>Atenciosamente,<br/><strong>Coordenação Operacional · FZ Build Solutions</strong></p>",
+                          );
+                        }
+                      }}
+                      className="text-[11px] bg-os-surface-2 border border-os-border rounded-lg px-2 py-1 text-os-fg focus:outline-none focus:ring-1 focus:ring-os-primary"
+                      defaultValue=""
+                    >
+                      <option value="" disabled>
+                        Selecionar modelo...
+                      </option>
+                      <option value="apresentacao">
+                        Apresentação Institucional
+                      </option>
+                      <option value="proposta">
+                        Envio de Proposta Comercial
+                      </option>
+                      <option value="reuniao">Confirmação de Reunião</option>
+                      <option value="medicao">Aviso de Medição & Obra</option>
+                    </select>
+                  </div>
                 </div>
                 <textarea
                   required
