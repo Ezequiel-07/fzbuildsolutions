@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Reply, Forward, Trash2, Mail } from "lucide-react";
+import { Reply, Forward, Trash2, Mail, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/os/button";
 import { ConfirmDialog } from "@/components/os/confirm-dialog";
 import { useGmailMessage, useTrashMessage } from "../api/use-gmail";
@@ -11,6 +11,7 @@ import { type GmailMessageDetail } from "../services/gmail-service";
 
 interface EmailViewerProps {
   selectedId: string | null;
+  onBack?: () => void;
   onReply: (msg: GmailMessageDetail) => void;
   onForward: (msg: GmailMessageDetail) => void;
   onDeleted: () => void;
@@ -18,6 +19,7 @@ interface EmailViewerProps {
 
 export function EmailViewer({
   selectedId,
+  onBack,
   onReply,
   onForward,
   onDeleted,
@@ -97,11 +99,25 @@ export function EmailViewer({
     }
   };
 
+  const senderName = message.sender || message.fromEmail || "Você";
+  const avatarInitial = (senderName.trim().charAt(0) || "E").toUpperCase();
+
   return (
     <div className="flex-1 flex flex-col h-full bg-os-surface overflow-hidden">
       {/* Top Toolbar */}
       <div className="px-6 py-3.5 border-b border-os-border flex items-center justify-between bg-os-surface-2/30">
         <div className="flex items-center gap-2">
+          {onBack && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              className="md:hidden text-os-muted hover:text-os-fg"
+              leadingIcon={<ArrowLeft className="h-4 w-4" />}
+            >
+              Voltar
+            </Button>
+          )}
           <Button
             variant="secondary"
             size="sm"
@@ -142,19 +158,24 @@ export function EmailViewer({
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
             <div className="h-10 w-10 rounded-xl bg-os-primary/10 text-os-primary flex items-center justify-center font-bold text-sm shrink-0 border border-os-primary/20">
-              {message.sender.charAt(0).toUpperCase()}
+              {avatarInitial}
             </div>
             <div className="space-y-0.5">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs font-bold text-os-fg">
-                  {message.sender}
+                  {message.sender || message.fromEmail || "Remetente"}
                 </span>
-                <span className="text-[11px] text-os-muted">
-                  &lt;{message.fromEmail}&gt;
-                </span>
+                {message.fromEmail && (
+                  <span className="text-[11px] text-os-muted">
+                    &lt;{message.fromEmail}&gt;
+                  </span>
+                )}
               </div>
               <p className="text-[11px] text-os-muted">
-                Para: <span className="text-os-fg">{message.toEmail}</span>
+                Para:{" "}
+                <span className="text-os-fg font-medium">
+                  {message.toEmail || "Destinatário"}
+                </span>
               </p>
             </div>
           </div>
@@ -167,10 +188,16 @@ export function EmailViewer({
 
       {/* Message Body */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
-        <div
-          className="prose prose-sm max-w-none text-xs text-os-fg leading-relaxed bg-os-surface-2/20 p-5 rounded-2xl border border-os-border/50"
-          dangerouslySetInnerHTML={{ __html: message.bodyHtml }}
-        />
+        {message.bodyHtml && message.bodyHtml.trim() !== "<p></p>" ? (
+          <div
+            className="prose prose-sm max-w-none text-xs text-os-fg leading-relaxed bg-os-surface-2/20 p-5 rounded-2xl border border-os-border/50 break-words"
+            dangerouslySetInnerHTML={{ __html: message.bodyHtml }}
+          />
+        ) : (
+          <div className="text-xs text-os-fg leading-relaxed bg-os-surface-2/20 p-5 rounded-2xl border border-os-border/50">
+            {message.snippet || "(Mensagem sem conteúdo para visualização)"}
+          </div>
+        )}
       </div>
 
       {/* Confirmation Dialog for Trash */}

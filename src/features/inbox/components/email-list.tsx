@@ -216,7 +216,12 @@ export function EmailList({
                     >
                       {folder === "sent"
                         ? `Para: ${msg.toEmail || "Destinatário"}`
-                        : msg.sender.split("<")[0].replace(/"/g, "")}
+                        : (msg.sender || "Remetente")
+                            .split("<")[0]
+                            .replace(/"/g, "")
+                            .trim() ||
+                          msg.fromEmail ||
+                          "Remetente"}
                     </span>
                     <span className="text-[10px] text-os-muted shrink-0 flex items-center gap-0.5">
                       <Clock className="h-3 w-3" />

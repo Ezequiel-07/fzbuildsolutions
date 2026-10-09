@@ -16,12 +16,12 @@ import Link from "next/link";
 import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { GalaxyParticles } from "@/components/ui/galaxy-particles";
 
-const loginSchema = z.object({
+export const loginSchema = z.object({
   email: z.string().email("Endereço de e-mail inválido"),
   password: z.string().min(1, "A senha é obrigatória"),
 });
 
-type LoginFormData = z.infer<typeof loginSchema>;
+export type LoginFormData = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
   const router = useRouter();

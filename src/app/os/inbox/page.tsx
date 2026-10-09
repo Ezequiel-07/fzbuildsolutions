@@ -135,7 +135,11 @@ export default function InboxPage() {
       {/* Master-Detail Split Screen Container */}
       <Panel className="overflow-hidden border border-os-border rounded-2xl shadow-sm flex flex-col md:flex-row h-[720px]">
         {/* Left Master List */}
-        <div className="w-full md:w-80 lg:w-96 shrink-0 h-full">
+        <div
+          className={`w-full md:w-80 lg:w-96 shrink-0 h-full ${
+            selectedId ? "hidden md:flex flex-col" : "flex flex-col"
+          }`}
+        >
           <EmailList
             messages={messages}
             selectedId={selectedId}
@@ -155,12 +159,19 @@ export default function InboxPage() {
         </div>
 
         {/* Right Detail Viewer */}
-        <EmailViewer
-          selectedId={selectedId}
-          onReply={handleReply}
-          onForward={handleForward}
-          onDeleted={handleDeleted}
-        />
+        <div
+          className={`flex-1 h-full overflow-hidden ${
+            selectedId ? "flex flex-col" : "hidden md:flex flex-col"
+          }`}
+        >
+          <EmailViewer
+            selectedId={selectedId}
+            onBack={() => setSelectedId(null)}
+            onReply={handleReply}
+            onForward={handleForward}
+            onDeleted={handleDeleted}
+          />
+        </div>
       </Panel>
 
       {/* Compose & Edit Modal */}

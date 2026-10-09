@@ -317,20 +317,45 @@ export async function getMessageDetail(
       headers.find((h) => h.name?.toLowerCase() === name.toLowerCase())
         ?.value || "";
 
+    const rawFrom = getHeader("From");
+    const rawTo = getHeader("To");
+    const rawSubject = getHeader("Subject");
+    const rawDate = getHeader("Date");
+    const snippet = detail.data.snippet || "";
+
     const { bodyHtml, bodyText } = extractMessageBodies(detail.data.payload);
+
+    let finalBodyHtml = bodyHtml;
+    if (!finalBodyHtml || finalBodyHtml.trim() === "<p></p>") {
+      if (bodyText) {
+        const escaped = bodyText
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+        finalBodyHtml = `<div style="white-space: pre-wrap; line-height: 1.6;">${escaped}</div>`;
+      } else if (snippet) {
+        const escaped = snippet
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+        finalBodyHtml = `<div style="white-space: pre-wrap; line-height: 1.6;" class="text-os-fg">${escaped}</div>`;
+      } else {
+        finalBodyHtml = `<p class="text-os-muted italic">(Esta mensagem não possui conteúdo de texto para exibição)</p>`;
+      }
+    }
 
     return {
       id,
       threadId: detail.data.threadId || id,
-      snippet: detail.data.snippet || "",
-      sender: getHeader("From"),
-      fromEmail: extractEmail(getHeader("From")),
-      toEmail: getHeader("To"),
-      subject: getHeader("Subject") || "(Sem Assunto)",
-      date: getHeader("Date") || new Date().toISOString(),
+      snippet,
+      sender: rawFrom || "Você <fzbuild.solutions@gmail.com>",
+      fromEmail: extractEmail(rawFrom) || "fzbuild.solutions@gmail.com",
+      toEmail: rawTo || "(Destinatário)",
+      subject: rawSubject || "(Sem Assunto)",
+      date: rawDate || new Date().toISOString(),
       isUnread: detail.data.labelIds?.includes("UNREAD") ?? false,
       labels: detail.data.labelIds || [],
-      bodyHtml: bodyHtml || `<p>${bodyText}</p>`,
+      bodyHtml: finalBodyHtml,
       bodyText,
     };
   } catch (error) {
@@ -426,18 +451,29 @@ export async function disconnectGmail(): Promise<void> {
 }
 
 // Helpers
-function extractEmail(headerVal: string): string {
+export function extractEmail(headerVal?: string | null): string {
+  if (!headerVal) return "";
   const match = headerVal.match(/<([^>]+)>/);
   return match ? match[1] : headerVal.trim();
 }
 
-interface MessagePartPayload {
+export function decodeBase64Safe(data: string): string {
+  if (!data) return "";
+  try {
+    return Buffer.from(data, "base64url").toString("utf-8");
+  } catch {
+    const normalized = data.replace(/-/g, "+").replace(/_/g, "/");
+    return Buffer.from(normalized, "base64").toString("utf-8");
+  }
+}
+
+export interface MessagePartPayload {
   mimeType?: string | null;
-  body?: { data?: string | null } | null;
+  body?: { data?: string | null; size?: number | null } | null;
   parts?: MessagePartPayload[] | null;
 }
 
-function extractMessageBodies(payload: unknown): {
+export function extractMessageBodies(payload: unknown): {
   bodyHtml: string;
   bodyText: string;
 } {
@@ -446,10 +482,19 @@ function extractMessageBodies(payload: unknown): {
 
   const extractRecursive = (part: MessagePartPayload | undefined | null) => {
     if (!part) return;
-    if (part.mimeType === "text/html" && part.body?.data) {
-      bodyHtml = Buffer.from(part.body.data, "base64").toString("utf-8");
-    } else if (part.mimeType === "text/plain" && part.body?.data) {
-      bodyText = Buffer.from(part.body.data, "base64").toString("utf-8");
+
+    const mime = (part.mimeType || "").toLowerCase();
+
+    if (part.body?.data) {
+      if (mime.includes("text/html")) {
+        if (!bodyHtml) {
+          bodyHtml = decodeBase64Safe(part.body.data);
+        }
+      } else if (mime.includes("text/plain")) {
+        if (!bodyText) {
+          bodyText = decodeBase64Safe(part.body.data);
+        }
+      }
     }
 
     if (part.parts && Array.isArray(part.parts)) {
@@ -460,5 +505,15 @@ function extractMessageBodies(payload: unknown): {
   };
 
   extractRecursive(payload as MessagePartPayload);
+
+  // If only bodyText was extracted, wrap it so it displays with formatting
+  if (!bodyHtml && bodyText) {
+    const escaped = bodyText
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+    bodyHtml = `<div style="white-space: pre-wrap; font-family: inherit; line-height: 1.6;">${escaped}</div>`;
+  }
+
   return { bodyHtml, bodyText };
 }
